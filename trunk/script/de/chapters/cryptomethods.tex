@@ -1,0 +1,1177 @@
+% $Id: cryptomethods.tex 3716 2016-04-10 20:16:26Z esslinger $
+% ............................................................................
+%             V E R S C H L U E S S E L U N G S V E R F A H R E N
+%
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+% HACK to fix warning "destination with the same identifier .. has already been used, ...":
+% REMOVED, because it caused missing index entries
+%\makeatletter \renewcommand{\thepage}{~\csname @arabic\endcsname \c@page} \makeatother
+
+\hypertarget{Kapitel_1}{}
+\chapter{Sicherheits-Definitionen und Verschlüsselungsverfahren}
+\label{Label_Kapitel_1}
+(Bernhard Esslinger, Jörg-Cornelius Schneider, Mai 1999; Updates: Dez. 2001, Feb. 2003, Juni 2005, Juli 2007, Jan. 2010, März 2013, März 2016)
+
+Dieses Kapitel soll einen eher beschreibenden Einstieg bieten und die
+Grundlagen ohne Verwendung von allzu viel Mathematik vermitteln.
+
+Sinn der Verschlüsselung \index{Verschlüsselung} ist es, Daten so zu
+verändern, dass nur ein autorisierter Empfän\-ger in der Lage ist,
+den Klartext zu rekonstruieren. Das hat den Vorteil, dass verschlüsselte
+Daten offen übertragen werden können und trotzdem keine Gefahr besteht,
+dass ein Angreifer die Daten unberechtigterweise lesen kann. Der
+autorisierte Empfänger ist im Besitz einer geheimen Information, des
+sogenannten Schlüssels, die es ihm erlaubt, die Daten zu entschlüsseln,
+während sie jedem anderen verborgen bleiben.%\par \vskip + 3pt
+
+Zur Erläuterung verwenden wir im Folgenden die Begriffe aus der
+Abbildung \ref{Generic-Notations-when-Encrypting}:
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[scale=0.7]{figures/Generic-Notation-Encryption_de.png}
+\caption{Übliche Bezeichnungen bei der Verwendung von Verschlüsselungsverfahren} 
+\label{Generic-Notations-when-Encrypting}
+\end{center}
+\end{figure}
+
+
+Zuerst erklären wir, wie die Sicherheit von Kryptosystemen definiert wird.
+
+
+
+% --------------------------------------------------------------------------
+\hypertarget{cm_Section_Security_Definitions}{}
+\section[Sicherheits-Definitionen]{Sicherheits-Definitionen}
+\label{cm_Section_Security_Definitions}
+\index{Sicherheits-Definitionen}
+
+\begin{ctsquote}
+Erkläre es mir, ich werde es vergessen.\\
+Zeige es mir, ich werde es vielleicht behalten.\\
+Lass es mich tun, und ich werde es können.
+\caption{Indisches Sprichwort}
+\end{ctsquote}
+
+Moderne Kryptographie basiert vor allem auf mathematischer Theorie und
+Computer-Praxis. Beim Design kryptographischer Algorithmen werden Annahmen
+zur Schwierigkeit von Berechnungen so gemacht, so dass sich solche Verfahren
+in der Praxis von einem Angreifer nur schwer brechen lassen.
+
+\vskip +3pt
+Die zwei Hauptnotationen in der Literatur definieren Sicherheit in
+Abhängigkeit von den Möglichkeiten des Angreifers (vgl. z.B.
+{\em Contemporary Cryptography} \cite{cm:Oppliger2011}):
+
+\begin{itemize}
+
+\item {\bf Berechenbare, bedingte oder praktische Sicherheit}\\
+Ein Verschlüsselungsverfahren ist berechenbar sicher, wenn es (obwohl es
+theoretisch möglich ist, es zu brechen) selbst mit den besten bekannten
+Verfahren nicht gebrochen werden kann. Theoretische Fortschritte (z.B.
+Verbesserungen bei den Algorithmen zur Faktorisierung) und schnellere
+Computer erfordern, dass dies ständig angepasst wird. 
+
+Selbst wenn man den besten bekannten Algorithmus zum Brechen benutzt, wird
+man so viele Ressourcen brauchen (z.B. 1.000.000 Jahre), dass das Kryptosystem
+sicher ist.
+
+Daher basiert dieses Konzept auf Annahmen über die begrenzte Rechenkraft des
+Angreifers und auf dem aktuellen Stand der Wissenschaft.
+
+\item {\bf Informations-theoretische oder unbedingte Sicherheit}\\
+Ein Verschlüsselungsverfahren ist unbedingt sicher, wenn es sicher ist, völlig
+unabhängig davon, wieviele Ressourcen (Zeit, Speicher) der Angreifer hat, also
+auch in dem Fall, wenn der Angreifer unbegrenzt viele Ressourcen hat, um das
+Verfahren zu brechen. Ein Angreifer hat nicht genug Informationen dafür, weil
+sich aus dem Chiffrat keine sinnvollen Informationen gewinnen lassen.
+
+Es gibt Informations-theoretisch sichere Verfahren, die beweisbar nicht
+gebrochen werden können, auch nicht mit unendlich viel Rechenkraft -- ein
+Beispiel dafür ist das {\em One-Time-Pad}\index{One-Time-Pad} (OTP\index{OTP}).
+
+Da das OTP ein Informations-theoretisch sicheres Verschlüsselungsverfahren
+ist, leitet sich seine Sicherheit schon allein aus der Informationstheorie
+ab -- und ist sicher, auch wenn der Angreifer unbegrenzte Rechenkapazitäten
+hat. Das OTP weist allerdings einige praktische Nachteile auf (der
+verwendete Schlüssel darf nur einmal verwendet werden, muss zufällig
+gewählt werden und mindestens so lang sein wie die zu schützende Nachricht),
+so dass es außer in geschlossenen Umgebungen, zum Beispiel beim heißen
+Draht zwischen Moskau und Washington, kaum eine Rolle spielt.%\par \vskip + 3pt
+
+\end{itemize}
+
+
+\vskip +3pt
+\noindent Manchmal werden auch zwei weitere Konzepte verwendet:
+
+\begin{itemize}
+
+\item {\bf Beweisbare Sicherheit}
+Dies bedeutet, dass das Brechen eines Kryptosystems mindestens so schwierig ist
+wie die Lösung eines bestimmten schwierigen Problems, z.B. die Berechnung des
+diskreten Logarithmus, die diskrete Quadratwurzel-Berechnung oder die
+Faktorisierung sehr großer Zahlen.
+
+Beispiel: Aktuell wissen wir, dass RSA\index{RSA} höchstens so schwierig
+ist wie die Faktorisierung, aber wir können nicht beweisen, dass es genauso
+schwierig ist.
+Deshalb hat RSA keine beweisbare Mindest-Sicherheit. Oder in anderen Worten:
+Wir können nicht beweisen, dass wenn das Kryptosystem RSA gebrochen ist, dass
+dann auch die Faktorisierung (ein schwieriges mathematisches Problem) gelöst
+werden kann.
+
+Das Rabin-Kryptosystem war das erste Kryptosystem, für das sich beweisen ließ,
+dass es berechenbar äquivalent zu einem harten mathematischen Problem ist.
+
+\item {\bf Ad-hoc-Sicherheit}
+Ein kryptographisches System hat diese Sicherheit, wenn es sich nicht lohnt,
+es zu versuchen es zu brechen, weil der Aufwand dafür teurer ist als der Wert
+der Daten, die man durch das Brechen erhalten würde. Z.B. weil ein Angriff
+nicht in einer ausreichend kurzen Zeit erfolgen kann (vgl.
+{\em Handbook of Applied Cryptography} \cite{cm:Menezes2001}).
+
+Dies kann z.B. zutreffen, wenn Börsen-relevante Daten sowieso am
+nächsten Tag veröffent"-licht werden und man für das Brechen ein Jahr brauchen
+würde.
+
+\end{itemize}
+
+
+\vskip +3pt
+Bei den heutzutage verwendeten guten Verfahren ist der Zeitaufwand zum Brechen
+so hoch, dass sie praktisch nicht gebrochen werden können. Deshalb kann man
+diese Verfahren als (praktisch) sicher ansehen -- aus einer rein auf den
+Algorithmus bezogenen Sichtweise.%\par
+
+\vskip +3pt
+\begin{sloppypar}
+Grundsätz"-lich unterscheidet man zwischen symmetrischen und asymmetrischen
+Verfahren zur Verschlüsse"-lung.
+Einen guten Überblick über die verschiedenen Verschlüsselungs-Verfahren bietet
+das Buch von Bruce Schneier \cite{cm:Schneier1996}.
+\end{sloppypar}
+\vskip +3pt
+
+
+
+
+
+% --------------------------------------------------------------------------
+\newpage
+
+\begin{ctsquote}
+\glqq Man kann nicht nicht kommunizieren!\grqq 
+\caption[Paul Watzlawick]{Paul Watzlawick\footnotemark}\index{Watzlawick, Paul}
+\end{ctsquote}
+\addtocounter{footnote}{0}\footnotetext{Paul Watzlawick, Janet H. Beavin und Don D. Jackson, \glqq Menschliche Kommunikation. Formen, Störungen, Paradoxien\grqq, Huber, (c) 2007, Das erste der fünf pragmatischen Axiome ihrer Kommunikationstheorie.}
+
+% --------------------------------------------------------------------------
+\section[Einflüsse auf Verschlüsselungsverfahren] % Was zw. [..] steht, kommt ins Inhaltsverzeichnis!
+{Einflüsse auf Verschlüsselungsverfahren}
+
+% \nopagebreak
+Hier sollen kurz zwei Aspekte von Kryptoverfahren erwähnt werden, auf die oft nicht früh genug eingegangen wird:
+
+\begin{itemize}
+
+\item {\bf Zufallsbasiert}\\
+\index{Zufall}
+Man kann Algorithmen trennen in deterministische\index{deterministisch} und heuristische\index{heuristisch} Verfahren. Meistens lernten Studenten nur deterministische Verfahren kennen, bei denen die Ausgabe eindeutig durch die Eingabe vorgegeben wird. Bei heuristischen Verfahren werden Entscheidungen aufgrund zufälliger Werte getroffen. Moderne Verfahren des maschinellen Lernens gehören ebenfalls hierzu.
+
+In Kryptoverfahren spielt Zufall eine große Rolle. Immer müssen die Schlüssel zufällig gewählt werden, so dass zumindest bei der Schlüsselgenerierung~\glqq Zufall\grqq~erzeugt werden muss. Zusätzlich sind manche Verfahren (vor allem aus der Kryptoanalyse) heuristisch.
+
+\item {\bf Konstanten-basiert}\\
+Viele moderne Verfahren (insbesondere Hashverfahren und symmetrische Verschlüsse-lungsverfahren) benutzen numerische Konstanten. Diese sollten nachvollziehbar sein und keine Hintertüren ermöglichen. Zahlen, die das erfüllen, nennt man im Englischen~\glqq Nichts-im-Ärmel\grqq-Zahlen: Nothing-up-my-sleeve number\index{Zahlen!Nothing-up-my-sleeve}.%
+\footnote{\url{http://en.wikipedia.org/wiki/Nothing_up_my_sleeve_number}}
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+% --------------------------------------------------------------------------
+\newpage
+
+\begin{ctsquote}
+\glqq Transparenz. Das ist das Höchste, was man sich in einer technologisch hoch entwickelten Gesellschaft erhoffen kann ... sonst wird man einfach nur manipuliert.\grqq 
+\caption[Daniel Suarez]{Daniel Suarez\footnotemark}\index{Suarez, Daniel}
+\end{ctsquote}
+\addtocounter{footnote}{0}\footnotetext{Daniel Suarez, \glqq Darknet\grqq,
+            rororo, (c) 2011, Kapitel 5, \glqq Einsichten\grqq, S. 69, Price.}
+
+% --------------------------------------------------------------------------
+\section[Symmetrische Verschlüsselung] % Was zw. [..] steht, kommt ins Inhaltsverzeichnis!
+{Symmetrische Verschlüsselung\footnotemark}
+  \footnotetext{% Dieses Prozent ist nötig, sonst startet die Fußnote mit einem Blank !
+    Mit CrypTool 1 ({\bf CT1})\index{CT1}\index{CrypTool 1} können Sie über das
+    Menü {\bf Ver-/Entschlüsseln \textbackslash{} Symmetrisch (modern)} folgende
+    modernen symmetrischen Verschlüsselungsverfahren ausführen:\\
+    IDEA, RC2, RC4, DES (ECB), DES (CBC), Triple-DES (ECB), Triple-DES (CBC),
+    MARS (AES-Kandidat), RC6 (AES-Kandidat), Serpent (AES-Kandidat), 
+    Twofish (AES-Kandidat),
+    Rijndael (offizielles AES-Verfahren)\index{AES}.\\
+    Mit CrypTool 2 ({\bf CT2})\index{CT2}\index{CrypTool 2} können Sie im Startcenter
+    über {\bf Vorlagen \textbackslash{} Kryptographie \textbackslash{}
+    Modern \textbackslash{} Symmetrisch} folgende modernen symmetrischen
+    Verschlüsselungsverfahren ausführen:\\ 
+    AES, DES, PRESENT, RC2, RC4, SDES, TEA, Triple-DES, Twofish.\\
+    In JCrypTool ({\bf JCT})\index{JCT}\index{JCrypTool} stehen Ihnen die folgenden
+    modernen symmetrischen Verschlüsselungsverfahren zur Verfügung:\\ 
+    AES, Rijndael, Camellia, DES, Dragon, IDEA, LFSR, MARS, Misty1, RC2, RC5,
+    RC6, SAFER+, SAFER++, Serpent, Shacal, Shacal2, Twofish.
+    }
+
+\nopagebreak
+
+Bei der {\em symmetrischen} Verschlüsselung 
+\index{Verschlüsselung!symmetrisch} müssen Sender und Empfänger
+über einen gemeinsamen (geheimen) Schlüssel verfügen, den sie vor
+Beginn der eigentlichen Kommunikation ausgetauscht haben. Der Sender
+benutzt diesen Schlüssel, um die Nachricht zu verschlüsseln und der
+Empfänger, um diese zu entschlüsseln.\par %\vskip + 3pt
+
+Dies veranschaulicht Abbildung \ref{Figure_Symmetric-Enc_Secret-Key-Enc}:
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[scale=0.7]{figures/SymmetricEnc_Figure_Chap1_de.png}
+\caption{Symmetrische oder Secret-Key-Verschlüsselung} 
+\label{Figure_Symmetric-Enc_Secret-Key-Enc}
+\end{center}
+\end{figure}
+
+Alle klassischen Chiffren sind vom Typ symmetrisch. Beispiele dazu finden Sie
+in den CT-Programmen, im Kapitel~\ref{Kapitel_PaperandPencil}
+(\glqq \nameref{Kapitel_PaperandPencil}\grqq )
+in diesem Skript oder in \cite{cm:Nichols1996}. 
+In diesem Unterkapitel wollen wir jedoch nur die moderneren symmetrischen
+Verfahren betrachten.
+
+Vorteile von symmetrischen Algorithmen sind die hohe
+Geschwindigkeit, mit denen Daten ver- und entschlüsselt werden.
+Ein Nachteil ist das Schlüsselmanagement. Um miteinander
+vertraulich kommunizieren zu können, müssen Sender und
+Empfänger vor Beginn der eigentlichen Kommunikation über einen
+sicheren Kanal einen Schlüssel ausgetauscht haben. Spontane
+Kommunikation zwischen Personen, die sich vorher noch nie begegnet
+sind, scheint so nahezu unmöglich. Soll in einem Netz mit $ n $
+Teilnehmern jeder mit jedem zu jeder Zeit spontan kommunizieren
+können, so muss jeder Teilnehmer vorher mit jedem anderen der
+$n - 1$ Teilnehmer einen Schlüssel ausgetauscht haben. Insgesamt
+müssen also $n(n - 1)/2$ Schlüssel ausgetauscht werden.\par \vskip + 3pt
+
+Vor AES war der DES-Algorithmus\index{DES} das bekannteste symmetrische
+Verschlüsselungs"-ver"-fahren. Der DES-Algorithmus ist eine Entwicklung von IBM 
+in Zusammenarbeit mit der National Security Agency \index{NSA} (NSA). 
+Er wurde 1975 als Standard veröffentlicht. Trotz seines relativ hohen
+Alters ist jedoch bis heute kein ~\glqq effektiver\grqq~ Angriff auf
+ihn gefunden worden. Der effektivste Angriff besteht aus dem Durchprobieren
+(fast) aller möglichen Schlüssel, bis der richtige gefunden wird 
+({\em Brute-Force-Angriff})\index{Angriff!Brute-Force}. Aufgrund der relativ
+kurzen Schlüssellänge von effektiv 56 Bits (64 Bits, die allerdings 8
+Paritätsbits enthalten), sind in der Vergangenheit schon mehrfach mit dem
+DES verschlüsselte Nachrichten gebrochen worden, so dass er heute nicht
+mehr als sicher anzusehen ist. Alternativen zum DES sind zum Beispiel die
+Algorithmen IDEA\index{IDEA}, Triple-DES und vor allem AES.
+\par \vskip + 3pt
+
+Standard unter den symmetrischen Verfahren ist heute AES\index{AES}:
+Der dazu gehörende Rijndael-Algo"-rithmus wurde am 2. Oktober 2000 zum
+Gewinner der AES-Ausschreibung erklärt und ist damit Nachfolger
+des DES-Verfahrens.
+
+Näheres und weitere Verweise zum AES-Algorithmus und den AES-Kandidaten
+der letzten Runde finden Sie z.B. in der Online-Hilfe von
+CrypTool\index{CrypTool}.%
+\footnote{%
+      Online-Hilfe von CT1\index{CrypTool 1}: Das Stichwort {\bf AES} im Index
+      führt auf die drei Hilfeseiten: {\bf AES-Kandidaten}, 
+      {\bf Der AES-Gewinner Rijndael} und {\bf Der AES-Algorithmus Rijndael}.\\
+      Eine ausführliche Beschreibung von AES mit C-Code findet sich
+       in \cite{cm:Haan2008}.
+  }
+
+
+
+
+% HACK to fix warning "destination with the same identifier .. has already been used, ...":
+% REMOVED, because it caused missing index entries
+%\makeatletter \renewcommand{\thepage}{\csname @arabic\endcsname \c@page} \makeatother
+% --------------------------------------------------------------------------
+\subsection{Ergebnisse zur Kryptoanalyse von AES}
+\label{NeueAES-Analyse}
+\index{Kryptoanalyse}
+\index{AES}
+
+Im Anschluss finden Sie einige Informationen, die das AES-Verfahren in
+letzter Zeit in Zweifel zogen -- unserer Ansicht nach aber (noch)
+unbegründet. Die folgenden Informationen beruhen vor allem auf den unten
+angegebenen Originalarbeiten und auf \cite{cm:Wobst-iX2002} und
+\cite{cm:Lucks-DuD2002}.
+
+Der AES bietet mit einer Mindestschlüssellänge von 128 Bit gegen
+Brute-Force-Angriffe auch auf längere Sicht genügend Sicherheit -- es sei
+denn, es stünden entsprechend leistungsfähige Quantencomputer zur
+Verfügung. Der AES war immun gegen alle bis dahin bekannten
+Krypto"-analyse-Verfahren, die vor allem auf statistischen
+Überlegungen beruhen und auf DES angewandt wurden: man konstruiert aus
+Geheim- und Klartextpaaren Ausdrücke, die sich nicht rein zufällig
+verhalten, sondern Rückschlüsse auf den verwendeten Schlüssel zulassen.
+Dazu waren aber unrealistische Mengen an abgehörten Daten nötig.
+
+Bei Kryptoverfahren bezeichnet man solche Kryptoanalyseverfahren als
+"`akademischen Erfolg"' oder als "`kryptoanalytischen Angriff"', da sie
+theoretisch schneller sind als das Durchprobieren aller Schlüssel, das
+beim Brute-Force-Angriff\index{Angriff!Brute-Force} verwendet wird. Im
+Fall des AES mit maximaler Schlüssellänge (256 Bit) braucht die
+erschöpfende Schlüsselsuche im Durchschnitt $2^{255}$
+Verschlüsselungsoperationen. Ein kryptoanalytischer Angriff muss diesen
+Wert unterbieten. Als aktuell gerade noch praktikabel (z.B. für einen
+Geheimdienst) gilt ein Aufwand von $2^{75}$ bis $2^{90}$
+Verschlüsselungsoperationen.
+
+Eine neue Vorgehensweise wurde in der Arbeit von Ferguson, Schroeppel
+und Whiting im Jahre 2001 \cite{cm:Ferguson2001} beschrieben: Sie stellten
+AES als geschlossene Formel (in der Form einer Art Kettenbruch) dar,
+was aufgrund seiner "`relativ"' übersichtlichen Struktur gelang. Da
+diese Formel aus rund 1 Billiarde Summanden besteht, taugt sie zunächst
+nicht für die Kryptoanalyse. Dennoch war die wissenschaftliche Neugier
+geweckt. Bereits bekannt war, dass sich der 128-Bit-AES als ein
+überbestimmtes System von rund 8000 quadratischen Gleichungen
+(über algebraischen Zahlkörpern) mit rund 1600 Variablen (einige
+Unbekannte sind die Schlüsselbits) darstellen lässt -- solch große
+Gleichungssysteme sind praktisch nicht lösbar. Dieses Gleichungssystem
+ist relativ dünn besetzt (\glqq sparse\grqq), d.h. von den insgesamt etwa
+1.280.000 möglichen quadratischen Termen tauchen nur relativ wenige
+überhaupt im Gleichungssystem auf.
+
+Die Mathematiker Courtois und Pieprzyk \cite{cm:Courtois2002} veröffentlichten 
+2002 eine Arbeit, die in der Krypto-Szene stark diskutiert wird: Sie 
+entwickelten das auf der Eurocrypt 2000 von Shamir et al. vorgestellte 
+XL-Verfahren (eXtended Linearization) weiter zum XSL-Verfahren 
+(eXtended Sparse Linearization). Das XL-Verfahren ist eine heuristische 
+Technik, mit der es manchmal gelingt, große nicht-lineare Gleichungssysteme 
+zu lösen und die bei der Analyse eines asymmetrischen Algorithmus (HFE) 
+angewandt wurde.  Die Innovation von Courtois und Pieprzyk war, das 
+XL-Verfahren auf symmetrische Verfahren anzuwenden: Das XSL-Verfahren kann
+auf spezielle Gleichungssysteme angewandt werden. Damit könnte ein 
+256-Bit-AES-Verfah"-ren in rund $2^{230}$ Schritten geknackt werden. Dies ist 
+zwar immer noch ein rein akademischer Angriff, aber er ist richtungsweisend
+für eine ganze Klasse von Blockchiffren. Das generelle Problem mit diesem
+Angriff besteht darin, dass man bisher nicht angeben kann, unter welchen
+Umständen er zum Erfolg führt: die Autoren geben in ihrer Arbeit notwendige
+Bedingungen an; es ist nicht bekannt, welche Bedingungen hinreichend sind.
+Neu an diesem Angriff war erstens, dass dieser Angriff nicht auf Statistik,
+sondern auf Algebra beruhte. Dadurch erscheinen Angriffe möglich, die nur
+geringe Mengen von Geheimtext brauchen. Zweitens steigt damit die Sicherheit
+eines Produktalgorithmus%
+\index{Produktalgorithmus}\index{Verschlüsselung!Produktalgorithmus}%
+\footnote{%
+Ein Geheimtext kann selbst wieder Eingabe für eine Chiffrierung sein. Eine
+Mehrfachverschlüsselung (cascade cipher)
+\index{Verschlüsselung!Mehrfachverschlüsselung}\index{Mehrfachverschlüsselung}
+\index{Kaskaden}
+entsteht aus einer Komposition von mehreren Verschlüsselungstransformationen.
+Die Gesamtchiffrierung wird Produktalgorithmus oder Kaskadenalgorithmus
+genannt (manchmal ist die Namensgebung abhängig davon, ob die verwendeten
+Schlüssel statistisch abhängig oder unabhängig sind).\\
+Nicht immer wird die Sicherheit eines Verfahrens durch Produktbildung 
+erhöht.\\
+Dieses Vorgehen wird auch {\em innerhalb} moderner Algorithmen angewandt:
+Sie kombinieren in der Regel einfache und, für sich genommen, kryptologisch
+relativ unsichere Einzelschritte in mehreren Runden zu einem leistungsfähigen
+Gesamtverfahren. Die meisten modernen Blockchiffrierungen (z.B. DES, IDEA)
+sind Produktalgorithmen.\\
+Als Mehrfachverschlüsselung wird auch das Hintereinanderschalten desselben
+Verfahrens mit verschiedenen Schlüsseln wie bei Triple-DES bezeichnet. 
+}
+nicht mehr exponentiell mit der Rundenzahl.
+
+Aktuell wird sehr intensiv auf diesem Gebiet geforscht: z.B. stellten
+Murphy und Robshaw auf der Crypto 2002 ein Papier vor \cite{cm:Robshaw2002a},
+das die Kryptoanalyse drastisch verbessern könnte: Der Aufwand für
+128-Bit-Schlüssel wurde auf $2^{100}$ geschätzt, indem sie AES als
+Spezialfall eines Algorithmus BES (Big Encryption System) darstellten,
+der eine besonders "`runde"' Struktur hat. Aber auch $2^{100}$
+Rechenschritte liegen jenseits dessen, was praktisch in absehbarer Zeit
+realisierbar ist. Bei 256 Bit Schlüssellänge schätzen die Autoren
+den Aufwand für den XSL-Angriff auf $2^{200}$ Operationen.
+
+Weitere Details finden Sie unter den Weblinks bei
+\hyperlink{CM_HT_Weblink_Rijndael-Cryptosystem}{\glqq Das AES-/Rijndael-Kryptosystem\grqq}.
+% nur \href oder \url rückt nicht ein, deshalb \item dazu !
+%\vspace{-10pt}
+%\begin{itemize}
+%  \item[] \url{http://www.cryptosystem.net/aes} \\
+%          \url{http://www.minrank.org/aes/} 
+%\end{itemize}
+
+
+Für AES-256 wäre der Angriff ebenfalls viel besser als
+Brute-Force\index{Angriff!Brute-Force}, aber auch noch weiter außerhalb der
+Reichweite realisierbarer Rechenpower.
+
+\begin{sloppypar}
+Die Diskussion ist z.Zt. sehr kontrovers: Don Coppersmith (einer der
+DES-Erfinder) z.B. bezweifelt die generelle Durchführbarkeit des Angriffs:
+XLS liefere für AES gar keine Lösung \cite{cm:Coppersmith2002}. Dann würde
+auch die Optimierung von Murphy und Robshaw \cite{cm:Robshaw2002b} nicht
+greifen.
+\end{sloppypar}
+
+2009 veröffentlichten Biryukov und Khovratovich \cite{cm:Biryukov2009} einen
+weiteren theoretischen Angriff auf AES, der sich anderer Techniken bedient, als
+die oben vorgestellten. Sie verwenden Methoden aus der Kryptoanalyse von
+Hashfunktionen (lokale Kollisionen und das Boomerang-Verfahren) und
+konstruierten daraus einen Related-Key-Angriff auf AES-256. D.~h.\ der Angreifer
+muss nicht nur in der Lage sein, beliebige Daten zu verschlüsseln (chosen plain
+text), sondern auch den ihm unbekannten Schlüssel manipulieren können (related
+key).
+
+Unter diesen Angriffs-Voraussetzungen reduziert der Angriff den Aufwand, einen
+AES-256-Schlüssel zu ermitteln, auf eine (asymmetrische) Komplexität von
+$2^{119}$ Zeit und $2^{77}$ Speicher. Bei AES-192 ist der Angriff noch weniger
+praktikabel, für AES-128 geben die Autoren keinen Angriff an.
+
+
+% --------------------------------------------------------------------------
+\subsection{Algebraische oder algorithmische Kryptoanalyse symmetrischer Verfahren}
+\index{Angriff!algebraischer}
+\label{Algebraic-gegen-Symmetr}
+
+Es gibt unterschiedliche moderne Angriffsverfahren, die die Strukturen eines Problems direkt oder nach einer Transformation des Problems angreifen. Eines dieser Angriffsverfahren beruht auf dem Erfüllbarkeitsproblem der Aussagenlogik (SAT, von englisch satisfiability)%
+\footnote{%
+ \url{http://de.wikipedia.org/wiki/Erf%C3%BCllbarkeitsproblem_der_Aussagenlogik}
+}.
+
+
+%\vskip +25 pt
+\paragraph*{Beschreibung SAT-Solver}\index{SAT-Solver}\mbox{}
+\hypertarget{ht_SAT-Solver}{}
+
+Ein sehr altes und gut studiertes Problem in der Informatik ist das sogenannte SAT-Problem. Hier gilt es, für eine gegebene Boolesche Formel herauszufinden, ob es eine Belegung der Variablen gibt, so dass die Auswertung der Formel den Wert 1 ergibt. 
+
+Beispiel: Die Formel \glqq A UND B\grqq~wird zu 1 ausgewertet, wenn A=B=1 gilt. Für die Formel \glqq A UND NICHT(A)\grqq~gibt es keine Belegung für A, so dass sie zu 1 ausgewertet wird.
+
+Für größere Formeln ist es nicht so einfach herauszufinden, ob eine Formel zu 1 ausgewertet werden kann (dieses Problem gehört zu den NP-vollständigen Problemen). Daher wurden spezielle Tools entwickelt, um dieses Problem für generelle Boolesche Formeln zu lösen, sogenannte SAT-Solver\footnote{
+    Mit {\bf CT2}\index{CT2}\index{CrypTool 2} können Sie im Startcenter
+    über {\bf Vorlagen \textbackslash{} Mathematisch \textbackslash{}
+    SAT-Solver (Texteingabe)}  und  {\bf SAT-Solver (Dateieingabe)} einen
+    SAT-Solver aufrufen.
+    }. Wie sich herausgestellt hat, können SAT-Solver erfolgreich eingesetzt werden, um Krypto-Verfahren
+anzugreifen.
+
+
+%\vskip +25 pt
+\paragraph*{SAT-Solver basierte Kryptoanalyse}\index{SAT-Solver}\mbox{}
+\hypertarget{ht_SAT-Solver_Cryptanalysis}{}
+
+Der generelle Ansatz, um SAT-Solver in der Kryptoanalyse einzusetzen, ist sehr einfach: Zunächst wird das kryptographische Problem, etwa das Finden des symmetrischen Schlüssels oder die Umkehrung einer Hashfunktion, in ein SAT-Problem übersetzt. Das wird so gemacht, dass die Lösung des SAT-Problems das ursprüngliche kryptographische Problem löst. Dann wird ein SAT-Solver verwendet, um eine Lösung für das SAT-Problem zu finden. Das Paper von Massacci \cite{cm: Massacci2000} beschreibt die erste bekannte Verwendung eines SAT-Solvers in diesem Kontext. Leider stellte sich sehr bald heraus, dass ein solch genereller Ansatz in der Praxis nicht effizient eingesetzt werden kann. Die kryptographischen SAT-Probleme sind sehr komplex und die Laufzeit eines SAT-Solvers wächst exponentiell mit der Problemgröße. Daher werden in modernen Ansätzen SAT-Solver nur für das Lösen von Teilproblemen der Kryptoanalyse verwendet. Ein gutes Beispiel zeigt das Paper von Mironov und Zhang \cite{cm: Mironov2006}. Hier wird anhand eines Angriffs auf Hashfunktionen gezeigt, zur Lösung welcher Teilprobleme SAT-Solver effizient eingesetzt werden können.
+
+xxxxxxxxx Bsp aus CT2.1 ergänzen
+% \index{ZZZ6b-xxxxxxxxxxxxxxxx-Bsp aus CT2.1 ergaenzen} 
+\index{ZZZ6b-xxxxxxxxxxxxxxxxD}
+
+
+
+
+% --------------------------------------------------------------------------
+\subsection{Aktueller Stand der Brute-Force-Angriffe auf symmetrische Verfahren}
+\index{Angriff!Brute-Force}
+\index{RC5}
+\label{Brute-force-gegen-Symmetr}
+
+Anhand der Blockchiffre RC5 kann der aktuelle Stand von Brute-Force-Angriffen
+auf symmetrische Verschlüsselungsverfahren gut erläutert werden.
+
+\begin{sloppypar}
+Als Brute-Force-Angriff (exhaustive search, trial-and-error) bezeichnet
+man das vollständige Durchsuchen des Schlüsselraums: Dazu müssen
+keine besonderen Analysetechniken eingesetzt werden. Stattdessen wird
+der Geheimtext mit allen möglichen Schlüsseln des Schlüsselraums
+entschlüsselt%
+\footnote{%
+  Mit CT1\index{CrypTool 1} können Sie über das Menü
+  {\bf Analyse \textbackslash{} Symmetrische Verschlüsselung (modern)}
+  ebenfalls Brute-Force-Analysen von modernen symmetrischen Verfahren
+  durchführen (unter der schwächsten aller möglichen Annahmen: Der
+  Angreifer kennt nur den Geheimtext, er führt also einen
+  Ciphertext-only-Angriff durch).\\
+  Mit CT2\index{CrypTool 2} können Sie bei den Vorlagen unter
+  {\bf Kryptoanalyse \textbackslash{} Modern} ebenfalls Brute-Force-Analysen
+  durchführen. Besonders mächtig ist die KeySearcher-Komponente, die
+  die Ausführung auch auf mehrere Rechner verteilen kann.
+}
+und geprüft, ob der resultierende Text einen sinnvollen
+Klartext ergibt%
+\footnote{%
+  Ist der Klartext natürlich-sprachlich und wenigstens 100 B lang, kann
+  diese Prüfung ebenfalls automatisiert durchgeführt werden.\\
+  Um in einer sinnvollen Zeit auf einem Einzel-PC ein Ergebnis zu
+  erhalten, sollten Sie nicht mehr als 24 Bit des Schlüssels als
+  unbekannt kennzeichnen.}.
+Bei einer Schlüssellänge von 64 Bit sind dies maximal
+$2^{64}$ = 18.446.744.073.709.551.616 oder rund 18 Trillionen zu
+überprüfende Schlüssel\index{CrypTool}.
+\end{sloppypar}
+
+Um zu zeigen, welche Sicherheit bekannte symmetrische Verfahren wie
+DES, Triple-DES oder RC5\index{DES}\index{RC5}\index{Triple-DES}
+haben, veranstaltete z.B. RSA Security
+sogenannte Cipher-Challenges.\footnote{%
+ \url{http://www.rsasecurity.com/rsalabs/challenges/secretkey/index.html}\\
+ Im Mai 2007 meldete RSA Inc leider, dass sie die Korrektheit der bis dahin
+ nicht gelösten RC5-72 Challenge nicht bestätigen werden.}
+Unter kontrollierten Bedingungen wurden Preise ausgelobt, um Geheimtexte
+(verschlüsselt mit verschiedenen Verfahren und verschiedenen
+Schlüssellängen) zu entschlüsseln und den symmetrischen Schlüssel
+zu ermitteln. Damit werden theoretische Resultate praktisch bestätigt.
+
+Dass das "`alte"' Standard-Verfahren DES mit der fixen Schlüssellänge
+von 56 Bit nicht mehr sicher ist, wurde schon im Januar 1999 von der
+Electronic Frontier Foundation (EFF) demonstriert, als sie mit Deep Crack
+eine DES-verschlüsselte Nachricht in weniger als einem Tag
+knackten.\footnote{%
+ \url{http://www.rsasecurity.com/rsalabs/challenges/des3/index.html}
+}
+
+Der aktuelle Rekord für starke symmetrische Verfahren liegt bei 64 Bit
+langen Schlüsseln. Dazu wurde das Verfahren RC5 benutzt, eine
+Blockchiffre mit variabler Schlüssellänge. 
+
+Die RC5-64 Challenge wurde im Juli 2002 nach 5 Jahren vom
+distributed.net-Team gelöst.\footnote{%
+ \url{http://www.distributed.net/Pressroom_press-rc5-64}\\
+ \url{http://www.distributed.net/images/9/92/20020925_-_PR_-_64_bit_solved.pdf}
+}
+Insgesamt arbeiteten 331.252 Personen gemeinsam über das Internet
+zusammen.\footnote{%
+Eine Übersicht über die aktuellen Projekte zum verteilten Rechnen finden
+Sie unter:\\
+\url{http://distributedcomputing.info/}
+}
+Ge"-testet wurden rund 15 Trillionen Schlüssel, bis der
+richtige Schlüssel gefunden wurde.
+
+Damit ist gezeigt, dass symmetrische Verfahren (auch wenn sie keinerlei
+kryptographische Schwä"-chen haben) mit 64 Bit langen Schlüsseln
+keine geeigneten Verfahren mehr sind, um sensible Daten länger geheim
+zu halten.
+
+Cipher-Challenges\footnote{%
+  Ein weites Spektrum einfacher und komplexer, symmetrischer und asymmetrischer
+  Krypto-Aufgaben bietet der Wettbewerb \glqq MysteryTwister C3\grqq:
+  \url{http://www.mysterytwisterc3.org}.
+  \index{MTC3}
+  \index{Challenge}
+  \index{Cipher-Challenge}
+  \index{Krypto-Wettbewerb}
+  } gibt es auch für asymmetrische Verfahren
+  (siehe Kapitel \ref{nt:NoteFactorization}).
+
+
+
+
+% --------------------------------------------------------------------------
+\section[Asymmetrische Verschlüsselung] % Was zw. [..] steht, kommt ins Inhaltsverzeichnis!
+{Asymmetrische Verschlüsselung\footnotemark}
+  \footnotetext{%
+   Mit CT1\index{CrypTool 1} können Sie über das Menü
+   {\bf Ver-/Entschlüsseln \textbackslash{} Asymmetrisch} mit RSA 
+   ver- und entschlüsseln. In beiden Fällen müssen Sie ein 
+   RSA-Schlüsselpaar auswählen. Nur bei der Entschlüsselung wird der 
+   geheime RSA-Schlüssel benötigt -- deshalb wird nur hier die PIN abgefragt.\\
+   Mit CT2\index{CrypTool 2} können Sie bei den Vorlagen unter
+   {\bf Kryptographie \textbackslash{} Modern} ebenfalls asymmetrische
+   Verfahren durchführen.\\
+   JCT\index{JCrypTool} bietet asymmetrische Verfahren wie RSA sowohl im
+   Menü {\bf Visualisierungen} der Standard-Perspektive als auch in der
+   Algorithmen-Perspektive.%Funktionalen
+  }
+
+Bei der {\em asymmetrischen} Verschlüsselung
+\index{Verschlüsselung!asymmetrisch} hat jeder Teilnehmer 
+ein persönliches Schlüsselpaar, % Schlüs\-selpaar, be_24.5.03: so vorher und kam auch richtig raus! 
+das aus einem {\em geheimen} \index{Schlüssel!geheim} und einem 
+{\em öffentlichen} Schlüssel \index{Schlüssel!öffentlich} besteht.
+Der öffentliche Schlüssel wird, der Name deutet es an,
+öffentlich bekanntgemacht -- zum Beispiel in einem Schlüsselverzeichnis
+im Internet (diese Art von \glqq Schwarzem Brett\grqq~wird auch Directory oder
+öffentlicher Schlüsselring genannt) oder in einem sogenannten \index{Zertifikat} Zertifikat.
+\par \vskip + 3pt
+
+Die asymmetrische Verschlüsselung veranschaulicht Abbildung \ref{Figure_Asymmetric-Enc_Public-Key-Enc}:
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[scale=0.7]{figures/AsymmetricEnc_Figure_Chap1_de.png}
+\caption{Asymmetrische oder Public-Key-Verschlüsselung} 
+\label{Figure_Asymmetric-Enc_Public-Key-Enc}
+\end{center}
+\end{figure}
+
+Möchte Alice\index{Alice}%
+\footnote{%
+  Zur Beschreibung kryptographischer Protokolle werden den Teilnehmern
+  oft Namen gegeben (vergleiche \cite[S. 23]{cm:Schneier1996}). 
+  Alice und Bob\index{Bob} führen alle allgemeinen 2-Personen-Protokolle durch,
+  wobei Alice dies initiiert und Bob antwortet.
+  Die Angreifer werden als Eve (eavesdropper = passiver Lauscher) und
+  Mallory (malicious active attacker = böswilliger, aktiver Abgreifer)
+  bezeichnet.
+  }
+mit Bob kommunizieren, so sucht sie Bobs öffentlichen Schlüssel
+und benutzt ihn, um ihre Nachricht an ihn zu
+verschlüsseln. Diesen verschlüsselten Text schickt sie dann an Bob,
+der mit Hilfe seines geheimen Schlüssels den Text wieder entschlüs"-seln
+kann. Da einzig Bob Kenntnis von seinem geheimen Schlüssel hat, ist
+auch nur er in der Lage, an ihn adressierte Nachrichten zu
+entschlüsseln.
+Selbst Alice als Absenderin der Nachricht kann aus der von ihr
+versandten (verschlüsselten) Nachricht den Klartext nicht wieder
+herstellen. Natürlich muss sichergestellt sein, dass man aus dem
+öffentlichen Schlüssel nicht auf den geheimen Schlüssel schließen
+kann.\par \vskip + 3pt
+
+% Abbildung evtl. besser hier, wenn Seitenaufteilung ausginge.
+
+Veranschaulichen kann man sich ein solches Verfahren mit einer
+Reihe von einbruchssicheren Briefkästen. Wenn ich eine Nachricht
+verfasst habe, so suche ich den Briefkasten\index{Briefkasten} mit dem
+Namensschild des Empfängers und werfe den Brief dort ein. Danach kann ich die
+Nachricht selbst nicht mehr lesen oder verändern, da nur der
+legitime Empfänger im Besitz des Schlüssels für den Briefkasten
+ist.\par \vskip + 3pt
+
+Vorteil von asymmetrischen Verfahren ist das einfachere
+\index{Schlüsselmanagement} Schlüsselmanagement. Betrachten wir
+wieder ein Netz mit $n$ Teilnehmern. Um sicherzustellen, dass
+jeder Teilnehmer jederzeit eine verschlüsselte Verbindung zu
+jedem anderen Teilnehmer aufbauen kann, muss jeder Teilnehmer ein
+Schlüsselpaar besitzen. Man braucht also $2n$ Schlüssel oder $n$
+Schlüsselpaare. Ferner ist im Vorfeld einer Übertragung kein
+sicherer Kanal notwendig, da alle Informationen, die zur Aufnahme
+einer vertraulichen Kommunikation notwendig sind, offen
+übertragen werden können. Hier ist lediglich%
+\footnote{%
+Dass auch dies nicht trivial ist, wird z.B. in Kapitel \ref{nt_Shared-Primes}
+erläutert.
+Neben den Anforderungen bei der Schlüsselgenerierung ist zu beachten, dass
+inzwischen auch die (Public-Key-)Infrastrukturen selbst Ziel von 
+Cyber-Angriffen sind.
+}
+auf die Unverfälschtheit (Integrität und Authentizität)
+\index{Authentizität} des öffentlichen Schlüssels zu achten.
+Nachteil: Im Vergleich zu symmetrischen Verfahren sind reine
+asymmetrische Verfahren jedoch um ein Vielfaches langsamer.\par \vskip + 3pt
+
+Das bekannteste asymmetrische Verfahren ist der \index{RSA} 
+RSA-Algorithmus\index{CrypTool}%
+\footnote{%
+RSA wird in diesem Skript ab Kapitel \ref{rsabeweis} ausführlich beschrieben.
+Die aktuellen Forschungsergebnisse im Umfeld von RSA werden in Kapitel
+\ref{SecurityRSA} beschrieben.\\
+Das RSA-Kryptosystem kann mit CT1\index{CrypTool 1} über das Menü 
+{\bf Einzelverfahren \textbackslash{} RSA-Kryptosystem \textbackslash{} 
+RSA-Demo} in vielen Variationen nachvollzogen werden.
+}%
+, der nach seinen Entwicklern Ronald \index{Rivest, Ronald} Rivest, 
+Adi \index{Shamir, Adi} Shamir und Leonard \index{Adleman, Leonard} Adleman
+benannt wurde. Der RSA-Algorith"-mus wurde 1978 veröffentlicht. 
+Das Konzept der asymmetrischen Verschlüsselung wurde erstmals
+von Whitfield Diffie \index{Diffie, Whitfield}  und 
+Martin \index{Hellman, Martin} Hellman in Jahre 1976 vorgestellt. 
+Heute spielen auch die Verfahren nach
+ElGamal \index{ElGamal, Tahir} eine bedeutende Rolle, vor allem die
+\index{Schnorr, C.P.} Schnorr-Varianten im \index{DSA} DSA (Digital
+\index{Signatur!digitale}\index{DSA-Signatur}\index{Signatur!DSA}
+Signature Algorithm).
+
+
+% --------------------------------------------------------------------------
+\newpage
+\section[Hybridverfahren]{Hybridverfahren\footnotemark} 
+\footnotetext{%
+   In CT1\index{CrypTool 1} finden Sie dieses Verfahren über das Menü
+   {\bf Ver-/Entschlüsseln \textbackslash{} Hybrid}:
+   Dabei können Sie die einzelnen Schritte und ihre Abhängigkeiten mit konkreten
+   Zahlen nachvollziehen. Die Variante mit RSA als asymmetrischem Verfahren
+   ist graphisch visualisiert; die Variante mit ECC nutzt die Standard-Dialoge.
+   In beiden Fällen wird AES als symmetrisches Verfahren eingesetzt.\index{AES}\\
+   JCT\index{JCrypTool} bietet Hybrid-Verfahren (z.B. ECIES) in der
+   Algorithmen-Perspektive an unter {\bf Algorithms \textbackslash{} Hybrid Ciphers}.
+}
+\label{CM_Hybrid-procedures}
+\index{Hybridverfahren}
+
+Um die Vorteile von symmetrischen und asymmetrischen Techniken gemeinsam 
+nutzen zu können, werden (zur Verschlüsselung) in der Praxis meist 
+Hybridverfahren \index{Verschlüsselung!hybrid} verwendet.\par \vskip + 3pt
+
+Hier werden die Mengen-Daten mittels symmetrischer Verfahren
+verschlüsselt: Der Schlüssel ist ein vom Absender zufällig\footnote{%
+   Die Erzeugung zufälliger Zahlen ist ein wichtiger Bestandteil 
+   kryptographisch sicherer Verfahren.\\
+   Mit CT1\index{CrypTool 1} 
+   können Sie über das Menü {\bf Einzelverfahren \textbackslash{}
+   Zufallsdaten erzeugen} verschiedene Zufallszahlengeneratoren ausprobieren.
+   Über das Menü {\bf Analyse \textbackslash{} Zufallsanalyse} können Sie
+   verschiedene Testverfahren für Zufallsdaten auf binäre Dokumente
+   anwenden.\\
+   % CT1 konzentriert sich auf kryptographisch starke
+   % {\bf Pseudo}zufallszahlengeneratoren. \glqq Echte\grqq~
+   % Zufallsquellen werden nur über den Aufruf des Secude-Generators einbezogen.\\
+%   CT2 ... xxxxxxxxxxxxxxx\index{ZZZ6c-xxxxxxxxxxxxxxxx-Bsp-Menue aus CT2 ergaenzen}\\
+   CT2 ... xxxxxxxxxxxxxxx\index{ZZZ6c-xxxxxxxxxxxxxxxxD} \\
+   JCT\index{JCrypTool} bietet {\bf Pseudo}zufallszahlengeneratoren sowohl
+   im Menü {\bf Algorithms \textbackslash{} Random Number Generator} der
+   Standard-Perspektive als auch in der Algorithmen-Perspektive an.
+}\index{Zufall}
+generierter geheimer Sitzungsschlüssel (session key)\index{Session Key},
+der nur für diese Nachricht verwendet wird.
+
+Anschließend wird dieser Sitzungsschlüssel mit Hilfe des asymmetrischen
+Verfahrens verschlüsselt und zusammen mit der Nachricht an den Empfänger
+übertragen.
+
+Der Empfänger kann den Sitzungsschlüssel mit Hilfe seines geheimen
+Schlüssels bestimmen und mit diesem dann die Nachricht entschlüsseln.
+
+Auf diese Weise profitiert man von dem bequemen Schlüsselmanagement\index{Schlüsselmanagement}
+asymmetrischer Verfahren (mit öffentlichem und privatem Schlüssel), und
+man profitiert von der Schnelligkeit symmetrischer Verfahren, um große
+Datenmengen zu verschlüsseln (mit den geheimen Schlüsseln).
+
+
+
+% --------------------------------------------------------------------------
+\newpage
+% \vskip +40 pt
+
+\begin{ctsquote}
+    Ein altes Sprichwort, angeblich geprägt von der
+    US National Security Agency (NSA), sagt:\\
+    \glqq Angriffe werden immer besser, niemals schlechter.\grqq\\
+    ``Attacks always get better; they never get worse.''
+\caption[IETF]{IETF\footnotemark}
+\end{ctsquote}
+\addtocounter{footnote}{0}\footnotetext{%
+  \url{http://tools.ietf.org/html/rfc4270}\index{IETF}\index{NSA}
+  }
+
+% --------------------------------------------------------------------------
+\section[Kryptoanalyse und symmetrische Chiffren für Lehrzwecke]{Kryptoanalyse und symmetrische Chiffren für Lehrzwecke\footnotemark} 
+\footnotetext{%
+Ein guter Start in die Kryptoanalyse ist das Buch von Mark Stamp \cite{cm:Stamp2007}.\\
+Sehr high-level und nur bezogen auf die Analyse symmetrischer Blockchiffren ist
+der Artikel von Bruce Schneier \cite{cm:Schneier2000cm}.\\
+Einige der Cipher-Challenges bei \glqq MysteryTwister C3\grqq~
+(\url{http://www.mysterytwisterc3.org}) sind ebenfalls gut für Lehrzwecke
+einsetzbar.\index{MTC3}\index{Challenge}\index{Cipher-Challenge}\index{Krypto-Wettbewerb}
+}
+\index{Kryptoanalyse}
+
+Verglichen mit den auf der Zahlentheorie beruhenden Public-Key-Verschlüsselungsverfahren wie RSA, ist die Struktur von AES\index{AES} und den meisten anderen modernen symmetrischen Verschlüsse"-lungsverfahren (wie DES, IDEA oder Present) sehr komplex und kann nicht so einfach wie RSA\index{RSA} erklärt werden.
+
+Deshalb wurden zu Lehrzwecken vereinfachte Varianten moderner
+symmetrischer Verfahren entwickelt, um Einsteigern die Möglichkeit zu geben,
+Ver- und Entschlüsselung von Hand zu lernen und ein besseres Verständnis zu
+gewinnen, wie die Algorithmen im Detail funktionieren.
+Diese vereinfachten Varianten helfen auch, die entsprechenden
+Kryptoanalyse-Methoden zu verstehen und anzuwenden.
+
+Eine dieser Varianten ist z.B. S-AES (Simplified-AES) von Prof. Ed Schaefer und
+seinen Studenten \cite{cm:Musa-etal2003}.%
+\footnote{
+    Siehe auch die beiden namensgleichen Artikel
+    \glqq Devising a Better Way to Teach and Learn
+    the Advanced Encryption Standard\grqq~
+    unter den Universitäts-News bei\\
+    - \url{http://math.scu.edu/~eschaefe/getfile.pdf} \\
+    - \url{http://www.scu.edu/cas/research/cryptography.cfm}
+}
+Eine andere Variante ist Mini-AES \cite{cm:Phan2002}
+(siehe das Kapitel~\ref{CM_Sage_Mini-AES} \glqq \nameref{CM_Sage_Mini-AES}\grqq)%
+\index{DES}\index{DES!SDES}\index{IDEA}:
+\begin{itemize}
+
+\item Edward F. Schaefer: {\em A Simplified Data Encryption Standard Algorithm} 
+      \cite{cm:Schaefer1996}.
+
+\item Raphael Chung-Wei Phan: {\em Mini Advanced Encryption Standard (Mini-AES):
+                                   A Testbed for Cryptanalysis Students} 
+      \cite{cm:Phan2002}.
+
+\item Raphael Chung-Wei Phan: {\em Impossible differential cryptanalysis of Mini-AES} 
+      \cite{cm:Phan2003}.
+
+\item Mohammad A. Musa, Edward F. Schaefer, Stephen Wedig:
+      {\em A simplified AES algorithm and its linear and differential cryptanalyses} 
+      \cite{cm:Musa-etal2003}.
+
+\item Nick Hoffman: {\em A SIMPLIFIED IDEA ALGORITHM} 
+      \cite{cm:Hoffman2006}.
+
+\item S. Davod. Mansoori, H. Khaleghei Bizaki: 
+      {\em On the vulnerability of Simplified AES Algorithm Against Linear Cryptanalysis} 
+      \cite{cm:Mansoori-etal2007}.
+
+\end{itemize}
+
+
+
+% --------------------------------------------------------------------------
+\section{Weitere Informationsquellen}
+
+Neben den anderen Kapiteln in diesem Skript, der umfangreichen Fachliteratur
+und vielen Stellen im Internet enthält auch die Online-Hilfe aller 
+CrypTool-Varianten\index{CrypTool} sehr viele weitere Informationen zu den 
+einzelnen symmetrischen und asymmetrischen Verschlüsselungsverfahren.
+
+
+
+
+% ---------------------------------------------------------------------------
+% ---------------------------------------------------------------------------
+\newpage
+\hypertarget{CM_Appendix_SageCode}{}
+\section{Anhang: Beispiele mit SageMath}
+\label{CM_Sage_samples}
+\index{SageMath!Programmbeispiele}
+
+\noindent Der folgende Abschnitt enthält SageMath Source-Code, der sich auf den Inhalt des
+Kapitels~\ref{Label_Kapitel_1} (\glqq \nameref{Label_Kapitel_1}\grqq) bezieht.
+
+Weitere Details zu in SageMath enthaltenen Kryptoverfahren (z.B. S-DES) finden sich
+z.B. in der Diplomarbeit von Minh Van Nguyen \cite{cm:Nguyen2009}.
+
+% ---------------------------------------------------------------------------
+\subsection{Mini-AES}
+\label{CM_Sage_Mini-AES}
+\index{AES!Mini-AES}
+
+Das SageMath-Modul \texttt{crypto/block\_cipher/miniaes.py} enthält den Mini-AES, mit
+dem Studenten die Funktionsweise moderner Blockchiffren untersuchen können.
+
+Mini-AES, ursprünglich vorgestellt von \cite{cm:Phan2002}, ist eine vereinfachte
+Variante des Advanced Encryption Standard (AES) für Ausbildungszwecke.
+
+Wie man Mini-AES benutzt, ist ausführlich in der SageMath Reference-Page beschrieben:\\
+\url{http://www.sagemath.org/doc/reference/sage/crypto/block_cipher/miniaes.html}.
+
+Das folgende SageMath-Code-Beispiel~\ref{cryptomethods:Mini-AES:Sage_example}
+ist aus den Release-Notes von SageMath 4.1%
+\footnote{
+Siehe \url{http://mvngu.wordpress.com/2009/07/12/sage-4-1-released/}
+}
+und ruft diese Implementierung des Mini-AES auf.
+
+Weiterer Beispiel-Code zum Mini-AES findet sich in
+\cite[Kap. 6.5 und Anhang D]{cm:Nguyen2009}.
+
+% Using [fontsize=\footnotesize,fontshape=tt] caused:
+%   LaTeX Font Warning: Font shape `T1/cmtt/m/tt' undefined
+%   (Font)              using `T1/cmtt/m/n' instead on input line 730.
+% so deleted the fontshape parameter.
+\begin{sagecode}
+\begin{Verbatim}%
+[fontsize=\footnotesize]
+# We can encrypt a plaintext using Mini-AES as follows:
+sage: from sage.crypto.block_cipher.miniaes import MiniAES
+sage: maes = MiniAES()
+sage: K = FiniteField(16, "x")
+sage: MS = MatrixSpace(K, 2, 2)
+sage: P = MS([K("x^3 + x"), K("x^2 + 1"), K("x^2 + x"), K("x^3 + x^2")]); P
+
+[  x^3 + x   x^2 + 1]
+[  x^2 + x x^3 + x^2]
+sage: key = MS([K("x^3 + x^2"), K("x^3 + x"), K("x^3 + x^2 + x"), K("x^2 + x + 1")]); key
+
+[    x^3 + x^2       x^3 + x]
+[x^3 + x^2 + x   x^2 + x + 1]
+sage: C = maes.encrypt(P, key); C
+
+[            x       x^2 + x]
+[x^3 + x^2 + x       x^3 + x]
+
+# Here is the decryption process:
+sage: plaintxt = maes.decrypt(C, key)
+sage: plaintxt == P
+True
+
+# We can also work directly with binary strings:
+sage: from sage.crypto.block_cipher.miniaes import MiniAES
+sage: maes = MiniAES()
+sage: bin = BinaryStrings()
+sage: key = bin.encoding("KE"); key
+0100101101000101
+sage: P = bin.encoding("Encrypt this secret message!")
+sage: C = maes(P, key, algorithm="encrypt")
+sage: plaintxt = maes(C, key, algorithm="decrypt")
+sage: plaintxt == P
+True
+
+# Or work with integers n such that 0 <= n <= 15:
+sage: from sage.crypto.block_cipher.miniaes import MiniAES
+sage: maes = MiniAES()
+sage: P = [n for n in xrange(16)]; P
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+sage: key = [2, 3, 11, 0]; key
+[2, 3, 11, 0]
+sage: P = maes.integer_to_binary(P)
+sage: key = maes.integer_to_binary(key)
+sage: C = maes(P, key, algorithm="encrypt")
+sage: plaintxt = maes(C, key, algorithm="decrypt")
+sage: plaintxt == P
+True
+\end{Verbatim}
+\caption{Ver- und Entschlüsselung mit dem Mini-AES}
+\label{cryptomethods:Mini-AES:Sage_example}
+\end{sagecode}
+
+
+
+% ---------------------------------------------------------------------------
+\subsection{Weitere symmetrische Krypto-Algorithmen in SageMath}
+\label{CM_Sage_SymCryptoAlg}
+
+Die SageMath-Referenz v5.4.1%
+%
+\footnote{
+Siehe \url{http://www.sagemath.org/doc/reference/sage/crypto/}
+}
+führt als weitere Chiffren auf:\\ 
+- Linear feedback shift register (LFSR),\\
+- ShrinkingGeneratorCryptosystem,\\
+- Blum-Blum-Shub (BBS): Pseudo-Zufallsbit-Generator,\\
+- Gitter-bezogene Funktionen.
+
+
+
+
+% --------------------------------------------------------------------------
+%xxxxxxxxxxx
+%\bibitem[x]{cm:x}  \index{x}
+%        x, \\
+%        {\em x}, 
+%       x x.
+%xxxxxxxxxxx
+\newpage
+\begin{thebibliography}{99999}
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+
+\bibitem[Biryukov2009]{cm:Biryukov2009} \index{Biryukov 2009}
+	Alex Biryukov, Dmitry Khovratovich,\\
+	{\em Related-key Cryptanalysis of the Full AES-192 and AES-256},
+	2009.\\
+	\url{http://eprint.iacr.org/2009/317}
+
+\bibitem[Coppersmith2002]{cm:Coppersmith2002}  \index{Coppersmith 2002}
+       Don Coppersmith, \\
+       {\em Re: Impact of Courtois and Pieprzyk results},\\ 
+       19.09.2002, in den \glqq AES Discussion Groups\grqq~unter\\
+       \url{http://aes.nist.gov/aes/}
+
+\bibitem[Courtois2002]{cm:Courtois2002}  \index{Courtois 2002}
+       Nicolas Courtois, Josef Pieprzyk, \\
+       {\em Cryptanalysis of Block Ciphers with Overdefined Systems
+            of Equations}, \\
+       received 10 Apr 2002, last revised 9 Nov 2002.\\
+       Eine davon verschiedene~\glqq compact version\grqq~des ersten
+       XSL-Angriffs wurde auf der Asiacrypt im Dezember 2002 veröffentlicht.\\
+       \url{http://eprint.iacr.org/2002/044}
+
+\bibitem[Ferguson2001]{cm:Ferguson2001}  \index{Ferguson 2001}
+       Niels Ferguson, Richard Schroeppel, Doug Whiting, \\
+       {\em A simple algebraic representation of Rijndael}, 
+       Draft 1. Mai 2001. \\
+       \url{http://www.xs4all.nl/~vorpal/pubs/rdalgeq.html}
+
+\bibitem[Haan2008]{cm:Haan2008} \index{Haan 2008} 
+       Kristian Laurent Haan, \\
+       {\em Advanced Encryption Standard (AES)},
+       2008. \\
+       \url{http://www.codeplanet.eu/tutorials/cpp/51-advanced-encryption-standard.html}
+
+\bibitem[Hoffman2006]{cm:Hoffman2006} \index{Hoffman 2006} 
+       Nick Hoffman, \\
+       {\em A SIMPLIFIED IDEA ALGORITHM},
+       2006. \\
+       \url{http://www.nku.edu/~christensen/simplified%20IDEA%20algorithm.pdf}
+
+\bibitem[Lucks-DuD2002]{cm:Lucks-DuD2002}  \index{Lucks 2002}
+       Stefan Lucks, Rüdiger Weis, \\
+       {\em Neue Ergebnisse zur Sicherheit des Verschlüsselungsstandards AES},\\
+       in DuD 12/2002.
+
+\bibitem[Mansoori-etal2007]{cm:Mansoori-etal2007} \index{Mansoori, Bizaki 2007} 
+       S. Davod. Mansoori, H. Khaleghei Bizaki, \\
+       {\em On the vulnerability of Simplified AES Algorithm Against Linear
+       Cryptanalysis}, \\
+       In: IJCSNS International Journal of Computer Science and Network Security,
+       Vol. 7 No. 7, Juli 2007, Seite~257-263. \\
+       Siehe auch:\\
+       \url{http://paper.ijcsns.org/07_book/200707/20070735.pdf}
+
+\bibitem[Massacci2000]{cm: Massacci2000} \index{Massacci 2000}
+       Fabio Massacci, Laura Marraro \\
+       {\em Logical cryptanalysis as a SAT problem: Encoding and analysis},\\
+       In: Journal of Automated Reasoning Security,
+       Vol. 24, 2000, Seite~165-203.
+
+\bibitem[Menezes2001]{cm:Menezes2001} \index{Menezes 2001}
+       Alfred J. Menezes, Paul C. van Oorschot, Scott A. Vanstone \\
+       {\em Handbook of Applied Cryptography}, 
+       CRC Press 1997, 5th printing 2001.\\
+       \url{http://www.cacr.math.uwaterloo.ca/hac/} (Errata last update 24.07.2011)
+
+\bibitem[Mironov2006]{cm: Mironov2006} \index{Mironov 2006}
+       Ilya Mironov, Lintao Zhang \\
+       {\em Applications of SAT Solvers to Cryptanalysis of Hash Functions}, 
+       Springer 2006.
+
+\bibitem[Musa-etal2003]{cm:Musa-etal2003} \index{Musa, Schaefer, Wedig 2003} 
+       Mohammad A. Musa, Edward F. Schaefer, Stephen Wedig, \\
+       {\em A simplified AES algorithm and its linear and differential cryptanalyses}, \\
+       In: Cryptologia 17 (2), April 2003, Seite~148-177.\\
+       Siehe auch:\\
+%       \url{http://findarticles.com/p/articles/mi_qa3926/is_200304/ai_n9181658}\\
+       \url{http://www.rose-hulman.edu/~holden/Preprints/s-aes.pdf}\\
+       \url{http://math.scu.edu/~eschaefe/}   Ed Schaefer's Homepage
+
+\bibitem[Nguyen2009]{cm:Nguyen2009} \index{Nguyen 2009} 
+       Minh Van Nguyen, \\
+       {\em Exploring Cryptography Using the Sage Computer Algebra System}, \\
+       Victoria University, 2009. \\
+       Siehe SageMath publications \url{http://www.sagemath.org/library-publications.html},\\
+       \url{http://www.sagemath.org/files/thesis/nguyen-thesis-2009.pdf},\\
+       \url{http://sites.google.com/site/nguyenminh2/honours-thesis-2009.pdf}
+
+\bibitem[Nichols1996]{cm:Nichols1996} \index{Nichols 1996} 
+       Randall K. Nichols, \\
+       {\em Classical Cryptography Course, Volume 1 and 2}, \\
+       Aegean Park Press 1996; \\
+       oder in 12 Lektionen online unter: \\
+       \url{http://www.fortunecity.com/skyscraper/coding/379/lesson1.htm}
+
+\bibitem[Oppliger2011]{cm:Oppliger2011} \index{Oppliger 2011}
+       Rolf Oppliger \\
+       {\em Contemporary Cryptography, Second Edition},
+       Artech House, 2011. \\
+       \url{http://books.esecurity.ch/cryptography2e.html}.
+
+\bibitem[Phan2002]{cm:Phan2002} \index{Phan 2002} 
+       Raphael Chung-Wei Phan, \\
+       {\em Mini Advanced Encryption Standard (Mini-AES): A Testbed for
+            Cryptanalysis Students}, \\
+       In: Cryptologia 26 (4), 2002, Seite~283-306.
+
+\bibitem[Phan2003]{cm:Phan2003} \index{Phan 2003} 
+       Raphael Chung-Wei Phan, \\
+       {\em Impossible differential cryptanalysis of Mini-AES}, \\
+       In: Cryptologia, Oct 2003.\\
+       \url{http://findarticles.com/p/articles/mi_qa3926/is_200310/ai_n9311721/}
+
+\bibitem[Robshaw2002a]{cm:Robshaw2002a}  \index{Robshaw 2002}
+       S.P. Murphy, M.J.B. Robshaw, \\
+       {\em Essential Algebraic Structure within the AES},\\
+       5. Juni 2002, auf der Crypto 2002.  \\
+       \url{http://www.isg.rhul.ac.uk/~mrobshaw/rijndael/rijndael.html}
+
+\bibitem[Robshaw2002b]{cm:Robshaw2002b}  \index{Robshaw 2002}
+       S.P. Murphy, M.J.B. Robshaw, \\
+       {\em Comments on the Security of the AES and the XSL Technique},\\
+       26. September 2002. \\
+       \url{http://www.isg.rhul.ac.uk/~mrobshaw/rijndael/rijndael.html}
+
+\bibitem[Schaefer1996]{cm:Schaefer1996} \index{Schaefer 1996} 
+       Edward F. Schaefer, \\
+       {\em A Simplified Data Encryption Standard Algorithm}, \\
+       In: Cryptologia 20 (1), 1996, Seite~77-84.
+
+\bibitem[Schmeh2016]{cm:Schmeh2016}  \index{Schmeh 2016}
+       Klaus Schmeh, \\
+       {\em Kryptografie -- Verfahren, Protokolle, Infrastrukturen},\\ 
+       dpunkt.verlag, 6. aktualisierte und erweiterte Auflage 2016. \\
+       Sehr gut lesbares, aktuelles und umfangreiches Buch über Kryptographie. 
+       Geht auch auf praktische Probleme, wie Standardisierung oder 
+       real existierende Software, ein.
+
+\bibitem[Schneier1996]{cm:Schneier1996} \index{Schneier 1996} 
+       Bruce Schneier, \\
+       {\em Applied Cryptography, Protocols, Algorithms, and Source Code in C}, \\
+       Wiley 1994, 2nd edition 1996.
+
+\bibitem[Schneier2000]{cm:Schneier2000cm} \index{Schneier 2000} 
+       Bruce Schneier, \\
+       {\em A Self-Study Course in Block-Cipher Cryptanalysis}, \\
+       In: Cryptologia, v.24, Jan 2000, Seite~18-34.\\
+       \url{www.schneier.com/paper-self-study.pdf}
+
+\bibitem[Stallings2006]{cm:Stallings2006} \index{Stallings 2006} 
+       William Stallings, \\
+       {\em Cryptography and Network Security}, \\
+       Prentice Hall 2006.\\
+       \url{http://williamstallings.com/}
+
+\bibitem[Stamp2007]{cm:Stamp2007} \index{Stamp 2007} 
+       Mark Stamp, Richard M. Low, \\
+       {\em Applied Cryptanalysis: Breaking Ciphers in the Real World}, \\
+       Wiley-IEEE Press 2007. \\
+       \url{http://cs.sjsu.edu/faculty/stamp/crypto/}
+
+\bibitem[Swenson2008]{cm:Swenson2008} \index{Swenson 2008} 
+       Christopher Swenson, \\
+       {\em Modern Cryptanalysis: Techniques for Advanced Code Breaking}, \\
+       Wiley 2008.
+
+\bibitem[Wobst-iX2002]{cm:Wobst-iX2002}  \index{Wobst 2002}
+       Reinhard Wobst, \\
+       {\em Angekratzt -- Kryptoanalyse von AES schreitet voran},\\
+       in iX 12/2002, \\
+       und der Leserbrief dazu von Johannes Merkle in der iX 2/2003.
+
+\end{thebibliography}
+
+
+% --------------------------------------------------------------------------
+\newpage
+\chapter*{Web-Links}\addcontentsline{toc}{section}{Web-Links}
+
+\begin{enumerate}
+
+%  \item[] \href{http://www.cryptosystem.net/aes}
+%       {\texttt{http://www.cryptosystem.net/aes}} 
+%  per item[] werden sie NICHT durchnummeriert !
+  \hypertarget{CM_HT_Weblink_Rijndael-Cryptosystem}{}
+  \item Das AES-/Rijndael-Kryptosystem \\
+        \url{http://www.cryptosystem.net/aes}
+
+\item \glqq AES Discussion Groups\grqq~beim NIST \\ %%% \grqq nach \item braucht die Tilde, aber kein weiteres Blank. Sonst reicht ein Blank, wenn ein weiteres Wort danach folgt (es reicht auch sonst nicht, wenn danach der Zeilenumbruch).
+	\url{http://csrc.nist.gov/archive/aes/}
+
+  \item distributed.net:~\glqq RC5-64 has been solved\grqq \\
+        \url{http://www.distributed.net/Pressroom_press-rc5-64}
+
+  \item RSA: ~\glqq The RSA Secret Key Challenge\grqq \\
+        \url{http://www.rsa.com/rsalabs/node.asp?id=2100}
+
+  \item RSA: ~\glqq DES Challenge\grqq \\
+        \url{http://www.rsa.com/rsalabs/node.asp?id=2108}
+
+  \item Weiterführende Links auf der CrypTool-Homepage \\
+        \url{http://www.cryptool.org}
+	       
+\end{enumerate}
+
+Alle Links wurden am 12.12.2012 überprüft.
+
+
+
+% Local Variables:
+% TeX-master: "../script-de.tex"
+% End:

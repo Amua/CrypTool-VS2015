@@ -1,0 +1,12 @@
+4d3
+< #include <string>
+115,117c114
+< 	const std::string cext = CEXT;
+< 	
+<     ofstream o ("primetab" + cext);
+---
+>     ofstream o ("primetab"CEXT);
+121c118
+<         cerr << "Unable to open file primetab" << cext << endl;
+---
+>         cerr << "Unable to open file primetab"CEXT << endl;
