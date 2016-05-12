@@ -122,10 +122,10 @@ void CGameSummary::gameAnalyse()
 
 	CString result;
 
-	CString sepPointsPlayer=hai.setSeperator(pointsPlayer);
-	CString sepPointsComputer=hai.setSeperator(pointsComputer);
-	CString sepUpperLimit=hai.setSeperator(upperLimit);
-	CString sepBestValue=hai.setSeperator(finishBestValue);
+	CString sepPointsPlayer = EvoZahlenHai::numberToStringWithSeparators(pointsPlayer);
+	CString sepPointsComputer = EvoZahlenHai::numberToStringWithSeparators(pointsComputer);
+	CString sepUpperLimit = EvoZahlenHai::numberToStringWithSeparators(upperLimit);
+	CString sepBestValue = EvoZahlenHai::numberToStringWithSeparators(finishBestValue);
 
 	//Spieler hat gewonnen
 	if(pointsPlayer > pointsComputer)

@@ -25,6 +25,10 @@
 #include "zahl.h"
 #include "math.h"
 
+#define MAX_POINTS_CALC 22
+
+extern CString bestWay;
+
 //Konstruktor
 EvoZahlenHai::EvoZahlenHai(void)
 {
@@ -433,53 +437,35 @@ CString EvoZahlenHai::toString()
 	
 	return writeBuffer;
 }
-/*
-//Setzten der Tausenderpunkte
-char* EvoZahlenHai::itoa_fmt(unsigned long ul_num)
-{
-	char pc_str[1000];
-	unsigned long str_length, str_ptr;
-	char * str, c_pt;
 
-	// pre-compute the length of the output string
-	str_length = (!ul_num) ? 2 : (unsigned long)floor(log((double)ul_num)/log(10.0))+2;
-	str_length += (str_length-2)/3;
-	str = new char [str_length];
+CString EvoZahlenHai::numberToStringWithSeparators(const __int64 _number) {
+	CString valueStr = "";
+	CString seperator = "";
+	char Buffer[100];
+	seperator.LoadString(IDS_STRING_PT);
+	valueStr = _i64toa(_number, Buffer, 10);
+	int length = valueStr.GetLength();
+	for (int i = length - 3; i>0; i = i - 3) {
+		if (length > 3) {
+			valueStr.Insert(i, seperator);
+		}
+	}
+	return valueStr;
+}
 
-	str_ptr = str_length-1;
-	
-	// write num blocks
-	do {
-		str_ptr = (str_ptr >= 3) ? str_ptr-3 : 0;
-		itoa((int)(ul_num % 1000), str + str_ptr, 10);
-		ul_num /= 1000;
-		if (str_ptr) str_ptr--;
-	} while (ul_num);
-
-	// write 'dots'
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_PT,pc_str,STR_LAENGE_STRING_TABLE);
-	c_pt = pc_str[0];
-	do {
-		str_ptr += strlen(str+str_ptr);
-		if ( str_ptr < str_length -1 ) str[str_ptr] = c_pt;
-	} while ( str_ptr < str_length-1 );
-
-	return str;
-}*/
-CString EvoZahlenHai::setSeperator(__int64 value)
-{
-
-	CString valueStr="";
-	 CString seperator="";
-	 char Buffer[100];
-	 seperator.LoadString(IDS_STRING_PT);
-	 valueStr=_i64toa(value,Buffer,10);
-	 int length=valueStr.GetLength();
-	 for(int i=length-3; i>0;i=i-3)
-	 {
-		 if(length>3)
-			 valueStr.Insert(i,seperator);
-	 }
-	 
-	 return valueStr;
+void EvoZahlenHai::showCalculationResult(const int _maxEndPoints, const int _upperLimit) {
+	const int tempUpperLimit = _upperLimit;
+	const int maxPts = _maxEndPoints;
+	if (maxPts != -1) {
+		CString result;
+		CString headline;
+		headline.LoadString(IDS_MAX_POINTS_HEADLINE);
+		CString sepTempUpperLimit = EvoZahlenHai::numberToStringWithSeparators(tempUpperLimit);
+		CString sepMaxPts = EvoZahlenHai::numberToStringWithSeparators(maxPts);
+		if (tempUpperLimit <= MAX_POINTS_CALC)
+			result.Format(IDS_MAX_POINTS_NEW_2, sepTempUpperLimit, sepMaxPts, EvoZahlenHai::numberToStringWithSeparators(getTime()), EvoZahlenHai::numberToStringWithSeparators(getNumberOfRounds()), EvoZahlenHai::numberToStringWithSeparators(maxPrime(tempUpperLimit)), bestWay);
+		else
+			result.Format(IDS_MAX_POINTS_NEW, sepTempUpperLimit, sepMaxPts, EvoZahlenHai::numberToStringWithSeparators(getTime()), EvoZahlenHai::numberToStringWithSeparators(getNumberOfRounds()), EvoZahlenHai::numberToStringWithSeparators(maxPrime(tempUpperLimit)), bestWay);
+		MessageBox(NULL, result, headline, MB_ICONINFORMATION);
+	}
 }

@@ -42,7 +42,6 @@ int endTime;
 
 int doSearch;
 
-CMFCZahlenHaiDlg zahlenHaiDlg;
 EvoZahlenHai optimalesSpiel;
 
 CString bestWay;
@@ -390,13 +389,11 @@ UINT maxPointsStatic(LPVOID param)
 	maxEndPoints = 0;
 	
 	EvoZahlenHai Spiel;
-			
 
 	int startTime = clock();
 	Spiel.init(upperLimit);
 	numberOfRounds=0;
 	ContinueSearchFromFile = false;
-	//}
 
 	Spiel.startRound(maxPrime(upperLimit));
 
@@ -430,56 +427,15 @@ UINT maxPointsStatic(LPVOID param)
 			bestWay += " , ";
 	}
 
-	//globalPoints = maxEndPoints;
 	if(doSearch==0)
 		maxEndPoints = -1;
 
 	if(searchStatus == DONE) {
-        zahlenHaiDlg.calculationResult(maxEndPoints, upperLimit);
+		EvoZahlenHai::showCalculationResult(maxEndPoints, upperLimit);
 	}
 	return maxEndPoints;
 }
 
-__int64 getNumberOfRounds(){return numberOfRounds;}
-int getTime(){return endTime;}
-//Vorherige Version der Suche durch eine Rekursion
-/*
-void Suche(EvoZahlenHai &Spiel)
-{
-	//numberOfRounds und Suchtiefe müssen mit den Werten aus der Datein gesetzt werden, wenn diese geöffnet wurde
-	numberOfRounds++;
-	Suchtiefe++;
+__int64 getNumberOfRounds() { return numberOfRounds; }
 
-	int upperLimit = Spiel.getUpperLimit();
-	
-	for(int i=1 ; i<=upperLimit; i++)
-	{
-		//Kontrolle ob die ausgewählte Zahl noch FREE ist 
-		if(Spiel.checkPlayerNumber(i))
-		{
-			
-			EvoZahlenHai EvoZahlenHaiCopy;
-			//Inhalt von Spiel wird in EvoZahlenHaiCopy kopiert
-			EvoZahlenHaiCopy = Spiel;
-			//Mit den kopierten Daten in EvoZahlenHaiCopy wird die Runde gestartet
-			EvoZahlenHaiCopy.startRound(i);
-			//Abfrage ob sich ein Voranschreiten noch lohnt oder nicht
-			if(Spiel.maxPossiblePointsPlayer() > maxEndPoints)
-			{	
-				//Programm Suche startet wieder von vorn bis keine Zahl mehr FREE ist
-				Suche(EvoZahlenHaiCopy);
-			}
-		}
-	}
-	// wenn keine Zahl mehr FREE ist, wird die ermittelte höchste Punktezahl mit vorherigen
-	//Ergebnissen verglichen. Die höhere Zahl wird behalten
- 	if (Spiel.getPointsPlayer() > maxEndPoints)
-	{
-		if(Spiel.getPointsPlayer() > optimalesSpiel.getPointsPlayer())
-			optimalesSpiel = Spiel;
-
-		maxEndPoints=Spiel.getPointsPlayer();
-	}
-	Suchtiefe--;
-}
-*/
+int getTime() { return endTime; }

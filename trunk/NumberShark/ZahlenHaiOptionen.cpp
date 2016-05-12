@@ -30,9 +30,6 @@
 #include "DlgShowPrecalculatedScores.h"
 #include "zhl.h"
 
-CMFCZahlenHaiDlg sharkMaxPoints;
-// ZahlenHaiOptionen-Dialogfeld
-
 IMPLEMENT_DYNAMIC(ZahlenHaiOptionen, CDialog)
 ZahlenHaiOptionen::ZahlenHaiOptionen(CWnd* pParent /*=NULL*/)
 	: CDialog(ZahlenHaiOptionen::IDD, pParent)
@@ -130,8 +127,8 @@ BOOL ZahlenHaiOptionen::OnInitDialog()
 	
 	((CEdit*)GetDlgItem(IDC_EDIT_NAME))->SetFocus();
 	
-	CString sepUpperLimit=sharkMaxPoints.hai.setSeperator(optionenUpperLimit);
-	optionenMaxP.Format(IDS_OPTIONS_MAX_POINTS,sepUpperLimit);
+	CString sepUpperLimit = EvoZahlenHai::numberToStringWithSeparators(optionenUpperLimit);
+	optionenMaxP.Format(IDS_OPTIONS_MAX_POINTS, sepUpperLimit);
 	CDialog::OnInitDialog();
 	
 	if(showToolTips)
@@ -335,7 +332,7 @@ CString ZahlenHaiOptionen::readGameDataBlock(CString &data)
 void ZahlenHaiOptionen::calculateMaximumScore()
 {
 	int upperLimit = hai.getUpperLimit();
-	CString sepUpperLimit = hai.setSeperator(upperLimit);
+	CString sepUpperLimit = EvoZahlenHai::numberToStringWithSeparators(upperLimit);
 
 	CString question;
 	question.LoadString(IDS_QUESTION);

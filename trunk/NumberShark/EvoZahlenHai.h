@@ -85,9 +85,7 @@ public:
 	int getOptimalNumbersCount() { return optimalNumbersCount; }; // Die Anzahl der beim "optimalen Spiel" gewählten Zahlen
 	int *getOptimalNumbers() { return optimalNumbers; } // vom Spieler im "optimalen Spiel" gewählte Zahlen
 
-	//char* itoa_fmt (unsigned long ul_num);
-
-	CString setSeperator(__int64 value);
-
-	
+public:
+	static CString numberToStringWithSeparators(const __int64 _number);
+	static void showCalculationResult(const int _maxEndPoints, const int _upperLimit);
 };

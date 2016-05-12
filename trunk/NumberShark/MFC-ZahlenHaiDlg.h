@@ -46,7 +46,6 @@
 #define MAX_ZAHLENHAI_BUTTON 30
 #define MIN_ZAHLENHAI_BUTTON 1
 #define MAX_ZAHLENHAI_NUMBERS 9999
-#define MAX_POINTS_CALC 22
 
 // CMFCZahlenHaiDlg Dialogfeld
 class CMFCZahlenHaiDlg : public CDialog
@@ -139,7 +138,6 @@ public:
 	void writeIntoUndo(int nButton);
 	void writeSaveGame();
 	void readSaveGame();
-	void calculationResult(int maxEndPoints, int upperLimit);
 
 	CString sumText;
 	CString startInfo;
@@ -164,7 +162,6 @@ public:
 	CButton buttonRules;
 	CStatic muschelfeld;
 	CString shellBoxText;
-
 	
 	afx_msg void OnStartTimer();
 	afx_msg void OnStopTimer();
@@ -172,7 +169,6 @@ public:
 	afx_msg void OnBnClickedButtonSwitchStyle();
 	afx_msg void OnTimer(UINT nIDEvent);
 	CStatic controlTimer;
-	//CDigiStatic controlTimer;
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 	afx_msg void OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult);
 

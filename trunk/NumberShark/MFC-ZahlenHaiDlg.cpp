@@ -44,8 +44,6 @@
 #define new DEBUG_NEW
 #endif
 
-extern CString bestWay;
-
 using namespace std;
 // CAboutDlg-Dialogfeld für Anwendungsbefehl 'Info'
 
@@ -816,8 +814,8 @@ void CMFCZahlenHaiDlg::updatePoints()
 	strPointsComputer=_itoa(pointsComputer,buffer,10);
 	m_LedText.SetText(strPointsPlayer + ":" + strPointsComputer);
 
-	CString sepValueUpperLimit=hai.setSeperator(upperLimit);
-	CString sepValue=hai.setSeperator(upperLimit+((upperLimit*(upperLimit-1))/2));
+	CString sepValueUpperLimit = EvoZahlenHai::numberToStringWithSeparators(upperLimit);
+	CString sepValue = EvoZahlenHai::numberToStringWithSeparators(upperLimit+((upperLimit*(upperLimit-1))/2));
 	sumText.Format(IDS_SUM_TEXT, sepValueUpperLimit, sepValue);
 	usablenumbersleft = hai.usableNumbersLeft();
 
@@ -971,10 +969,10 @@ void CMFCZahlenHaiDlg::OnBnClickedButtonOk()
 	if(numbers < 1 || numbers > MAX_ZAHLENHAI_NUMBERS)
 	{
 		CString input;
-		input.Format(IDS_INVALID_INPUT, hai.setSeperator(MAX_ZAHLENHAI_NUMBERS));
+		input.Format(IDS_INVALID_INPUT, EvoZahlenHai::numberToStringWithSeparators(MAX_ZAHLENHAI_NUMBERS));
 		CString headline;
 		if(numbers > MAX_ZAHLENHAI_NUMBERS)
-		{
+		{extern CString bestWay;
 			headline.LoadString(IDS_VALID_INPUT_HEADLINE);
 			numbers = 9999;
 		}
@@ -2220,27 +2218,4 @@ void CMFCZahlenHaiDlg::OnBnClickedButtonLoad()
 void CMFCZahlenHaiDlg::OnBnClickedButtonSave()
 {
 	writeSaveGame();
-}
-
-void CMFCZahlenHaiDlg::calculationResult(int maxEndPoints, int upperLimit)
-{
-	int tempUpperLimit = upperLimit;
-	int maxPts = maxEndPoints;
-	
-    if(maxPts != -1)
-	{	
-		CString result;
-  		CString headline;
-		
-		headline.LoadString(IDS_MAX_POINTS_HEADLINE);
-
-		CString sepTempUpperLimit = hai.setSeperator(tempUpperLimit);
-		CString sepMaxPts = hai.setSeperator(maxPts);
-		if(tempUpperLimit <= MAX_POINTS_CALC)
-			result.Format(IDS_MAX_POINTS_NEW_2, sepTempUpperLimit, sepMaxPts, hai.setSeperator(getTime()), hai.setSeperator(getNumberOfRounds()), hai.setSeperator(maxPrime(tempUpperLimit)), bestWay);	
-		else
-			result.Format(IDS_MAX_POINTS_NEW, sepTempUpperLimit, sepMaxPts, hai.setSeperator(getTime()), hai.setSeperator(getNumberOfRounds()), hai.setSeperator(maxPrime(tempUpperLimit)), bestWay);
-		
-		MessageBox(result,headline, MB_ICONINFORMATION);
-	}
 }
