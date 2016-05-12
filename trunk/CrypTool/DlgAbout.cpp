@@ -30,11 +30,8 @@
 #include "DlgAuthors.h"
 #include "DlgTranslations.h"
 
-// für NTL Bibliothek
 #include "..\libNTL\include\NTL\version.h"
-namespace OPENSSL {
-#include "crypto.h" // clashes with secude.h
-}
+#include "crypto.h"
 #include "gmp.h"
 
 #define YEAR ((((__DATE__ [7] - '0') * 10 + (__DATE__ [8] - '0')) * 10 \
@@ -182,52 +179,31 @@ BOOL CDlgAbout::OnInitDialog()
 
 void CDlgAbout::determineLibraryVersions()
 {
-
-	// Miracl (statisch)
-	// *** TODO *** ???
+	// MIRACL (STATIC)
 	this->strVersionMiracl = "4.4.3";
 	this->strVersionMiracl.Insert(0, "Miracl ");
-
-
-	// OpenSSL
-#ifndef _UNSTABLE
-	this->strVersionOpenSSL = OPENSSL::SSLeay_version(SSLEAY_VERSION);
-#endif
-
-	// NTL (statisch)
+	// OPENSSL
+	this->strVersionOpenSSL = SSLeay_version(SSLEAY_VERSION);
+	// NTL
 	this->strVersionNTL = NTL_VERSION;
 	this->strVersionNTL.Insert(0, "NTL ");
-
-
-	// Scintilla
+	// SCINTILLA
 	int scv =
 #include "../scintilla/version.txt"
 	;
 	this->strVersionScintilla.Format("%d.%d.%d",scv/100, (scv/10)%10, scv%10);
 	this->strVersionScintilla.Insert(0, "Scintilla ");
-
-	// GMP (dynamisch)
+	// GMP/MPIR
 	CString StrGMPWindowText;
 	StrGMPWindowText.Format("MPIR %s", mpir_version);
 	this->strVersionGMP = StrGMPWindowText;
-
-	// CRACKLIB (statisch)
+	// CRACKLIB (STATIC)
 	this->strVersionCracklib = "2.7";
 	this->strVersionCracklib.Insert(0, "cracklib ");
-
-	// CRYPTOVISION (statisch)
-	// flomar, 04/13/2012: we're using libcvact 1.4.6 with VS2008, and libcvact 1.4.18 with VS2010;
-	// as long as we lack a more sophisticated solution to determine library versions we stick to 
-	// the following workaround
-#if _MSC_VER > 1500
+	// CRYPTOVISION (STATIC)
 	this->strVersionCryptovision = "1.4.18";
 	this->strVersionCryptovision.Insert(0, "cv cryptovision (tm) cv act library ");
-#else
-	this->strVersionCryptovision = "1.4.6";
-	this->strVersionCryptovision.Insert(0, "cv cryptovision (tm) cv act library ");
-#endif
-
-	// APFLOAT (statisch)
+	// APFLOAT (STATIC)
 	this->strVersionApfloat = "2.41";
 	this->strVersionApfloat.Insert(0, "apfloat ");
 }
