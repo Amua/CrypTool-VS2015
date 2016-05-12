@@ -1,6 +1,6 @@
 # CrypTool-VS2015
 
-This is a fork of CrypTool to provide support for Visual Studio 2015.
+This is a fork of CrypTool 1 to provide support for Visual Studio 2015.
 
 Please visit http://www.cryptool.org for information on the original project.
 
