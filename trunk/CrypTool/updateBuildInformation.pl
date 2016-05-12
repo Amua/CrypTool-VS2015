@@ -3,12 +3,10 @@
 #
 # This script is called as pre-build and as post-build 
 # task from within Visual Studio. It updates a couple of 
-# static variables in "CrypToolApp.cpp" (i.e. build time 
-# and SVN revision) and some resources in "CrypTool.rc"
-# (i.e. the IDE version in the window title) if invoked 
-# with the "PRE" parameter, and it reverts those changes 
-# when invoked after the build with the "POST" parameter.
-# The "VS2008" or "VS2010" parameters are optional.
+# static variables in "CrypToolApp.cpp" and some of the 
+# resources in "CrypTool.rc" if invoked with the "PRE" 
+# parameter, and it reverts those changes when invoked 
+# after the build with the "POST" parameter.
 #
 # flomar, 03/04/2012
 #
@@ -28,7 +26,6 @@ my $CrypToolVersionAddition = "Beta 6c";
 #
 
 my $mode = undef;
-my $ide = undef;
 
 my $fileCrypToolApp = "CrypToolApp.cpp";
 my $fileCrypToolRC = "CrypTool.rc";
@@ -52,12 +49,6 @@ else {
 		print "Please supply at least one argument, either PRE or POST! Exiting...\n";
 		exit;
 	}
-	if($ARGV[1] eq "VS2008") {
-		$ide = "VS2008";
-	}
-	if($ARGV[1] eq "VS2010") {
-		$ide = "VS2010";
-	}
 }
 
 # mode PRE: we update the files
@@ -73,20 +64,12 @@ if($mode eq "PRE") {
 		exit;
 	}
 	
-	#
-	# build the CrypTool version (used throught the CrypTool application);
-	# if we have a non-release version (read: $CrypToolVersionAddition is 
-	# defined), we also append the IDE information; format looks as follows:
-	# 	"CrypTool 1.4.31 Beta 5"
-	#
+	# build the CrypTool version (used throughout the CrypTool application)
 	my $CrypToolVersion = $CrypToolVersionMajor . "." . $CrypToolVersionMinor . "." . $CrypToolVersionRevision;
 	my $CrypToolVersionFull = $CrypToolVersion;
-	# use a version string with an additional tag and IDE information (if existent)
+	# use a version string with an additional tag (if existent)
 	if(defined $CrypToolVersionAddition) {
 		$CrypToolVersionFull .= " " . $CrypToolVersionAddition;
-		if(defined $ide) {
-			$CrypToolVersionFull .= " " . "[" . $ide . "]";
-		}
 	}
 	
 	# copy the original files
@@ -94,18 +77,10 @@ if($mode eq "PRE") {
 	system("copy $fileCrypToolRC $fileCrypToolRC_BACKUP");
 
 	my $buildTime = undef;
-	my $svnRevision = undef;
 	
 	# determine the current time
 	my ($sec,$min,$hour,$day,$month,$yr19,@rest) = localtime(time);
 	$buildTime = (1900+$yr19) . "-" . ($month+1) . "-" . ($day);
-
-	# determine the current SVN revision
-	my $line = `svnversion .`;
-	chomp($line);
-	if($line =~ m{ \d+ : (\d+) .* }xms or $line =~ m{ (\d+) .* }xms) {
-		$svnRevision = $1;
-	}
 
 	# open the file (fileCrypToolApp)
 	my @lineArrayFileCrypToolApp;
@@ -113,16 +88,11 @@ if($mode eq "PRE") {
 	@lineArrayFileCrypToolApp = <FILE>;
 	close(FILE);
 
-	# update the file content (with build time and current SVN revision)
+	# update the file content (with build time)
 	foreach my $line(@lineArrayFileCrypToolApp) {
 		if($line =~ m{ \#define \s+ CRYPTOOL_BUILD_TIME }xms) {
 			if(defined $buildTime) {
 				$line = "#define CRYPTOOL_BUILD_TIME \"$buildTime\"\n";
-			}
-		}
-		if($line =~ m{ \#define \s+ CRYPTOOL_SVN_REVISION }xms) {
-			if(defined $svnRevision) {
-				$line = "#define CRYPTOOL_SVN_REVISION \"$svnRevision\"\n";
 			}
 		}
 	}
@@ -142,11 +112,11 @@ if($mode eq "PRE") {
 	
 	# update the file content (with build time and current SVN revision)
 	foreach my $line(@lineArrayFileCrypToolRC) {
-		# inserting i.e. "CrypTool 1.4.31 Beta 5 [VS2010]" (full version)
+		# inserting i.e. "CrypTool 1.4.31 Beta 5" (full version)
 		if($line =~ m{ \[CRYPTOOL_VERSION_FULL\] }xms) {
 			$line = "IDR_MAINFRAME \"CrypTool $CrypToolVersionFull\"\n";
 		}
-		# inserting i.e. "1.4.31 Beta 5" (version without CrypTool name and IDE)
+		# inserting i.e. "1.4.31 Beta 5" (version without CrypTool name)
 		if($line =~ m{ FileVersion }xms and $line =~ m{ \[CRYPTOOL_VERSION\] }xms) {
 			$line = "VALUE \"FileVersion\", \"$CrypToolVersion\"\n";
 		}
@@ -174,4 +144,3 @@ if($mode eq "POST") {
 	system("del $fileCrypToolApp_BACKUP");
 	system("del $fileCrypToolRC_BACKUP");
 }
-

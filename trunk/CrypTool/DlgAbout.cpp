@@ -143,15 +143,13 @@ BOOL CDlgAbout::OnInitDialog()
 
 	if(windowReleaseInformation) {
 		// get build information
-		CString buildSvnRevision;
-		buildSvnRevision.Format(theApp.getSvnRevision());
 		CString buildDate;
 		buildDate.Format(theApp.getBuildTime());
 		CString buildVersion;
 		buildVersion.Format("MSC %d.%02d",_MSC_VER/100,_MSC_VER%100);
 		// construct release information
 		CString stringReleaseInformation;
-		stringReleaseInformation.Format(IDS_CRYPTOOL_RELEASE_INFORMATION, stringCrypToolVersion, buildSvnRevision, buildDate, buildVersion);
+		stringReleaseInformation.Format(IDS_CRYPTOOL_RELEASE_INFORMATION, stringCrypToolVersion, buildDate, buildVersion);
 		stringReleaseInformation.Append(strVersionApfloat); stringReleaseInformation.Append(", ");
 		stringReleaseInformation.Append(strVersionCracklib); stringReleaseInformation.Append(", ");
 		stringReleaseInformation.Append(strVersionCryptovision); stringReleaseInformation.Append(", ");

@@ -155,7 +155,6 @@ class CCrypToolApp : public CWinApp
 public:
 	// flomar, 03/04/2012
 	CString getBuildTime();
-	CString getSvnRevision();
 
 public:
 	// flomar, 02/16/2010
