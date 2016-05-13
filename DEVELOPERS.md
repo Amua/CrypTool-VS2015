@@ -36,6 +36,8 @@ After having build CrypTool, go into the **trunk/setup** folder and run **create
 
 ## Remarks
 
+Check out the TODO document for a list of the most pressing issues of the project.
+
 If you have any questions, don't hesitate to contact me under florian(at)marchal(dot)de.
 
 Florian Marchal (flomar), May 2016
