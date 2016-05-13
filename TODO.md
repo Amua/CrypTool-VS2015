@@ -5,8 +5,8 @@ This document contains the most important TODOs for the project.
 ## Documentation
 
 - unify project documentation in master branch
-- update "CrypTool-MFC-Kurs-VC7.ppt" in CrypTool root folder (and rename it to something in English)
-- update "readme-source.txt" in CrypTool root folder, in particular the parts about the online help
+- update **CrypTool-MFC-Kurs-VC7.ppt** in CrypTool root folder, translate it into English and publish it as a PDF instead of a PPT, and move the result into the master branch with a reference to it in the DEVELOPERS document
+- extract information from **readme-source.txt** in CrypTool root folder and integrate it into DEVELOPERS document, in particular the sections about the online help, and then remove the original file
 - ~~extend developer documentation with instructions for NSIS (remove documents in 'setup' folder)~~
 
 ## Licensing
@@ -23,3 +23,7 @@ This document contains the most important TODOs for the project.
 ## Other
 
 - rename 'script' folder into 'ctbook' (make sure to handle all side effects)
+
+## IMPORTANT
+
+All the legacy code which has not been refactored yet is deactivated using the **_UNSTABLE** preprocessor definition. Please do not remove this definition from any of the individual VS2015 project files as long as not all the code has been refactored properly.
