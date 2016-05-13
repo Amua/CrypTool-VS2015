@@ -5,7 +5,7 @@ This document contains the most important TODOs for the project.
 ## Documentation
 
 - unify project documentation in master branch (various .odt, .txt, .ppt documents)
-- extend developer documentation with instructions for NSIS (remove documents in 'setup' folder)
+- ~~extend developer documentation with instructions for NSIS (remove documents in 'setup' folder)~~
 
 ## Licensing
 
