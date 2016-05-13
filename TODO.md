@@ -4,7 +4,9 @@ This document contains the most important TODOs for the project.
 
 ## Documentation
 
-- unify project documentation in master branch (various .odt, .txt, .ppt documents)
+- unify project documentation in master branch
+- update "CrypTool-MFC-Kurs-VC7.ppt" in CrypTool root folder (and rename it to something in English)
+- update "readme-source.txt" in CrypTool root folder, in particular the parts about the online help
 - ~~extend developer documentation with instructions for NSIS (remove documents in 'setup' folder)~~
 
 ## Licensing
