@@ -26,7 +26,13 @@ Put the Perl distribution you installed (see above) into your **%PATH%** variabl
 
 #### Building CrypTool
 
-Fire up VS2015 and open the CrypTool solution file **trunk/CrypTool/CrypTool-VS2015.sln**. Choose your preferred solution configuration depending on the desired language, for example "Debug_en" or "Release_en". Then build the solution, set "CrypTool" as start-up project, and run it. 
+Fire up VS2015 and open the CrypTool solution file **trunk/CrypTool/CrypTool-VS2015.sln**. Choose your preferred solution configuration depending on the desired language, for example "Debug_en" or "Release_en". Then build the solution, set "CrypTool" as start-up project, and run it.
+
+#### Building CrypTool Installers
+
+In order to build a self-extracting CrypTool installer executable, first you have to build CrypTool in the RELEASE configuration of the desired language. For example, if you want to create an English installer, you have to build CrypTool in the "Release_en" configuration. The following languages are supported at the moment: English, German, Polish, Spanish, Serbian, Greek, and French, with their corresponding language identifiers being "en", "de", "pl", "es", "rs", "el", and "fr".
+
+After having build CrypTool, go into the **trunk/setup** folder and run **createsetupdir1lang.bat en && createsetupexe1lang.bat en**. For non-English versions you have to replace "en" with the language identifier of your choice. If you want to create installers for all supported languages in one go, you can run **createsetupdirs.bat && createsetupexes.bat**, but don't forget you have to build CrypTool in the RELEASE configuration for all supported languages prior to creating the installers.
 
 ## Remarks
 
