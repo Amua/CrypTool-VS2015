@@ -26,3 +26,7 @@ OctetString::OctetString() :
 
 }
 
+namespace OpenSSL {
+	// see header file for details
+}
+

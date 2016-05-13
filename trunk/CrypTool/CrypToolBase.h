@@ -40,4 +40,13 @@ struct OctetString {
 	char *octets;
 };
 
+// this namespace encapsulates OpenSSL functionality
+namespace OpenSSL {
+	// 1. implement hash Functions (note: remove MD2 implementation from legacy code)
+	// 2. implement symmetric Cryptography
+	// 3. implement asymmetric Cryptography
+	// 4. implement certificates (replacement for Secude PSEs)
+	// ...
+}
+
 #endif
