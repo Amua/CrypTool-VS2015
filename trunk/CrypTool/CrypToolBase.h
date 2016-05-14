@@ -30,7 +30,7 @@ limitations under the License.
 
 #include <afx.h>
 #include <atlstr.h>
-#include <stdint.h>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 
@@ -58,12 +58,12 @@ namespace OpenSSL {
 	//
 
 	// this class encapsulates byte strings for various OpenSSL operations; 
-	// if provides an interface for reading/writing bytes from/to files, 
-	// and it makes sure the allocated memory is deleted upon construction
+	// it provides an interface for reading/writing bytes from/to files, 
+	// and it makes sure the allocated memory is deleted upon destruction
 	class ByteString {
 	public:
 		// construction: if no parameter is specified, no memory is allocated
-		ByteString(const uint64_t _byteLength = 0);
+		ByteString(const size_t _byteLength = 0);
 		// destruction: the allocated memory is deleted
 		~ByteString();
 	public:
@@ -79,7 +79,7 @@ namespace OpenSSL {
 		// the byte data
 		char *byteData;
 		// the byte length
-		uint64_t byteLength;
+		size_t byteLength;
 	};
 
 	// the supported hash algorithms

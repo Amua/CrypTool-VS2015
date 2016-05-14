@@ -28,11 +28,11 @@ OctetString::OctetString() :
 
 namespace OpenSSL {
 	
-	ByteString::ByteString(const uint64_t _byteLength) :
+	ByteString::ByteString(const size_t _byteLength) :
 		byteData(0),
 		byteLength(0) {
 		if (_byteLength > 0) {
-			byteData = new char[byteLength]; // ************* this throws a warning, because byteLength is truncated... maybe use a vector here anyway?!
+			byteData = new char[byteLength];
 			std::memset(byteData, 0, byteLength);
 			byteLength = _byteLength;
 		}
@@ -46,12 +46,18 @@ namespace OpenSSL {
 		CFile infile;
 		if (infile.Open(_fileName, CFile::modeRead)) {
 			reset();
-			byteLength = infile.GetLength();
-			if (infile.Read(byteData, (std::numeric_limits<uint64_t>::max)()) == byteLength) {
-				infile.Close();
-				return true;
+			const uint64_t infileLength = infile.GetLength();
+			if (infileLength <= (std::numeric_limits<size_t>::max)()) {
+				byteLength = (size_t)(infileLength);
+				byteData = new char[byteLength];
+				std::memset(byteData, 0, byteLength);
+				if (infile.Read(byteData, byteLength) == byteLength) {
+					infile.Close();
+					return true;
+				}
 			}
 			infile.Close();
+			reset();
 		}
 		return false;
 	}
