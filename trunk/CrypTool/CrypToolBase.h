@@ -21,18 +21,12 @@ limitations under the License.
 #ifndef _CRYPTOOLBASE_H_
 #define _CRYPTOOLBASE_H_
 
-// flomar, April 2016: during the switch from VS2010 to VS2015, we define 
-// the "_UNSTABLE" preprocessor macro in all (!) projects contained in the 
-// CrypTool solution; if this macro is defined, certain parts of the code 
-// are temporarily inactive in order to compile the code base under VS2015 
-// and without "LibEC" and "LibSecude". PLEASE MAKE SURE ALL OCCURENCES OF 
-// THIS DEFINITION ARE PROPERLY RESOLVED BEFORE THE CODE IS RELEASED!!!
-
 #include <afx.h>
 #include <atlstr.h>
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <vector>
 
 // this struct encapsulates an octet string (TODO/FIXME: TEMPORARY SOLUTION FOR COMPATIBILITY WITH LEGACY CODE)
 struct OctetString {
@@ -44,22 +38,12 @@ struct OctetString {
 	char *octets;
 };
 
-// this namespace encapsulates OpenSSL functionality
-namespace OpenSSL {
+// this namespace encapsulates high-level CrypTool functionality
+namespace CrypTool {
 
-	//
-	// TODO/FIXME
-	//
-	// 1. implement hash Functions (note: remove MD2 implementation from legacy code)
-	// 2. implement symmetric Cryptography
-	// 3. implement asymmetric Cryptography
-	// 4. implement certificates (replacement for Secude PSEs)
-	// ...
-	//
-
-	// this class encapsulates byte strings for various OpenSSL operations; 
-	// it provides an interface for reading/writing bytes from/to files, 
-	// and it makes sure the allocated memory is deleted upon destruction
+	// this class encapsulates byte strings for various cryptographic operations; 
+	// it provides an interface for reading/writing bytes from/to files, and it 
+	// makes sure the allocated memory is deleted upon destruction
 	class ByteString {
 	public:
 		// construction: if no parameter is specified, no memory is allocated
@@ -82,19 +66,48 @@ namespace OpenSSL {
 		size_t byteLength;
 	};
 
-	// the supported hash algorithms
-	enum HashAlgorithm {
-		HASH_ALGORITHM_NULL,
-		HASH_ALGORITHM_MD4,
-		HASH_ALGORITHM_MD5,
-		HASH_ALGORITHM_RIPEMD160,
-		HASH_ALGORITHM_SHA,
-		HASH_ALGORITHM_SHA1,
-		HASH_ALGORITHM_SHA224,
-		HASH_ALGORITHM_SHA256,
-		HASH_ALGORITHM_SHA384,
-		HASH_ALGORITHM_SHA512
-	};
+	// this namespace encapsulates a variety of utilitiy functions
+	namespace Utilities {
+
+		// this function returns a temporary file name with the specified extension so that the resulting 
+		// file name adheres to the following pattern: "CrypTool-[identifier].[extension]"; the identifier 
+		// is random; if a temporary file name cannot be created, the function returns an empty string
+		CString getTemporaryFileName(const CString &_extension = ".tmp");
+
+	}
+
+	// this namespace encapsulates cryptographic functionality
+	namespace Cryptography {
+
+		// the supported hash algorithms
+		enum HashAlgorithm {
+			HASH_ALGORITHM_NULL,
+			HASH_ALGORITHM_MD4,
+			HASH_ALGORITHM_MD5,
+			HASH_ALGORITHM_RIPEMD160,
+			HASH_ALGORITHM_SHA,
+			HASH_ALGORITHM_SHA1,
+			HASH_ALGORITHM_SHA224,
+			HASH_ALGORITHM_SHA256,
+			HASH_ALGORITHM_SHA384,
+			HASH_ALGORITHM_SHA512
+		};
+
+		// the supported symmetric encryption algorithms
+		enum SymmetricEncrytionAlgorithm {
+			SYMMETRIC_ENCRYPTION_ALGORITHM_NULL
+		};
+
+		// the supported asymmetric encryption algorithms
+		enum AsymmetricEncryptionAlgorithms {
+			ASYMMETRIC_ENCRYPTION_ALGORITHM_NULL
+		};
+
+		// this function hashes a file with the specified hash algorithm; upon success, it opens up a new file
+		// containing the calculated hash and assigns a file title depending on the old file title that was specified
+		void hashFile(const CString &_fileName, const CString &_fileTitle, const HashAlgorithm _hashAlgorithm);
+
+	}
 
 }
 
