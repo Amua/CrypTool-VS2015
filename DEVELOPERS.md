@@ -18,7 +18,7 @@ The following is **RECOMMENEDED**, but not required, to work with CrypTool:
 
 #### Get The CrypTool Source Code
 
-Run **git clone https://github.com/flomar/CrypTool-VS2015** to check out the source code. If you want to work with branches other than the master branch, you can for example run **git checkout experimental** to work with the experimental branch.
+Run **git clone https://github.com/flomar/CrypTool-VS2015** to check out the source code.
 
 #### Make Perl Available
 
