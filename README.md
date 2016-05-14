@@ -8,12 +8,10 @@ The code in this repository was forked from r3717 of the CrypTool SVN repository
 
 The long-term goal of this project is to refactor all the legacy code so that CrypTool is no longer dependent on a set of deprecated libraries, but instead using a to-be-implemented OpenSSL-based abstraction layer.
 
-This repository contains four main branches: master, stable, unstable, and experimental.
+This repository contains two main branches: **master** and **experimental**.
 
-- The **master** branch does not contain any code, it simply contains this README file for the project, a README file for developers, a TODO list, and a license file.
-- The **stable** branch contains a stable version of the code, therefore it will stay empty until the code is considered stable.
-- The **unstable** branch contains code which can be compiled, but the runtime behavior in some areas is undefined due to the fact that a lot of temporarily deactivated legacy code has not been refactored yet.
-- The **experimental** branch is a constant work in progress, most probably the code in this branch will not compile successfully.
+- The **master** branch contains code which can be compiled successfully. However, due to the nature of this project, not even the code in the master branch can really be considered stable before all refactoring is finished.
+- The **experimental** branch contains the most recent features and fixes, therefore the code may not even compile successfully. As soon as a certain degree of stability is reached, this branch is continuously merged into the master branch.
 
 Please take a look at the DEVELOPERS document if you're interested in contributing.
 
