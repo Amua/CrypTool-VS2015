@@ -1,6 +1,6 @@
 # CrypTool-VS2015
 
-This is a fork of CrypTool to provide support for Visual Studio 2015.
+This is a fork of CrypTool 1 to provide support for Visual Studio 2015.
 
 Please visit http://www.cryptool.org for information on the original project.
 
@@ -10,7 +10,7 @@ The long-term goal of this project is to refactor all the legacy code so that Cr
 
 This repository contains four main branches: master, stable, unstable, and experimental.
 
-- The **master** branch does not contain any code, it simply contains this README file for the project, a README file for developers, and a license file.
+- The **master** branch does not contain any code, it simply contains this README file for the project, a README file for developers, a TODO list, and a license file.
 - The **stable** branch contains a stable version of the code, therefore it will stay empty until the code is considered stable.
 - The **unstable** branch contains code which can be compiled, but the runtime behavior in some areas is undefined due to the fact that a lot of temporarily deactivated legacy code has not been refactored yet.
 - The **experimental** branch is a constant work in progress, most probably the code in this branch will not compile successfully.

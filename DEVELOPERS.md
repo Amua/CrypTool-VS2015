@@ -16,7 +16,7 @@ The following is **RECOMMENEDED**, but not required, to work with CrypTool:
 
 ## Build Instructions
 
-#### Acquire CrypTool Source Code
+#### Get The CrypTool Source Code
 
 Run **git clone https://github.com/flomar/CrypTool-VS2015** to check out the source code, and then switch to the branch you want to build. The master branch itself doesn't contain any code, so you have to choose between one of the available branches, for example you can run **git checkout unstable** to work with the "unstable" branch.
 
@@ -26,9 +26,17 @@ Put the Perl distribution you installed (see above) into your **%PATH%** variabl
 
 #### Building CrypTool
 
-Fire up VS2015 and open the CrypTool solution file **trunk/CrypTool/CrypTool-VS2015.sln**. Choose your preferred solution configuration depending on the desired language, for example "Debug_en" or "Release_en". Then build the solution, set "CrypTool" as start-up project, and run it. 
+Fire up VS2015 and open the CrypTool solution file **trunk/CrypTool/CrypTool-VS2015.sln**. Choose your preferred solution configuration depending on the desired language, for example "Debug_en" or "Release_en". Then build the solution, set "CrypTool" as start-up project, and run it.
+
+#### Building CrypTool Installers
+
+In order to build a self-extracting CrypTool installer executable, first you have to build CrypTool in the RELEASE configuration of the desired language. For example, if you want to create an English installer, you have to build CrypTool in the "Release_en" configuration. The following languages are supported at the moment: English, German, Polish, Spanish, Serbian, Greek, and French, with their corresponding language identifiers being "en", "de", "pl", "es", "rs", "el", and "fr".
+
+After having build CrypTool, go into the **trunk/setup** folder and run **createsetupdir1lang.bat en && createsetupexe1lang.bat en**. For non-English versions you have to replace "en" with the language identifier of your choice. If you want to create installers for all supported languages in one go, you can run **createsetupdirs.bat && createsetupexes.bat**, but don't forget you have to build CrypTool in the RELEASE configuration for all supported languages prior to creating the installers.
 
 ## Remarks
+
+Check out the TODO document for a list of the most pressing issues of the project.
 
 If you have any questions, don't hesitate to contact me under florian(at)marchal(dot)de.
 
