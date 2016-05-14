@@ -28,9 +28,13 @@ limitations under the License.
 // and without "LibEC" and "LibSecude". PLEASE MAKE SURE ALL OCCURENCES OF 
 // THIS DEFINITION ARE PROPERLY RESOLVED BEFORE THE CODE IS RELEASED!!!
 
+#include <afx.h>
+#include <atlstr.h>
 #include <stdint.h>
+#include <cstring>
+#include <limits>
 
-// this struct encapsulates an octet string
+// this struct encapsulates an octet string (TODO/FIXME: TEMPORARY SOLUTION FOR COMPATIBILITY WITH LEGACY CODE)
 struct OctetString {
 	// construction
 	OctetString();
@@ -42,11 +46,56 @@ struct OctetString {
 
 // this namespace encapsulates OpenSSL functionality
 namespace OpenSSL {
+
+	//
+	// TODO/FIXME
+	//
 	// 1. implement hash Functions (note: remove MD2 implementation from legacy code)
 	// 2. implement symmetric Cryptography
 	// 3. implement asymmetric Cryptography
 	// 4. implement certificates (replacement for Secude PSEs)
 	// ...
+	//
+
+	// this class encapsulates byte strings for various OpenSSL operations; 
+	// if provides an interface for reading/writing bytes from/to files, 
+	// and it makes sure the allocated memory is deleted upon construction
+	class ByteString {
+	public:
+		// construction: if no parameter is specified, no memory is allocated
+		ByteString(const uint64_t _byteLength = 0);
+		// destruction: the allocated memory is deleted
+		~ByteString();
+	public:
+		// read byte string from file: in case of errors, false is returned
+		bool readFromFile(const CString &_fileName);
+		// write byte string to file; in case of errors, false is returned
+		bool writeToFile(const CString &_fileName) const;
+	private:
+		// resets the byte string: deletes the allocated memory, 
+		// and resets both the byte data and byte length to zero
+		void reset();
+	private:
+		// the byte data
+		char *byteData;
+		// the byte length
+		uint64_t byteLength;
+	};
+
+	// the supported hash algorithms
+	enum HashAlgorithm {
+		HASH_ALGORITHM_NULL,
+		HASH_ALGORITHM_MD4,
+		HASH_ALGORITHM_MD5,
+		HASH_ALGORITHM_RIPEMD160,
+		HASH_ALGORITHM_SHA,
+		HASH_ALGORITHM_SHA1,
+		HASH_ALGORITHM_SHA224,
+		HASH_ALGORITHM_SHA256,
+		HASH_ALGORITHM_SHA384,
+		HASH_ALGORITHM_SHA512
+	};
+
 }
 
 #endif
