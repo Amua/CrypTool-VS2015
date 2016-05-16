@@ -97,7 +97,10 @@ namespace CrypTool {
 			vectorEnvironmentVariables.push_back("TMP");
 			// try to find a valid temporary folder using the environment variables
 			for (unsigned int i = 0; i < vectorEnvironmentVariables.size(); i++) {
-				temporaryFolder = getenv(vectorEnvironmentVariables[i]);
+				char *environmentVariable = 0;
+				size_t environmentVariableSize = 0;
+				ASSERT(_dupenv_s(&environmentVariable, &environmentVariableSize, vectorEnvironmentVariables[i]) == 0);
+				temporaryFolder = environmentVariable;
 				if (temporaryFolder.GetLength() > 0) {
 					break;
 				}
@@ -220,54 +223,63 @@ namespace CrypTool {
 					fpInitialize = (fpInitialize_t)(OpenSSL::MD4_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::MD4_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::MD4_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_MD5:
 					context = new unsigned char[sizeof(OpenSSL::MD5_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::MD5_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::MD5_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::MD5_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_RIPEMD160:
 					context = new unsigned char[sizeof(OpenSSL::RIPEMD160_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::RIPEMD160_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::RIPEMD160_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::RIPEMD160_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA:
 					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA1:
 					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA1_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA1_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA1_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA224:
 					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA224_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA224_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA224_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA256:
 					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA256_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA256_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA256_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA384:
 					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA384_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA384_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA384_Final);
+					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA512:
 					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA512_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA512_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA512_Final);
+					delete context;
 					break;
 				}
 				// make sure we have a valid OpenSSL function pointers for the specified hash function
@@ -277,8 +289,6 @@ namespace CrypTool {
 			}
 
 			HashOperation::~HashOperation() {
-				// free OpenSSL context
-				delete context;
 				// deinitialize variables
 				context = 0;
 				fpInitialize = 0;
@@ -298,10 +308,10 @@ namespace CrypTool {
 				// open the specified source file
 				CFile fileSource;
 				if (fileSource.Open(fileNameSource, CFile::modeRead)) {
-					const unsigned long positionStart = 0;
-					const unsigned long positionEnd = fileSource.GetLength();
-					unsigned long positionCurrent = positionStart;
-					unsigned long bytesRead;
+					const ULONGLONG positionStart = 0;
+					const ULONGLONG positionEnd = fileSource.GetLength();
+					ULONGLONG positionCurrent = positionStart;
+					ULONGLONG bytesRead;
 					// the actual hash operation
 					fpInitialize(context);
 					while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
@@ -332,9 +342,6 @@ namespace CrypTool {
 	DialogOperationController::DialogOperationController() :
 		operationParameters(0),
 		operationThread(0),
-		operationStarted(false),
-		operationStopped(false),
-		operationFinished(false),
 		operationProgress(0.0) {
 		// create the dialog
 		Create(IDD_SHOW_PROGRESS);
@@ -343,7 +350,6 @@ namespace CrypTool {
 	DialogOperationController::~DialogOperationController() {
 		// clean up memory
 		delete operationParameters;
-		delete operationThread;
 	}
 
 	void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
@@ -351,31 +357,8 @@ namespace CrypTool {
 		operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
 		// execute operation thread
 		operationThread = AfxBeginThread(execute, this);
-	}
-
-	void DialogOperationController::stopOperation() {
-		// TODO/FIXME: implement me (interrupt the underlying operation)
-	}
-
-	void DialogOperationController::setOperationStarted() {
-		// update internal status
-		operationStarted = true;
 		// show the dialog
 		ShowWindow(SW_SHOW);
-	}
-
-	void DialogOperationController::setOperationStopped() {
-		// update internal status
-		operationStopped = true;
-		// hide the dialog
-		ShowWindow(SW_HIDE);
-	}
-
-	void DialogOperationController::setOperationFinished() {
-		// update internal status
-		operationFinished = true;
-		// hide the dialog
-		ShowWindow(SW_HIDE);
 	}
 
 	UINT DialogOperationController::execute(LPVOID _operationController) {
@@ -385,8 +368,6 @@ namespace CrypTool {
 		OperationParameters *parameters = controller->operationParameters;
 		ASSERT(parameters);
 		const OperationType type = parameters->operationType;
-		// tell the controller that the operation was started
-		controller->setOperationStarted();
 		// execute the desired operation
 		if (type == OPERATION_TYPE_HASH) {
 			OperationParametersHash *parametersHash = (OperationParametersHash*)(parameters);
@@ -402,17 +383,27 @@ namespace CrypTool {
 
 		}
 		else {
-			// tell the controller that the operation was stopped
-			controller->setOperationStopped();
+			controller->SendMessage(WM_CLOSE);
+			AfxEndThread(-1);
 			return -1;
 		}
-		// tell the controller that the operation was finished
-		controller->setOperationFinished();
+		controller->SendMessage(WM_CLOSE);
+		AfxEndThread(0);
 		return 0;
 	}
 
+	void DialogOperationController::OnClose() {
+		CDialog::OnClose();
+		DestroyWindow();
+	}
+
+	void DialogOperationController::PostNcDestroy() {
+		CDialog::PostNcDestroy();
+		delete this;
+	}
+
 	BEGIN_MESSAGE_MAP(DialogOperationController, CDialog)
-		// TODO/FIXME
+		ON_WM_CLOSE()
 	END_MESSAGE_MAP()
 
 }

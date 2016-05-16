@@ -28,6 +28,7 @@ limitations under the License.
 #include <cstring>
 #include <limits>
 #include <vector>
+#include <set>
 
 // this struct encapsulates an octet string (TODO/FIXME: TEMPORARY SOLUTION FOR COMPATIBILITY WITH LEGACY CODE)
 struct OctetString {
@@ -118,7 +119,7 @@ namespace CrypTool {
 				void *context;
 				// type definitions for OpenSSL function pointers
 				typedef void(*fpInitialize_t) (void *_context);
-				typedef void(*fpUpdate_t) (void *_context, void *_message, unsigned long _length);
+				typedef void(*fpUpdate_t) (void *_context, void *_message, ULONGLONG _length);
 				typedef void(*fpFinalize_t) (void *_digest, void *_context);
 				// conext and function pointers for OpenSSL hash operations
 				fpInitialize_t fpInitialize;
@@ -165,22 +166,17 @@ namespace CrypTool {
 	public:
 		void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 		// TODO/FIXME: insert functions for other operations here
-		void stopOperation();
-	private:
-		void setOperationStarted();
-		void setOperationStopped();
-		void setOperationFinished();
 	private:
 		static UINT execute(LPVOID _operationController);
 	private:
 		OperationParameters *operationParameters;
 		CWinThread *operationThread;
 	private:
-		bool operationStarted;
-		bool operationStopped;
-		bool operationFinished;
-	private:
 		double operationProgress;
+	private:
+		afx_msg void OnClose();
+	private:
+		void PostNcDestroy();
 	private:
 		DECLARE_MESSAGE_MAP()
 	private:
