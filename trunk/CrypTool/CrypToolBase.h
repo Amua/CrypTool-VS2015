@@ -153,12 +153,14 @@ namespace CrypTool {
 		struct OperationParameters {
 			const OperationType operationType;
 			OperationParameters(const OperationType _operationType) : operationType(_operationType) { }
+			virtual ~OperationParameters() { }
 		};
 		struct OperationParametersHash : public OperationParameters {
 			const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
 			const CString documentFileName;
 			const CString documentTitle;
 			OperationParametersHash(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) : OperationParameters(OPERATION_TYPE_HASH), hashAlgorithmType(_hashAlgorithmType), documentFileName(_documentFileName), documentTitle(_documentTitle) { }
+			virtual ~OperationParametersHash() { }
 		};
 	public:
 		DialogOperationController();

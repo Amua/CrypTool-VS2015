@@ -101,6 +101,7 @@ namespace CrypTool {
 				size_t environmentVariableSize = 0;
 				ASSERT(_dupenv_s(&environmentVariable, &environmentVariableSize, vectorEnvironmentVariables[i]) == 0);
 				temporaryFolder = environmentVariable;
+				delete environmentVariable;
 				if (temporaryFolder.GetLength() > 0) {
 					break;
 				}
@@ -137,7 +138,7 @@ namespace CrypTool {
 		namespace Hash {
 
 			CString getHashAlgorithmName(const HashAlgorithmType _hashAlgorithmType) {
-				CString hashAlgorithmName;
+				CString hashAlgorithmName = "";
 				switch (_hashAlgorithmType) {
 				case HASH_ALGORITHM_TYPE_MD4:
 					hashAlgorithmName = "MD4";
@@ -173,7 +174,7 @@ namespace CrypTool {
 			}
 
 			int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType) {
-				int hashAlgorithmBitLength;
+				int hashAlgorithmBitLength = 0;
 				switch (_hashAlgorithmType) {
 				case HASH_ALGORITHM_TYPE_MD4:
 					hashAlgorithmBitLength = 128;
@@ -281,6 +282,8 @@ namespace CrypTool {
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA512_Final);
 					delete context;
 					break;
+				default:
+					break;
 				}
 				// make sure we have a valid OpenSSL function pointers for the specified hash function
 				ASSERT(fpInitialize);
@@ -343,8 +346,9 @@ namespace CrypTool {
 		operationParameters(0),
 		operationThread(0),
 		operationProgress(0.0) {
-		// create the dialog
+		// create and show the dialog
 		Create(IDD_SHOW_PROGRESS);
+		ShowWindow(SW_SHOW);
 	}
 
 	DialogOperationController::~DialogOperationController() {
@@ -357,8 +361,7 @@ namespace CrypTool {
 		operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
 		// execute operation thread
 		operationThread = AfxBeginThread(execute, this);
-		// show the dialog
-		ShowWindow(SW_SHOW);
+		
 	}
 
 	UINT DialogOperationController::execute(LPVOID _operationController) {
