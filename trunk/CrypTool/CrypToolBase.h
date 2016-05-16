@@ -105,12 +105,14 @@ namespace CrypTool {
 			// this class provides hash operations on all supported hash algorithm types
 			class HashOperation {
 			public:
-				HashOperation(const HashAlgorithmType _hashAlgorithmType);
+				HashOperation(const HashAlgorithmType _hashAlgorithmType, const CString &_fileNameSource, const CString &_fileNameTarget);
 				virtual ~HashOperation();
 			public:
-				void startOperation(const CString &_fileNameSource, const CString &_fileNameTarget);
+				void execute(double *_progress = 0);
 			private:
 				const HashAlgorithmType hashAlgorithmType;
+				const CString fileNameSource;
+				const CString fileNameTarget;
 			private:
 				// OpenSSL context
 				void *context;
@@ -137,6 +139,53 @@ namespace CrypTool {
 		};
 
 	}
+
+	class DialogOperationController : public CDialog {
+	public:
+		enum OperationType {
+			OPERATION_TYPE_NULL,
+			OPERATION_TYPE_HASH,
+			OPERATION_TYPE_SYMMETRIC_ENCRYPTION,
+			OPERATION_TYPE_ASYMMETRIC_ENCRYPTION
+		};
+	public:
+		struct OperationParameters {
+			const OperationType operationType;
+			OperationParameters(const OperationType _operationType) : operationType(_operationType) { }
+		};
+		struct OperationParametersHash : public OperationParameters {
+			const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
+			const CString documentFileName;
+			const CString documentTitle;
+			OperationParametersHash(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) : OperationParameters(OPERATION_TYPE_HASH), hashAlgorithmType(_hashAlgorithmType), documentFileName(_documentFileName), documentTitle(_documentTitle) { }
+		};
+	public:
+		DialogOperationController();
+		virtual ~DialogOperationController();
+	public:
+		void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+		// TODO/FIXME: insert functions for other operations here
+		void stopOperation();
+	private:
+		void setOperationStarted();
+		void setOperationStopped();
+		void setOperationFinished();
+	private:
+		static UINT execute(LPVOID _operationController);
+	private:
+		OperationParameters *operationParameters;
+		CWinThread *operationThread;
+	private:
+		bool operationStarted;
+		bool operationStopped;
+		bool operationFinished;
+	private:
+		double operationProgress;
+	private:
+		DECLARE_MESSAGE_MAP()
+	private:
+		friend class CrypTool::Cryptography::Hash::HashOperation;
+	};
 
 }
 

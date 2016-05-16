@@ -19,6 +19,7 @@ limitations under the License.
 **************************************************************************/
 
 #include "CrypToolBase.h"
+#include "resource.h"
 
 namespace OpenSSL {
 #include "OpenSSL/md4.h"
@@ -95,7 +96,7 @@ namespace CrypTool {
 			vectorEnvironmentVariables.push_back("TEMP");
 			vectorEnvironmentVariables.push_back("TMP");
 			// try to find a valid temporary folder using the environment variables
-			for (int i = 0; i < vectorEnvironmentVariables.size(); i++) {
+			for (unsigned int i = 0; i < vectorEnvironmentVariables.size(); i++) {
 				temporaryFolder = getenv(vectorEnvironmentVariables[i]);
 				if (temporaryFolder.GetLength() > 0) {
 					break;
@@ -204,8 +205,10 @@ namespace CrypTool {
 				return hashAlgorithmBitLength;
 			}
 
-			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType) :
+			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType, const CString &_fileNameSource, const CString &_fileNameTarget) :
 				hashAlgorithmType(_hashAlgorithmType),
+				fileNameSource(_fileNameSource),
+				fileNameTarget(_fileNameTarget),
 				context(0),
 				fpInitialize(0),
 				fpUpdate(0),
@@ -283,7 +286,7 @@ namespace CrypTool {
 				fpFinalize = 0;
 			}
 
-			void HashOperation::startOperation(const CString &_fileNameSource, const CString &_fileNameTarget) {
+			void HashOperation::execute(double *_progress) {
 				// acquire the bit length of the desired hash algorithm
 				const unsigned int hashAlgorithmBitLength = getHashAlgorithmBitLength(hashAlgorithmType);
 				const unsigned int hashAlgorithmByteLength = (hashAlgorithmBitLength + 7) / 8;
@@ -292,11 +295,9 @@ namespace CrypTool {
 				// the buffer size we're working with (the size of the chunks to be read from the source file)
 				const unsigned int bufferByteLength = 4096;
 				char *buffer = new char[bufferByteLength];
-				// this variable will track the progress of the operation (0.0 to 1.0)
-				double progress = 0.0;
 				// open the specified source file
 				CFile fileSource;
-				if (fileSource.Open(_fileNameSource, CFile::modeRead)) {
+				if (fileSource.Open(fileNameSource, CFile::modeRead)) {
 					const unsigned long positionStart = 0;
 					const unsigned long positionEnd = fileSource.GetLength();
 					unsigned long positionCurrent = positionStart;
@@ -306,12 +307,14 @@ namespace CrypTool {
 					while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
 						fpUpdate(context, buffer, bytesRead);
 						positionCurrent += bytesRead;
-						progress = (double)(positionCurrent) / (double)(positionEnd);
+						if (_progress) {
+							*_progress = (double)(positionCurrent) / (double)(positionEnd);
+						}
 					}
 					fpFinalize(digest, context);
 					// write the resulting hash value to the specified target file
 					CFile fileTarget;
-					if (fileTarget.Open(_fileNameTarget, CFile::modeCreate | CFile::modeWrite)) {
+					if (fileTarget.Open(fileNameTarget, CFile::modeCreate | CFile::modeWrite)) {
 						fileTarget.Write(digest, hashAlgorithmByteLength);
 						fileTarget.Close();
 					}
@@ -325,5 +328,91 @@ namespace CrypTool {
 		}
 
 	}
+
+	DialogOperationController::DialogOperationController() :
+		operationParameters(0),
+		operationThread(0),
+		operationStarted(false),
+		operationStopped(false),
+		operationFinished(false),
+		operationProgress(0.0) {
+		// create the dialog
+		Create(IDD_SHOW_PROGRESS);
+	}
+
+	DialogOperationController::~DialogOperationController() {
+		// clean up memory
+		delete operationParameters;
+		delete operationThread;
+	}
+
+	void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+		// initialize operation parameters
+		operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
+		// execute operation thread
+		operationThread = AfxBeginThread(execute, this);
+	}
+
+	void DialogOperationController::stopOperation() {
+		// TODO/FIXME: implement me (interrupt the underlying operation)
+	}
+
+	void DialogOperationController::setOperationStarted() {
+		// update internal status
+		operationStarted = true;
+		// show the dialog
+		ShowWindow(SW_SHOW);
+	}
+
+	void DialogOperationController::setOperationStopped() {
+		// update internal status
+		operationStopped = true;
+		// hide the dialog
+		ShowWindow(SW_HIDE);
+	}
+
+	void DialogOperationController::setOperationFinished() {
+		// update internal status
+		operationFinished = true;
+		// hide the dialog
+		ShowWindow(SW_HIDE);
+	}
+
+	UINT DialogOperationController::execute(LPVOID _operationController) {
+		// acquire the operation controller, the operation parameters, and the operation type
+		DialogOperationController *controller = (DialogOperationController*)(_operationController);
+		ASSERT(controller);
+		OperationParameters *parameters = controller->operationParameters;
+		ASSERT(parameters);
+		const OperationType type = parameters->operationType;
+		// tell the controller that the operation was started
+		controller->setOperationStarted();
+		// execute the desired operation
+		if (type == OPERATION_TYPE_HASH) {
+			OperationParametersHash *parametersHash = (OperationParametersHash*)(parameters);
+			ASSERT(parametersHash);
+			// TODO/FIXME: what about the title? new title?
+			CrypTool::Cryptography::Hash::HashOperation operation(parametersHash->hashAlgorithmType, parametersHash->documentFileName, Utilities::getTemporaryFileName());
+			operation.execute(&controller->operationProgress);
+		}
+		else if (type == OPERATION_TYPE_SYMMETRIC_ENCRYPTION) {
+
+		}
+		else if (type == OPERATION_TYPE_ASYMMETRIC_ENCRYPTION) {
+
+		}
+		else {
+			// tell the controller that the operation was stopped
+			controller->setOperationStopped();
+			return -1;
+		}
+		// tell the controller that the operation was finished
+		controller->setOperationFinished();
+		return 0;
+	}
+
+	BEGIN_MESSAGE_MAP(DialogOperationController, CDialog)
+		// TODO/FIXME
+	END_MESSAGE_MAP()
 
 }
