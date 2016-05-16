@@ -22,6 +22,7 @@ limitations under the License.
 #define _CRYPTOOLBASE_H_
 
 #include <afx.h>
+#include <afxwin.h>
 #include <atlstr.h>
 #include <cstdint>
 #include <cstring>
@@ -79,33 +80,49 @@ namespace CrypTool {
 	// this namespace encapsulates cryptographic functionality
 	namespace Cryptography {
 
-		// the supported hash algorithms
-		enum HashAlgorithm {
-			HASH_ALGORITHM_NULL,
-			HASH_ALGORITHM_MD4,
-			HASH_ALGORITHM_MD5,
-			HASH_ALGORITHM_RIPEMD160,
-			HASH_ALGORITHM_SHA,
-			HASH_ALGORITHM_SHA1,
-			HASH_ALGORITHM_SHA224,
-			HASH_ALGORITHM_SHA256,
-			HASH_ALGORITHM_SHA384,
-			HASH_ALGORITHM_SHA512
-		};
+		// this namespace encapsulates hash functionality
+		namespace Hash {
 
-		// the supported symmetric encryption algorithms
+			// the supported hash algorithm types
+			enum HashAlgorithmType {
+				HASH_ALGORITHM_TYPE_NULL,
+				HASH_ALGORITHM_TYPE_MD4,
+				HASH_ALGORITHM_TYPE_MD5,
+				HASH_ALGORITHM_TYPE_RIPEMD160,
+				HASH_ALGORITHM_TYPE_SHA,
+				HASH_ALGORITHM_TYPE_SHA1,
+				HASH_ALGORITHM_TYPE_SHA224,
+				HASH_ALGORITHM_TYPE_SHA256,
+				HASH_ALGORITHM_TYPE_SHA384,
+				HASH_ALGORITHM_TYPE_SHA512
+			};
+
+			// this function returns the name of the specified hash algorithm type
+			CString getHashAlgorithmName(const HashAlgorithmType _hashAlgorithmType);
+			// this function returns the bit length of the specified hash algorithm type
+			int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType);
+
+			// this class provides hash operations on all supported hash algorithm types
+			class HashOperation {
+			public:
+				HashOperation(const HashAlgorithmType _hashAlgorithmType);
+			public:
+				void startOperation(const CString &_fileNameSource, const CString &_fileNameTarget);
+			private:
+				const HashAlgorithmType hashAlgorithmType;
+			};
+
+		}
+
+		// the supported symmetric encryption algorithm types
 		enum SymmetricEncrytionAlgorithm {
-			SYMMETRIC_ENCRYPTION_ALGORITHM_NULL
+			SYMMETRIC_ENCRYPTION_ALGORITHM_TYPE_NULL
 		};
 
-		// the supported asymmetric encryption algorithms
+		// the supported asymmetric encryption algorithm types
 		enum AsymmetricEncryptionAlgorithms {
-			ASYMMETRIC_ENCRYPTION_ALGORITHM_NULL
+			ASYMMETRIC_ENCRYPTION_ALGORITHM_TYPE_NULL
 		};
-
-		// this function hashes a file with the specified hash algorithm; upon success, it opens up a new file
-		// containing the calculated hash and assigns a file title depending on the old file title that was specified
-		void hashFile(const CString &_fileName, const CString &_fileTitle, const HashAlgorithm _hashAlgorithm);
 
 	}
 

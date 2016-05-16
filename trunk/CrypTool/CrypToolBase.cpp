@@ -20,9 +20,12 @@ limitations under the License.
 
 #include "CrypToolBase.h"
 
-// TODO/FIXME: these defines need to be transformed into resource strings at some point
-#define EXCEPTION_TITLE "TODO/FIXME: EXCEPTION TITLE"
-#define EXCEPTION_MESSAGE "TODO/FIXME: EXCEPTION MESSAGE"
+namespace OpenSSL {
+#include "OpenSSL/md4.h"
+#include "OpenSSL/md5.h"
+#include "OpenSSL/ripemd.h"
+#include "OpenSSL/sha.h"
+}
 
 OctetString::OctetString() :
 	noctets(0),
@@ -127,12 +130,206 @@ namespace CrypTool {
 
 	namespace Cryptography {
 
-		void hashFile(const CString &_fileName, const CString &_fileTitle, const HashAlgorithm _hashAlgorithm) {
-			ByteString byteString;
-			if (!byteString.readFromFile(_fileName)) {
-				MessageBox(NULL, EXCEPTION_MESSAGE, EXCEPTION_TITLE, MB_ICONERROR);
-				return;
+		namespace Hash {
+
+			CString getHashAlgorithmName(const HashAlgorithmType _hashAlgorithmType) {
+				CString hashAlgorithmName;
+				switch (_hashAlgorithmType) {
+				case HASH_ALGORITHM_TYPE_MD4:
+					hashAlgorithmName = "MD4";
+					break;
+				case HASH_ALGORITHM_TYPE_MD5:
+					hashAlgorithmName = "MD5";
+					break;
+				case HASH_ALGORITHM_TYPE_RIPEMD160:
+					hashAlgorithmName = "RIPEMD160";
+					break;
+				case HASH_ALGORITHM_TYPE_SHA:
+					hashAlgorithmName = "SHA";
+					break;
+				case HASH_ALGORITHM_TYPE_SHA1:
+					hashAlgorithmName = "SHA1";
+					break;
+				case HASH_ALGORITHM_TYPE_SHA224:
+					hashAlgorithmName = "SHA224";
+					break;
+				case HASH_ALGORITHM_TYPE_SHA256:
+					hashAlgorithmName = "SHA256";
+					break;
+				case HASH_ALGORITHM_TYPE_SHA384:
+					hashAlgorithmName = "SHA384";
+					break;
+				case HASH_ALGORITHM_TYPE_SHA512:
+					hashAlgorithmName = "SHA512";
+					break;
+				default:
+					break;
+				}
+				return hashAlgorithmName;
 			}
+
+			int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType) {
+				int hashAlgorithmBitLength;
+				switch (_hashAlgorithmType) {
+				case HASH_ALGORITHM_TYPE_MD4:
+					hashAlgorithmBitLength = 128;
+					break;
+				case HASH_ALGORITHM_TYPE_MD5:
+					hashAlgorithmBitLength = 128;
+					break;
+				case HASH_ALGORITHM_TYPE_RIPEMD160:
+					hashAlgorithmBitLength = 160;
+					break;
+				case HASH_ALGORITHM_TYPE_SHA:
+					hashAlgorithmBitLength = 160;
+					break;
+				case HASH_ALGORITHM_TYPE_SHA1:
+					hashAlgorithmBitLength = 160;
+					break;
+				case HASH_ALGORITHM_TYPE_SHA224:
+					hashAlgorithmBitLength = 224;
+					break;
+				case HASH_ALGORITHM_TYPE_SHA256:
+					hashAlgorithmBitLength = 256;
+					break;
+				case HASH_ALGORITHM_TYPE_SHA384:
+					hashAlgorithmBitLength = 384;
+					break;
+				case HASH_ALGORITHM_TYPE_SHA512:
+					hashAlgorithmBitLength = 512;
+					break;
+				default:
+					break;
+				}
+				return hashAlgorithmBitLength;
+			}
+
+			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType) :
+				hashAlgorithmType(_hashAlgorithmType) {
+
+			}
+
+			void HashOperation::startOperation(const CString &_fileNameSource, const CString &_fileNameTarget) {
+				// acquire the bit length of the desired hash algorithm
+				const unsigned int hashAlgorithmBitLength = getHashAlgorithmBitLength(hashAlgorithmType);
+				const unsigned int hashAlgorithmByteLength = (hashAlgorithmBitLength + 7) / 8;
+				// this variable will store the resulting hash value
+				unsigned char *digest = new unsigned char[hashAlgorithmByteLength];
+				// the buffer size we're working with (the size of the chunks to be read from the source file)
+				const unsigned int bufferByteLength = 4096;
+				char *buffer = new char[bufferByteLength];
+				// this variable will track the progress of the operation (0.0 to 1.0)
+				double progress = 0.0;
+				// open the specified source file
+				CFile fileSource;
+				if (fileSource.Open(_fileNameSource, CFile::modeRead)) {
+					const unsigned long positionStart = 0;
+					const unsigned long positionEnd = fileSource.GetLength();
+					unsigned long positionCurrent = positionStart;
+					unsigned long bytesRead;
+					// MD4
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_MD4) {
+						OpenSSL::MD4_CTX context;
+						OpenSSL::MD4_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::MD4_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::MD4_Final(digest, &context);
+					}
+					// MD5
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_MD5) {
+						OpenSSL::MD5_CTX context;
+						OpenSSL::MD5_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::MD5_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::MD5_Final(digest, &context);
+					}
+					// RIPEMD160
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_RIPEMD160) {
+						OpenSSL::RIPEMD160_CTX context;
+						OpenSSL::RIPEMD160_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::RIPEMD160_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::RIPEMD160_Final(digest, &context);
+					}
+					// SHA
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA) {
+						OpenSSL::SHA_CTX context;
+						OpenSSL::SHA_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::SHA_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::SHA_Final(digest, &context);
+					}
+					// SHA1
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA1) {
+						OpenSSL::SHA_CTX context;
+						OpenSSL::SHA1_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::SHA1_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::SHA1_Final(digest, &context);
+					}
+					// SHA224
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA224) {
+						OpenSSL::SHA256_CTX context;
+						OpenSSL::SHA224_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::SHA224_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::SHA224_Final(digest, &context);
+					}
+					// SHA256
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA256) {
+						OpenSSL::SHA256_CTX context;
+						OpenSSL::SHA256_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::SHA256_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::SHA256_Final(digest, &context);
+					}
+					// SHA384
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA384) {
+						OpenSSL::SHA512_CTX context;
+						OpenSSL::SHA384_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::SHA384_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::SHA384_Final(digest, &context);
+					}
+					// SHA512
+					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA512) {
+						OpenSSL::SHA512_CTX context;
+						OpenSSL::SHA512_Init(&context);
+						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+							OpenSSL::SHA512_Update(&context, buffer, bytesRead);
+							positionCurrent += bytesRead;
+						}
+						OpenSSL::SHA512_Final(digest, &context);
+					}
+					// write the resulting hash value to the specified target file
+					CFile fileTarget;
+					if (fileTarget.Open(_fileNameTarget, CFile::modeCreate | CFile::modeWrite)) {
+						fileTarget.Write(digest, hashAlgorithmByteLength);
+						fileTarget.Close();
+					}
+				}
+				// free the memory for the resulting hash value
+				delete digest;
+				// free the memory for the buffer
+				delete buffer;
+			}
+
 		}
 
 	}
