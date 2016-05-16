@@ -106,10 +106,22 @@ namespace CrypTool {
 			class HashOperation {
 			public:
 				HashOperation(const HashAlgorithmType _hashAlgorithmType);
+				virtual ~HashOperation();
 			public:
 				void startOperation(const CString &_fileNameSource, const CString &_fileNameTarget);
 			private:
 				const HashAlgorithmType hashAlgorithmType;
+			private:
+				// OpenSSL context
+				void *context;
+				// type definitions for OpenSSL function pointers
+				typedef void(*fpInitialize_t) (void *_context);
+				typedef void(*fpUpdate_t) (void *_context, void *_message, unsigned long _length);
+				typedef void(*fpFinalize_t) (void *_digest, void *_context);
+				// conext and function pointers for OpenSSL hash operations
+				fpInitialize_t fpInitialize;
+				fpUpdate_t fpUpdate;
+				fpFinalize_t fpFinalize;
 			};
 
 		}

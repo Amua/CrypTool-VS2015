@@ -205,8 +205,82 @@ namespace CrypTool {
 			}
 
 			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType) :
-				hashAlgorithmType(_hashAlgorithmType) {
+				hashAlgorithmType(_hashAlgorithmType),
+				context(0),
+				fpInitialize(0),
+				fpUpdate(0),
+				fpFinalize(0) {
+				// initialize OpenSSL context and function pointers depending on the specified hash algorithm type
+				switch (hashAlgorithmType) {
+				case HASH_ALGORITHM_TYPE_MD4:
+					context = new unsigned char[sizeof(OpenSSL::MD4_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::MD4_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::MD4_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::MD4_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_MD5:
+					context = new unsigned char[sizeof(OpenSSL::MD5_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::MD5_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::MD5_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::MD5_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_RIPEMD160:
+					context = new unsigned char[sizeof(OpenSSL::RIPEMD160_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::RIPEMD160_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::RIPEMD160_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::RIPEMD160_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_SHA:
+					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::SHA_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::SHA_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::SHA_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_SHA1:
+					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::SHA1_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::SHA1_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::SHA1_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_SHA224:
+					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::SHA224_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::SHA224_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::SHA224_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_SHA256:
+					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::SHA256_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::SHA256_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::SHA256_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_SHA384:
+					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::SHA384_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::SHA384_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::SHA384_Final);
+					break;
+				case HASH_ALGORITHM_TYPE_SHA512:
+					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
+					fpInitialize = (fpInitialize_t)(OpenSSL::SHA512_Init);
+					fpUpdate = (fpUpdate_t)(OpenSSL::SHA512_Update);
+					fpFinalize = (fpFinalize_t)(OpenSSL::SHA512_Final);
+					break;
+				}
+				// make sure we have a valid OpenSSL function pointers for the specified hash function
+				ASSERT(fpInitialize);
+				ASSERT(fpUpdate);
+				ASSERT(fpFinalize);
+			}
 
+			HashOperation::~HashOperation() {
+				// free OpenSSL context
+				delete context;
+				// deinitialize variables
+				context = 0;
+				fpInitialize = 0;
+				fpUpdate = 0;
+				fpFinalize = 0;
 			}
 
 			void HashOperation::startOperation(const CString &_fileNameSource, const CString &_fileNameTarget) {
@@ -227,96 +301,14 @@ namespace CrypTool {
 					const unsigned long positionEnd = fileSource.GetLength();
 					unsigned long positionCurrent = positionStart;
 					unsigned long bytesRead;
-					// MD4
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_MD4) {
-						OpenSSL::MD4_CTX context;
-						OpenSSL::MD4_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::MD4_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::MD4_Final(digest, &context);
+					// the actual hash operation
+					fpInitialize(context);
+					while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+						fpUpdate(context, buffer, bytesRead);
+						positionCurrent += bytesRead;
+						progress = (double)(positionCurrent) / (double)(positionEnd);
 					}
-					// MD5
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_MD5) {
-						OpenSSL::MD5_CTX context;
-						OpenSSL::MD5_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::MD5_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::MD5_Final(digest, &context);
-					}
-					// RIPEMD160
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_RIPEMD160) {
-						OpenSSL::RIPEMD160_CTX context;
-						OpenSSL::RIPEMD160_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::RIPEMD160_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::RIPEMD160_Final(digest, &context);
-					}
-					// SHA
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA) {
-						OpenSSL::SHA_CTX context;
-						OpenSSL::SHA_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::SHA_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::SHA_Final(digest, &context);
-					}
-					// SHA1
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA1) {
-						OpenSSL::SHA_CTX context;
-						OpenSSL::SHA1_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::SHA1_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::SHA1_Final(digest, &context);
-					}
-					// SHA224
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA224) {
-						OpenSSL::SHA256_CTX context;
-						OpenSSL::SHA224_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::SHA224_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::SHA224_Final(digest, &context);
-					}
-					// SHA256
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA256) {
-						OpenSSL::SHA256_CTX context;
-						OpenSSL::SHA256_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::SHA256_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::SHA256_Final(digest, &context);
-					}
-					// SHA384
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA384) {
-						OpenSSL::SHA512_CTX context;
-						OpenSSL::SHA384_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::SHA384_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::SHA384_Final(digest, &context);
-					}
-					// SHA512
-					if (hashAlgorithmType == HASH_ALGORITHM_TYPE_SHA512) {
-						OpenSSL::SHA512_CTX context;
-						OpenSSL::SHA512_Init(&context);
-						while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
-							OpenSSL::SHA512_Update(&context, buffer, bytesRead);
-							positionCurrent += bytesRead;
-						}
-						OpenSSL::SHA512_Final(digest, &context);
-					}
+					fpFinalize(digest, context);
 					// write the resulting hash value to the specified target file
 					CFile fileTarget;
 					if (fileTarget.Open(_fileNameTarget, CFile::modeCreate | CFile::modeWrite)) {
