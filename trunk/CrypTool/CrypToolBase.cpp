@@ -87,7 +87,7 @@ namespace CrypTool {
 
 	namespace Utilities {
 
-		CString getTemporaryFileName(const CString &_extension) {
+		CString createTemporaryFile(const CString &_extension) {
 			// here we try to find a folder for the temporary files; if none of 
 			// the specified environment variables are valid, we stick to the 
 			// folder in which CrypTool is executed
@@ -110,9 +110,12 @@ namespace CrypTool {
 			if (temporaryFolder.GetLength() == 0) {
 				temporaryFolder = ".";
 			}
+			// provide thread-safety
+			static CMutex mutex;
+			mutex.Lock();
 			// now iterate through the range of valid identifiers and check 
-			// whether there's a temporary file name which has not been used 
-			// yet; a temporary file has not been used if it cannot be opened
+			// whether there's a file name for which a temporary file has not 
+			// been created yet
 			CFile file;
 			CString temporaryFileName;
 			const int identifierMin = 1;
@@ -120,15 +123,22 @@ namespace CrypTool {
 			for (int identifier = identifierMin; identifier <= identifierMax; identifier++) {
 				// create temporary file name (using the specified extension)
 				temporaryFileName.Format("%s\\CrypTool-%d.%s", temporaryFolder, identifier, _extension);
-				// try to open the temporary file; if it fails, that's a sign for success
-				if (!file.Open(temporaryFileName, CFile::modeRead)) {
-					return temporaryFileName;
+				// try to open the temporary file for reading
+				if (file.Open(temporaryFileName, CFile::modeRead)) {
+					file.Close();
 				}
-				file.Close();
+				else {
+					// try to open the temporary file for writing
+					if (file.Open(temporaryFileName, CFile::modeWrite | CFile::modeCreate)) {
+						file.Close();
+						break;
+					}
+				}
 			}
-			// at this point we were not able to create a temporary file, 
-			// therefore we return an empty string to indicate an error
-			return CString();
+			mutex.Unlock();
+			// make sure the temporary file name is valid before returning
+			ASSERT(!temporaryFileName.IsEmpty());
+			return temporaryFileName;
 		}
 
 	}
@@ -346,9 +356,8 @@ namespace CrypTool {
 		operationParameters(0),
 		operationThread(0),
 		operationProgress(0.0) {
-		// create and show the dialog
+		// create the dialog
 		Create(IDD_SHOW_PROGRESS);
-		ShowWindow(SW_SHOW);
 	}
 
 	DialogOperationController::~DialogOperationController() {
@@ -361,7 +370,6 @@ namespace CrypTool {
 		operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
 		// execute operation thread
 		operationThread = AfxBeginThread(execute, this);
-		
 	}
 
 	UINT DialogOperationController::execute(LPVOID _operationController) {
@@ -375,15 +383,20 @@ namespace CrypTool {
 		if (type == OPERATION_TYPE_HASH) {
 			OperationParametersHash *parametersHash = (OperationParametersHash*)(parameters);
 			ASSERT(parametersHash);
-			// TODO/FIXME: what about the title? new title?
-			CrypTool::Cryptography::Hash::HashOperation operation(parametersHash->hashAlgorithmType, parametersHash->documentFileName, Utilities::getTemporaryFileName());
+			// create a title for the dialog, and then make the dialog visible
+			CString title;
+			title.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(parametersHash->hashAlgorithmType));
+			controller->SetWindowText(title);
+			controller->ShowWindow(SW_SHOW);
+			// execute the operation
+			CrypTool::Cryptography::Hash::HashOperation operation(parametersHash->hashAlgorithmType, parametersHash->documentFileName, Utilities::createTemporaryFile());
 			operation.execute(&controller->operationProgress);
 		}
 		else if (type == OPERATION_TYPE_SYMMETRIC_ENCRYPTION) {
-
+			// TODO/FIXME
 		}
 		else if (type == OPERATION_TYPE_ASYMMETRIC_ENCRYPTION) {
-
+			// TODO/FIXME
 		}
 		else {
 			controller->SendMessage(WM_CLOSE);

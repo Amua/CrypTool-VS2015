@@ -22,6 +22,7 @@ limitations under the License.
 #define _CRYPTOOLBASE_H_
 
 #include <afx.h>
+#include <afxmt.h>
 #include <afxwin.h>
 #include <atlstr.h>
 #include <cstdint>
@@ -71,10 +72,12 @@ namespace CrypTool {
 	// this namespace encapsulates a variety of utilitiy functions
 	namespace Utilities {
 
-		// this function returns a temporary file name with the specified extension so that the resulting 
-		// file name adheres to the following pattern: "CrypTool-[identifier].[extension]"; the identifier 
-		// is random; if a temporary file name cannot be created, the function returns an empty string
-		CString getTemporaryFileName(const CString &_extension = ".tmp");
+		// this function creates a temporary file with the specified extension so that the resulting file 
+		// name adheres to the following pattern: "CrypTool-[identifier].[extension]", the identifiers are 
+		// generated sequentially; if the function cannot create a temporary file in one of the system temp 
+		// folders, it uses the CrypTool directory; if a temporary file name cannot be created, the function 
+		// asserts; the function is thread-safe
+		CString createTemporaryFile(const CString &_extension = ".tmp");
 
 	}
 
