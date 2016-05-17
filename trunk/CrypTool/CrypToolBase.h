@@ -154,25 +154,13 @@ namespace CrypTool {
 
 		class DialogOperationController : public CDialog {
 		public:
-			enum OperationType {
-				OPERATION_TYPE_NULL,
-				OPERATION_TYPE_HASH,
-				OPERATION_TYPE_SYMMETRIC_ENCRYPTION,
-				OPERATION_TYPE_ASYMMETRIC_ENCRYPTION
-			};
-		public:
 			struct OperationParameters {
-				const OperationType operationType;
-				OperationParameters(const OperationType _operationType) : operationType(_operationType) { }
-				virtual ~OperationParameters() { }
-			};
-			struct OperationParametersHash : public OperationParameters {
-				const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
-				const CString documentFileName;
-				const CString documentTitle;
-				OperationParametersHash(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) : OperationParameters(OPERATION_TYPE_HASH), hashAlgorithmType(_hashAlgorithmType), documentFileName(_documentFileName), documentTitle(_documentTitle) { }
-				virtual ~OperationParametersHash() { }
-			};
+				struct OperationParametersHash {
+					CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
+					CString documentFileName;
+					CString documentTitle;
+				} parametersHash;
+			} parameters;
 		public:
 			DialogOperationController();
 			virtual ~DialogOperationController();
@@ -180,12 +168,18 @@ namespace CrypTool {
 			void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 			// TODO/FIXME: insert functions for other operations here
 		private:
-			static UINT execute(LPVOID _operationController);
+			static UINT executeHashOperation(LPVOID _operationController);
+			// TODO/FIXME: insert functions for other operations here
 		private:
-			OperationParameters *operationParameters;
-			CWinThread *operationThread;
+			static UINT updateOperation(LPVOID _operationController);
+		private:
+			// this thread is used for executing the actual operation
+			CWinThread *operationExecutionThread;
+			// this thread is used for updating the operation progress in the dialog
+			CWinThread *operationUpdateThread;
 		private:
 			double operationProgress;
+			void updateOperationProgress();
 		private:
 			afx_msg void OnClose();
 		private:

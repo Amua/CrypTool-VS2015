@@ -338,67 +338,81 @@ namespace CrypTool {
 	namespace Internal {
 
 		DialogOperationController::DialogOperationController() :
-			operationParameters(0),
-			operationThread(0),
+			operationExecutionThread(0),
+			operationUpdateThread(0),
 			operationProgress(0.0) {
 			// create the dialog
 			Create(IDD_SHOW_PROGRESS);
 		}
 
 		DialogOperationController::~DialogOperationController() {
-			// clean up memory
-			delete operationParameters;
+			//WaitForSingleObject(operationExecutionThread->m_hThread, INFINITE);
+			//WaitForSingleObject(operationUpdateThread->m_hThread, INFINITE);
 		}
 
 		void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+			// we don't allow more than one operation per operation controller
+			if (operationExecutionThread || operationUpdateThread) {
+				// TODO/FIXME
+				AfxMessageBox("TODO/FIXME: only one operation allowed per operation controller");
+				return;
+			}
 			// initialize operation parameters
-			operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
-			// execute operation thread
-			operationThread = AfxBeginThread(execute, this);
+			parameters.parametersHash.hashAlgorithmType = _hashAlgorithmType;
+			parameters.parametersHash.documentFileName = _documentFileName;
+			parameters.parametersHash.documentTitle = _documentTitle;
+			// show the dialog
+			ShowWindow(SW_SHOW);
+			// start both the execution and update threads
+			operationExecutionThread = AfxBeginThread(executeHashOperation, this);
+			operationUpdateThread = AfxBeginThread(updateOperation, this);
 		}
 
-		UINT DialogOperationController::execute(LPVOID _operationController) {
-			// acquire the operation controller, the operation parameters, and the operation type
+		UINT DialogOperationController::executeHashOperation(LPVOID _operationController) {
+			// acquire the operation controller
 			DialogOperationController *controller = (DialogOperationController*)(_operationController);
 			ASSERT(controller);
-			OperationParameters *parameters = controller->operationParameters;
-			ASSERT(parameters);
-			const OperationType type = parameters->operationType;
-			// execute the desired operation
-			if (type == OPERATION_TYPE_HASH) {
-				OperationParametersHash *parametersHash = (OperationParametersHash*)(parameters);
-				ASSERT(parametersHash);
-				// create a title for the dialog, and then make the dialog visible
-				CString title;
-				title.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(parametersHash->hashAlgorithmType));
-				controller->SetWindowText(title);
-				controller->ShowWindow(SW_SHOW);
-				// execute the operation
-				CrypTool::Cryptography::Hash::HashOperation operation(parametersHash->hashAlgorithmType, parametersHash->documentFileName, Utilities::createTemporaryFile());
-				operation.execute(&controller->operationProgress);
-			}
-			else if (type == OPERATION_TYPE_SYMMETRIC_ENCRYPTION) {
-				// TODO/FIXME
-			}
-			else if (type == OPERATION_TYPE_ASYMMETRIC_ENCRYPTION) {
-				// TODO/FIXME
-			}
-			else {
-				controller->SendMessage(WM_CLOSE);
-				AfxEndThread(-1);
-				return -1;
-			}
+			// create the appropriate title for the dialog
+			CString title;
+			title.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(controller->parameters.parametersHash.hashAlgorithmType));
+			controller->SetWindowText(title);
+			// execute the operation
+			CrypTool::Cryptography::Hash::HashOperation operation(controller->parameters.parametersHash.hashAlgorithmType, controller->parameters.parametersHash.documentFileName, Utilities::createTemporaryFile());
+			operation.execute(&controller->operationProgress);
+			// cleanly close the dialog and finish the thread
 			controller->SendMessage(WM_CLOSE);
 			AfxEndThread(0);
 			return 0;
 		}
 
+		UINT DialogOperationController::updateOperation(LPVOID _operationController) {
+			// acquire the operation controller
+			DialogOperationController *controller = (DialogOperationController*)(_operationController);
+			ASSERT(controller);
+			// as long as the dialog is visible...
+			while (controller->IsWindowVisible()) {
+				// update the operation progress
+				controller->updateOperationProgress();
+				// sleep for some time to not unnecessary drain the CPU
+				Sleep(10);
+			}
+			// cleanly finish the thread
+			AfxEndThread(0);
+			return 0;
+		}
+
+		void DialogOperationController::updateOperationProgress() {
+			// TODO/FIXME
+		}
+
 		void DialogOperationController::OnClose() {
+			// destroy the window after the dialog has been closed
 			CDialog::OnClose();
 			DestroyWindow();
 		}
 
 		void DialogOperationController::PostNcDestroy() {
+			// this workaround is required as this dialog bas been created on the heap
 			CDialog::PostNcDestroy();
 			delete this;
 		}
