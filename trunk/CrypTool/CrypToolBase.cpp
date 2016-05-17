@@ -222,49 +222,42 @@ namespace CrypTool {
 					fpInitialize = (fpInitialize_t)(OpenSSL::MD4_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::MD4_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::MD4_Final);
-					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_MD5:
 					context = new unsigned char[sizeof(OpenSSL::MD5_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::MD5_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::MD5_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::MD5_Final);
-					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_RIPEMD160:
 					context = new unsigned char[sizeof(OpenSSL::RIPEMD160_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::RIPEMD160_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::RIPEMD160_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::RIPEMD160_Final);
-					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA:
 					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA_Final);
-					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA1:
 					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA1_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA1_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA1_Final);
-					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA256:
 					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA256_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA256_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA256_Final);
-					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA512:
 					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA512_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA512_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA512_Final);
-					delete context;
 					break;
 				default:
 					break;
@@ -277,6 +270,7 @@ namespace CrypTool {
 
 			HashOperation::~HashOperation() {
 				// deinitialize variables
+				delete context;
 				context = 0;
 				fpInitialize = 0;
 				fpUpdate = 0;
@@ -358,7 +352,9 @@ namespace CrypTool {
 		}
 
 		DialogOperationController::~DialogOperationController() {
-			WaitForSingleObject(operationThread->m_hThread, INFINITE);
+			if (operationThread) {
+				WaitForSingleObject(operationThread->m_hThread, INFINITE);
+			}
 		}
 
 		void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
