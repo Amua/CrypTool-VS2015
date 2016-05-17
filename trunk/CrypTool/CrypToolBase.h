@@ -117,13 +117,12 @@ namespace CrypTool {
 				const CString fileNameSource;
 				const CString fileNameTarget;
 			private:
-				// OpenSSL context
-				void *context;
 				// type definitions for OpenSSL function pointers
 				typedef void(*fpInitialize_t) (void *_context);
 				typedef void(*fpUpdate_t) (void *_context, void *_message, ULONGLONG _length);
 				typedef void(*fpFinalize_t) (void *_digest, void *_context);
-				// conext and function pointers for OpenSSL hash operations
+				// context size and function pointers for OpenSSL hash operations
+				size_t contextSize;
 				fpInitialize_t fpInitialize;
 				fpUpdate_t fpUpdate;
 				fpFinalize_t fpFinalize;

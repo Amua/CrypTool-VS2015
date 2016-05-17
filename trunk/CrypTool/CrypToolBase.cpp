@@ -211,50 +211,50 @@ namespace CrypTool {
 				hashAlgorithmType(_hashAlgorithmType),
 				fileNameSource(_fileNameSource),
 				fileNameTarget(_fileNameTarget),
-				context(0),
+				contextSize(0),
 				fpInitialize(0),
 				fpUpdate(0),
 				fpFinalize(0) {
 				// initialize OpenSSL context and function pointers depending on the specified hash algorithm type
 				switch (hashAlgorithmType) {
 				case HASH_ALGORITHM_TYPE_MD4:
-					context = new unsigned char[sizeof(OpenSSL::MD4_CTX)];
+					contextSize = sizeof(OpenSSL::MD4_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::MD4_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::MD4_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::MD4_Final);
 					break;
 				case HASH_ALGORITHM_TYPE_MD5:
-					context = new unsigned char[sizeof(OpenSSL::MD5_CTX)];
+					contextSize = sizeof(OpenSSL::MD5_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::MD5_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::MD5_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::MD5_Final);
 					break;
 				case HASH_ALGORITHM_TYPE_RIPEMD160:
-					context = new unsigned char[sizeof(OpenSSL::RIPEMD160_CTX)];
+					contextSize = sizeof(OpenSSL::RIPEMD160_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::RIPEMD160_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::RIPEMD160_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::RIPEMD160_Final);
 					break;
 				case HASH_ALGORITHM_TYPE_SHA:
-					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
+					contextSize = sizeof(OpenSSL::SHA_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA_Final);
 					break;
 				case HASH_ALGORITHM_TYPE_SHA1:
-					context = new unsigned char[sizeof(OpenSSL::SHA_CTX)];
+					contextSize = sizeof(OpenSSL::SHA_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA1_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA1_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA1_Final);
 					break;
 				case HASH_ALGORITHM_TYPE_SHA256:
-					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
+					contextSize = sizeof(OpenSSL::SHA256_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA256_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA256_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA256_Final);
 					break;
 				case HASH_ALGORITHM_TYPE_SHA512:
-					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
+					contextSize = sizeof(OpenSSL::SHA512_CTX);
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA512_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA512_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA512_Final);
@@ -262,7 +262,8 @@ namespace CrypTool {
 				default:
 					break;
 				}
-				// make sure we have a valid OpenSSL function pointers for the specified hash function
+				// make sure we have a valid OpenSSL variables
+				ASSERT(contextSize);
 				ASSERT(fpInitialize);
 				ASSERT(fpUpdate);
 				ASSERT(fpFinalize);
@@ -270,8 +271,7 @@ namespace CrypTool {
 
 			HashOperation::~HashOperation() {
 				// deinitialize variables
-				delete context;
-				context = 0;
+				contextSize = 0;
 				fpInitialize = 0;
 				fpUpdate = 0;
 				fpFinalize = 0;
@@ -286,6 +286,8 @@ namespace CrypTool {
 				// the buffer size we're working with (the size of the chunks to be read from the source file)
 				const unsigned int bufferByteLength = 4096;
 				char *buffer = new char[bufferByteLength];
+				// create the OpenSSL context
+				void *context = (void*)(new unsigned char[contextSize]);
 				// open the specified source file
 				CFile fileSource;
 				if (fileSource.Open(fileNameSource, CFile::modeRead)) {
@@ -315,9 +317,9 @@ namespace CrypTool {
 						fileTarget.Close();
 					}
 				}
-				// free the memory for the resulting hash value
+				// free memory
+				delete context;
 				delete digest;
-				// free the memory for the buffer
 				delete buffer;
 			}
 
