@@ -95,9 +95,7 @@ namespace CrypTool {
 				HASH_ALGORITHM_TYPE_RIPEMD160,
 				HASH_ALGORITHM_TYPE_SHA,
 				HASH_ALGORITHM_TYPE_SHA1,
-				HASH_ALGORITHM_TYPE_SHA224,
 				HASH_ALGORITHM_TYPE_SHA256,
-				HASH_ALGORITHM_TYPE_SHA384,
 				HASH_ALGORITHM_TYPE_SHA512
 			};
 
@@ -144,49 +142,61 @@ namespace CrypTool {
 
 	}
 
-	class DialogOperationController : public CDialog {
-	public:
-		enum OperationType {
-			OPERATION_TYPE_NULL,
-			OPERATION_TYPE_HASH,
-			OPERATION_TYPE_SYMMETRIC_ENCRYPTION,
-			OPERATION_TYPE_ASYMMETRIC_ENCRYPTION
+	// this namespace encapsulates a variety of high-level functions
+	namespace Functions {
+
+		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+
+	}
+
+	// this namespace encapsulates internal functionality
+	namespace Internal {
+
+		class DialogOperationController : public CDialog {
+		public:
+			enum OperationType {
+				OPERATION_TYPE_NULL,
+				OPERATION_TYPE_HASH,
+				OPERATION_TYPE_SYMMETRIC_ENCRYPTION,
+				OPERATION_TYPE_ASYMMETRIC_ENCRYPTION
+			};
+		public:
+			struct OperationParameters {
+				const OperationType operationType;
+				OperationParameters(const OperationType _operationType) : operationType(_operationType) { }
+				virtual ~OperationParameters() { }
+			};
+			struct OperationParametersHash : public OperationParameters {
+				const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
+				const CString documentFileName;
+				const CString documentTitle;
+				OperationParametersHash(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) : OperationParameters(OPERATION_TYPE_HASH), hashAlgorithmType(_hashAlgorithmType), documentFileName(_documentFileName), documentTitle(_documentTitle) { }
+				virtual ~OperationParametersHash() { }
+			};
+		public:
+			DialogOperationController();
+			virtual ~DialogOperationController();
+		public:
+			void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+			// TODO/FIXME: insert functions for other operations here
+		private:
+			static UINT execute(LPVOID _operationController);
+		private:
+			OperationParameters *operationParameters;
+			CWinThread *operationThread;
+		private:
+			double operationProgress;
+		private:
+			afx_msg void OnClose();
+		private:
+			void PostNcDestroy();
+		private:
+			DECLARE_MESSAGE_MAP()
+		private:
+			friend class CrypTool::Cryptography::Hash::HashOperation;
 		};
-	public:
-		struct OperationParameters {
-			const OperationType operationType;
-			OperationParameters(const OperationType _operationType) : operationType(_operationType) { }
-			virtual ~OperationParameters() { }
-		};
-		struct OperationParametersHash : public OperationParameters {
-			const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
-			const CString documentFileName;
-			const CString documentTitle;
-			OperationParametersHash(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) : OperationParameters(OPERATION_TYPE_HASH), hashAlgorithmType(_hashAlgorithmType), documentFileName(_documentFileName), documentTitle(_documentTitle) { }
-			virtual ~OperationParametersHash() { }
-		};
-	public:
-		DialogOperationController();
-		virtual ~DialogOperationController();
-	public:
-		void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
-		// TODO/FIXME: insert functions for other operations here
-	private:
-		static UINT execute(LPVOID _operationController);
-	private:
-		OperationParameters *operationParameters;
-		CWinThread *operationThread;
-	private:
-		double operationProgress;
-	private:
-		afx_msg void OnClose();
-	private:
-		void PostNcDestroy();
-	private:
-		DECLARE_MESSAGE_MAP()
-	private:
-		friend class CrypTool::Cryptography::Hash::HashOperation;
-	};
+
+	}
 
 }
 

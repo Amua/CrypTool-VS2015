@@ -637,58 +637,44 @@ void CCryptDoc::OnCryptHashMd2()
 
 void CCryptDoc::OnCryptHashMd4() 
 {
-    UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(),2);
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD4, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashMd5() 
 {
-    UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(),3);	
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashSha() 
 {
-    UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(),4);
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashSha1() 
 {
-    UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(),5);
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashRipemd160() 
 {
-    UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(),6);
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashSha256()
 {
-		UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(), 7);
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA256, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashSha512()
 {
-		UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(), 8);
-#endif
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512, ContentName, GetTitle());
 }
 
 BOOL CAscDoc::OnSaveDocument(LPCTSTR lpszPathName) 

@@ -165,14 +165,8 @@ namespace CrypTool {
 				case HASH_ALGORITHM_TYPE_SHA1:
 					hashAlgorithmName = "SHA1";
 					break;
-				case HASH_ALGORITHM_TYPE_SHA224:
-					hashAlgorithmName = "SHA224";
-					break;
 				case HASH_ALGORITHM_TYPE_SHA256:
 					hashAlgorithmName = "SHA256";
-					break;
-				case HASH_ALGORITHM_TYPE_SHA384:
-					hashAlgorithmName = "SHA384";
 					break;
 				case HASH_ALGORITHM_TYPE_SHA512:
 					hashAlgorithmName = "SHA512";
@@ -201,14 +195,8 @@ namespace CrypTool {
 				case HASH_ALGORITHM_TYPE_SHA1:
 					hashAlgorithmBitLength = 160;
 					break;
-				case HASH_ALGORITHM_TYPE_SHA224:
-					hashAlgorithmBitLength = 224;
-					break;
 				case HASH_ALGORITHM_TYPE_SHA256:
 					hashAlgorithmBitLength = 256;
-					break;
-				case HASH_ALGORITHM_TYPE_SHA384:
-					hashAlgorithmBitLength = 384;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA512:
 					hashAlgorithmBitLength = 512;
@@ -264,25 +252,11 @@ namespace CrypTool {
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA1_Final);
 					delete context;
 					break;
-				case HASH_ALGORITHM_TYPE_SHA224:
-					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
-					fpInitialize = (fpInitialize_t)(OpenSSL::SHA224_Init);
-					fpUpdate = (fpUpdate_t)(OpenSSL::SHA224_Update);
-					fpFinalize = (fpFinalize_t)(OpenSSL::SHA224_Final);
-					delete context;
-					break;
 				case HASH_ALGORITHM_TYPE_SHA256:
 					context = new unsigned char[sizeof(OpenSSL::SHA256_CTX)];
 					fpInitialize = (fpInitialize_t)(OpenSSL::SHA256_Init);
 					fpUpdate = (fpUpdate_t)(OpenSSL::SHA256_Update);
 					fpFinalize = (fpFinalize_t)(OpenSSL::SHA256_Final);
-					delete context;
-					break;
-				case HASH_ALGORITHM_TYPE_SHA384:
-					context = new unsigned char[sizeof(OpenSSL::SHA512_CTX)];
-					fpInitialize = (fpInitialize_t)(OpenSSL::SHA384_Init);
-					fpUpdate = (fpUpdate_t)(OpenSSL::SHA384_Update);
-					fpFinalize = (fpFinalize_t)(OpenSSL::SHA384_Final);
 					delete context;
 					break;
 				case HASH_ALGORITHM_TYPE_SHA512:
@@ -352,74 +326,87 @@ namespace CrypTool {
 
 	}
 
-	DialogOperationController::DialogOperationController() :
-		operationParameters(0),
-		operationThread(0),
-		operationProgress(0.0) {
-		// create the dialog
-		Create(IDD_SHOW_PROGRESS);
+	namespace Functions {
+
+		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+			CrypTool::Internal::DialogOperationController *dialogOperationController = new CrypTool::Internal::DialogOperationController();
+			dialogOperationController->startHashOperation(_hashAlgorithmType, _documentFileName, _documentTitle);
+		}
+
 	}
 
-	DialogOperationController::~DialogOperationController() {
-		// clean up memory
-		delete operationParameters;
-	}
+	namespace Internal {
 
-	void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
-		// initialize operation parameters
-		operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
-		// execute operation thread
-		operationThread = AfxBeginThread(execute, this);
-	}
+		DialogOperationController::DialogOperationController() :
+			operationParameters(0),
+			operationThread(0),
+			operationProgress(0.0) {
+			// create the dialog
+			Create(IDD_SHOW_PROGRESS);
+		}
 
-	UINT DialogOperationController::execute(LPVOID _operationController) {
-		// acquire the operation controller, the operation parameters, and the operation type
-		DialogOperationController *controller = (DialogOperationController*)(_operationController);
-		ASSERT(controller);
-		OperationParameters *parameters = controller->operationParameters;
-		ASSERT(parameters);
-		const OperationType type = parameters->operationType;
-		// execute the desired operation
-		if (type == OPERATION_TYPE_HASH) {
-			OperationParametersHash *parametersHash = (OperationParametersHash*)(parameters);
-			ASSERT(parametersHash);
-			// create a title for the dialog, and then make the dialog visible
-			CString title;
-			title.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(parametersHash->hashAlgorithmType));
-			controller->SetWindowText(title);
-			controller->ShowWindow(SW_SHOW);
-			// execute the operation
-			CrypTool::Cryptography::Hash::HashOperation operation(parametersHash->hashAlgorithmType, parametersHash->documentFileName, Utilities::createTemporaryFile());
-			operation.execute(&controller->operationProgress);
+		DialogOperationController::~DialogOperationController() {
+			// clean up memory
+			delete operationParameters;
 		}
-		else if (type == OPERATION_TYPE_SYMMETRIC_ENCRYPTION) {
-			// TODO/FIXME
+
+		void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+			// initialize operation parameters
+			operationParameters = new OperationParametersHash(_hashAlgorithmType, _documentFileName, _documentTitle);
+			// execute operation thread
+			operationThread = AfxBeginThread(execute, this);
 		}
-		else if (type == OPERATION_TYPE_ASYMMETRIC_ENCRYPTION) {
-			// TODO/FIXME
-		}
-		else {
+
+		UINT DialogOperationController::execute(LPVOID _operationController) {
+			// acquire the operation controller, the operation parameters, and the operation type
+			DialogOperationController *controller = (DialogOperationController*)(_operationController);
+			ASSERT(controller);
+			OperationParameters *parameters = controller->operationParameters;
+			ASSERT(parameters);
+			const OperationType type = parameters->operationType;
+			// execute the desired operation
+			if (type == OPERATION_TYPE_HASH) {
+				OperationParametersHash *parametersHash = (OperationParametersHash*)(parameters);
+				ASSERT(parametersHash);
+				// create a title for the dialog, and then make the dialog visible
+				CString title;
+				title.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(parametersHash->hashAlgorithmType));
+				controller->SetWindowText(title);
+				controller->ShowWindow(SW_SHOW);
+				// execute the operation
+				CrypTool::Cryptography::Hash::HashOperation operation(parametersHash->hashAlgorithmType, parametersHash->documentFileName, Utilities::createTemporaryFile());
+				operation.execute(&controller->operationProgress);
+			}
+			else if (type == OPERATION_TYPE_SYMMETRIC_ENCRYPTION) {
+				// TODO/FIXME
+			}
+			else if (type == OPERATION_TYPE_ASYMMETRIC_ENCRYPTION) {
+				// TODO/FIXME
+			}
+			else {
+				controller->SendMessage(WM_CLOSE);
+				AfxEndThread(-1);
+				return -1;
+			}
 			controller->SendMessage(WM_CLOSE);
-			AfxEndThread(-1);
-			return -1;
+			AfxEndThread(0);
+			return 0;
 		}
-		controller->SendMessage(WM_CLOSE);
-		AfxEndThread(0);
-		return 0;
-	}
 
-	void DialogOperationController::OnClose() {
-		CDialog::OnClose();
-		DestroyWindow();
-	}
+		void DialogOperationController::OnClose() {
+			CDialog::OnClose();
+			DestroyWindow();
+		}
 
-	void DialogOperationController::PostNcDestroy() {
-		CDialog::PostNcDestroy();
-		delete this;
-	}
+		void DialogOperationController::PostNcDestroy() {
+			CDialog::PostNcDestroy();
+			delete this;
+		}
 
-	BEGIN_MESSAGE_MAP(DialogOperationController, CDialog)
-		ON_WM_CLOSE()
-	END_MESSAGE_MAP()
+		BEGIN_MESSAGE_MAP(DialogOperationController, CDialog)
+			ON_WM_CLOSE()
+		END_MESSAGE_MAP()
+
+	}
 
 }
