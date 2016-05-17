@@ -413,6 +413,7 @@ namespace CrypTool {
 
 		void DialogOperationController::OnCancel() {
 			CDialog::OnCancel();
+			DestroyWindow();
 		}
 
 		void DialogOperationController::OnClose() {
