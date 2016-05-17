@@ -151,7 +151,6 @@ BEGIN_MESSAGE_MAP(CCryptDoc, CAppDocument)
 	ON_COMMAND(ID_CRYPT_RC2, OnCryptRc2)
 	ON_COMMAND(ID_CRYPT_DES_DESECB, OnCryptDesDesecb)
 	ON_COMMAND(ID_CRYPT_HASH_MD5, OnCryptHashMd5)
-	ON_COMMAND(ID_CRYPT_HASH_MD2, OnCryptHashMd2)
 	ON_COMMAND(ID_CRYPT_HASH_MD4, OnCryptHashMd4)
 	ON_COMMAND(ID_CRYPT_HASH_RIPEMD160, OnCryptHashRipemd160)
 	ON_COMMAND(ID_CRYPT_HASH_SHA, OnCryptHashSha)
@@ -233,7 +232,6 @@ BEGIN_MESSAGE_MAP(CCryptDoc, CAppDocument)
 	ON_UPDATE_COMMAND_UI(ID_CRYPT_3DES_ECB, OnUpdateNeedSecude)
 	ON_UPDATE_COMMAND_UI(ID_CRYPT_DES_DESCBC, OnUpdateNeedSecude)
 	ON_UPDATE_COMMAND_UI(ID_CRYPT_DES_DESECB, OnUpdateNeedSecude)
-	ON_UPDATE_COMMAND_UI(ID_CRYPT_HASH_MD2, OnUpdateNeedSecude)
 	ON_UPDATE_COMMAND_UI(ID_CRYPT_HASH_MD4, OnUpdateNeedSecude)
 	ON_UPDATE_COMMAND_UI(ID_CRYPT_HASH_MD5, OnUpdateNeedSecude)
 	ON_UPDATE_COMMAND_UI(ID_CRYPT_HASH_RIPEMD160, OnUpdateNeedSecude)
@@ -627,14 +625,6 @@ void CCryptDoc::OnCryptDesDesecb()
 	SymmetricEncryption(IDS_CRYPT_DES_ECB, SECUDE_PROVIDER, ContentName, GetTitle());
 }
 
-void CCryptDoc::OnCryptHashMd2() 
-{
-    UpdateContent();
-#ifndef _UNSTABLE
-		Secude::hash(ContentName, GetTitle(),1);
-#endif
-}
-
 void CCryptDoc::OnCryptHashMd4() 
 {
 	UpdateContent();
@@ -647,6 +637,12 @@ void CCryptDoc::OnCryptHashMd5()
 	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5, ContentName, GetTitle());
 }
 
+void CCryptDoc::OnCryptHashRipemd160()
+{
+	UpdateContent();
+	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160, ContentName, GetTitle());
+}
+
 void CCryptDoc::OnCryptHashSha() 
 {
 	UpdateContent();
@@ -657,12 +653,6 @@ void CCryptDoc::OnCryptHashSha1()
 {
 	UpdateContent();
 	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptHashRipemd160() 
-{
-	UpdateContent();
-	CrypTool::Functions::executeHashOperation(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashSha256()

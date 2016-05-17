@@ -1917,7 +1917,6 @@
 #define ID_CRYPT_HASH_MD5               33017
 #define ID_ANALYSE_IDEA                 33018
 #define ID_ANALYSE_RC2                  33019
-#define ID_CRYPT_HASH_MD2               33020
 #define ID_CRYPT_HASH_MD4               33021
 #define ID_CRYPT_HASH_SHA               33022
 #define ID_CRYPT_HASH_SHA1              33023

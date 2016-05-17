@@ -89,9 +89,8 @@ protected:
 	afx_msg void OnCryptIdea();
 	afx_msg void OnCryptRc2();
 	afx_msg void OnCryptDesDesecb();
-	afx_msg void OnCryptHashMd5();
-	afx_msg void OnCryptHashMd2();
 	afx_msg void OnCryptHashMd4();
+	afx_msg void OnCryptHashMd5();
 	afx_msg void OnCryptHashRipemd160();
 	afx_msg void OnCryptHashSha();
 	afx_msg void OnCryptHashSha1();
