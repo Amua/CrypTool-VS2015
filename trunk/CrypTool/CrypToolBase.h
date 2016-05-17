@@ -170,11 +170,13 @@ namespace CrypTool {
 					CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
 					CString documentFileName;
 					CString documentTitle;
-					// construction
+					// construction/destruction
 					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle("") { }
+					virtual ~ParametersHash() { }
 				} parametersHash;
-				// construction
+				// construction/destruction
 				Parameters() : started(false), finished(false), cancelled(false), progress(0.0) { }
+				virtual ~Parameters() { }
 			} parameters;
 		public:
 			DialogOperationController();
