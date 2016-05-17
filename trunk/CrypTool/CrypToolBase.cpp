@@ -19,6 +19,7 @@ limitations under the License.
 **************************************************************************/
 
 #include "CrypToolBase.h"
+#include "CrypToolApp.h"
 #include "resource.h"
 
 namespace OpenSSL {
@@ -27,6 +28,8 @@ namespace OpenSSL {
 #include "OpenSSL/ripemd.h"
 #include "OpenSSL/sha.h"
 }
+
+#include "DlgShowHash.h"
 
 OctetString::OctetString() :
 	noctets(0),
@@ -40,7 +43,7 @@ namespace CrypTool {
 		byteData(0),
 		byteLength(0) {
 		if (_byteLength > 0) {
-			byteData = new char[byteLength];
+			byteData = new unsigned char[byteLength];
 			std::memset(byteData, 0, byteLength);
 			byteLength = _byteLength;
 		}
@@ -57,7 +60,7 @@ namespace CrypTool {
 			const uint64_t infileLength = infile.GetLength();
 			if (infileLength <= (std::numeric_limits<size_t>::max)()) {
 				byteLength = (size_t)(infileLength);
-				byteData = new char[byteLength];
+				byteData = new unsigned char[byteLength];
 				std::memset(byteData, 0, byteLength);
 				if (infile.Read(byteData, byteLength) == byteLength) {
 					infile.Close();
@@ -77,6 +80,24 @@ namespace CrypTool {
 			outfile.Close();
 		}
 		return false;
+	}
+
+	CString ByteString::toStringHex(const CString &_separator) const {
+		CString stringHex;
+		for (size_t index = 0; index < byteLength; index++) {
+			unsigned char byte = byteData[index];
+			char byteLo;
+			char byteHi;
+			if ((byte % 16) < 10) byteHi = '0' + (byte % 16);
+			else byteHi = 'A' + (byte % 16) - 10;
+			byte /= 16;
+			if (byte < 10) byteLo = '0' + byte;
+			else byteLo = 'A' + byte - 10;
+			stringHex += byteLo;
+			stringHex += byteHi;
+			if (index < byteLength + 1) stringHex += _separator;
+		}
+		return stringHex;
 	}
 
 	void ByteString::reset() {
@@ -376,12 +397,28 @@ namespace CrypTool {
 			// acquire the operation parameters
 			Parameters *parameters = (Parameters*)(_parameters);
 			ASSERT(parameters);
+			// create a file name and a title for the new document, 
+			// and update the parameters accordingly
+			parameters->parametersHash.documentFileNameNew = Utilities::createTemporaryFile();
+			parameters->parametersHash.documentTitleNew.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(parameters->parametersHash.hashAlgorithmType), parameters->parametersHash.documentTitle);
 			// execute the operation
-			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType, parameters->parametersHash.documentFileName, Utilities::createTemporaryFile());
+			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType, parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew);
 			operation->execute(&parameters->cancelled, &parameters->progress);
 			delete operation;
-			// mark the operation as finished, and end the thread
+			// mark the operation as finished
 			parameters->finished = true;
+			// start post-processing: read the result value into a byte string, and display the 
+			// result value in the show hash dialog; if desired by the user, display the result 
+			// in a new document
+			ByteString byteStringHash;
+			byteStringHash.readFromFile(parameters->parametersHash.documentFileNameNew);
+			CDlgShowHash dlgShowHash;
+			dlgShowHash.initialize(parameters->parametersHash.documentTitleNew, byteStringHash.toStringHex(" "));
+			if (dlgShowHash.DoModal() == IDOK) {
+				theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersHash.documentFileNameNew, parameters->parametersHash.documentTitleNew);
+			}
+			// mark the operation as done, and end the thread
+			parameters->done = true;
 			AfxEndThread(0);
 			return 0;
 		}
@@ -401,9 +438,12 @@ namespace CrypTool {
 				controlProgress.SetPos((int)(parameters.progress * 100));
 				// update the text
 				controlText.SetWindowText("");
-				// if the operation is finished or cancelled, kill the 
-				// update timer and close the dialog
-				if (parameters.finished || parameters.cancelled) {
+				// if the operation is finished, hide the dialog
+				if (parameters.finished) {
+					ShowWindow(SW_HIDE);
+				}
+				// if the operation is done, kill the timer and close the dialog
+				if (parameters.done) {
 					KillTimer(updateTimer);
 					OnClose();
 				}
@@ -413,8 +453,8 @@ namespace CrypTool {
 		}
 
 		void DialogOperationController::OnCancel() {
-			CDialog::OnCancel();
-			DestroyWindow();
+			// mark the operation as done
+			parameters.done = true;
 		}
 
 		void DialogOperationController::OnClose() {

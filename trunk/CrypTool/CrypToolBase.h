@@ -25,6 +25,7 @@ limitations under the License.
 #include <afxmt.h>
 #include <afxwin.h>
 #include <afxcmn.h>
+#include <stdafx.h>
 #include <atlstr.h>
 #include <cstdint>
 #include <cstring>
@@ -59,13 +60,17 @@ namespace CrypTool {
 		bool readFromFile(const CString &_fileName);
 		// write byte string to file; in case of errors, false is returned
 		bool writeToFile(const CString &_fileName) const;
+	public:
+		// convert byte string to a hexadecimal string: if a separator is 
+		// specified, the result will contain a separator after each byte
+		CString toStringHex(const CString &_separator = "") const;
 	private:
 		// resets the byte string: deletes the allocated memory, 
 		// and resets both the byte data and byte length to zero
 		void reset();
 	private:
 		// the byte data
-		char *byteData;
+		unsigned char *byteData;
 		// the byte length
 		size_t byteLength;
 	};
@@ -163,6 +168,8 @@ namespace CrypTool {
 				bool finished;
 				// whether the operation has been cancelled
 				bool cancelled;
+				// whether the operation is done (including post-processing like displaying the result)
+				bool done;
 				// the progress of the operation (0.0 to 1.0)
 				double progress;
 				// parameters specific to hash operations
@@ -170,12 +177,14 @@ namespace CrypTool {
 					CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
 					CString documentFileName;
 					CString documentTitle;
+					CString documentFileNameNew;
+					CString documentTitleNew;
 					// construction/destruction
-					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle("") { }
+					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle(""), documentFileNameNew(""), documentTitleNew("") { }
 					virtual ~ParametersHash() { }
 				} parametersHash;
 				// construction/destruction
-				Parameters() : started(false), finished(false), cancelled(false), progress(0.0) { }
+				Parameters() : started(false), finished(false), cancelled(false), done(false), progress(0.0) { }
 				virtual ~Parameters() { }
 			} parameters;
 		public:
