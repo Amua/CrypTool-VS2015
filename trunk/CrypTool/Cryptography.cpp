@@ -3037,49 +3037,25 @@ void Permutation(const char *infileName, const char *OldTitle, BOOL TEXTMODE)
 	}  // IDOK == DoModal()
 }
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// Hashwert einer Datei berechnen, ohne dass die Datei selbst in den Dialog geöffnet werden 
-// muß. (Henrik Koy: Maerz. 2002)
-
-void HashOfAFile()
-{
-#ifndef _UNSTABLE
-	char fname[257], ftitle[128];
- 
-// == load INPUT
-	{		
-		// Initialisierung des File-Dialogs:
-		CString sFileFilter;
-		CString sDefName("*.*");
-		CString sTitle;
-		DWORD   dwFlags(OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST);
-		sFileFilter.LoadString(IDS_OPEN_DOCUMENT_FILTER);
-		sTitle.LoadString(IDS_OPENHASHOFAFILE);
-		CFileDialog* doc;
-		doc = new CFileDialog(TRUE, NULL, sDefName, dwFlags, sFileFilter);
-		doc->m_ofn.lpstrTitle = sTitle;
-
-		if(doc->DoModal()==IDOK)// Aufruf des File-Dialogs
-		{			
-			strcpy(ftitle, LPCTSTR (doc->GetFileName()));
-			strcpy(fname, LPCTSTR (doc->GetPathName()));
-			delete doc;
-		}
-		else
-		{
-			delete doc;
-			return;
+// original version: Henrik Koy, 2002
+void HashOfAFile() {
+	// initialize parameters for file dialog
+	CString stringFilter = "*.*";
+	DWORD dwFlags = (OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST);
+	CString stringFileFilter;
+	stringFileFilter.LoadString(IDS_OPEN_DOCUMENT_FILTER);
+	CString title;
+	title.LoadString(IDS_OPENHASHOFAFILE);
+	// fire up file dialog
+	CFileDialog dlgFile(TRUE, NULL, stringFilter, dwFlags, stringFileFilter);
+	dlgFile.m_ofn.lpstrTitle = title;
+	if (dlgFile.DoModal() == IDOK) {
+		CDlgSelectHashFunction dlgSelectHashFunction;
+		if (dlgSelectHashFunction.DoModal() == IDOK) {
+			CrypTool::Functions::executeHashOperation(dlgSelectHashFunction.getHashAlgorithmType(), dlgFile.GetPathName(), dlgFile.GetFileName());
 		}
 	}
-	CDlgSelectHashFunction Dlg;
-	if ( Dlg.DoModal() == IDOK )
-	{
-		Secude::hash(fname, ftitle, Dlg.m_selectedHashFunction+1 );
-	}
-#endif
 }
-
 
 //####################################
 //Myriam Zeuner, Projekt Hashdemo

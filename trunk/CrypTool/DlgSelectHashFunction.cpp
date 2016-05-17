@@ -18,11 +18,9 @@
 
 **************************************************************************/
 
-// SelctAHashfunction.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
 #include "DlgSelectHashFunction.h"
 
 #ifdef _DEBUG
@@ -31,223 +29,101 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSelectHashFunction 
-
-
-CDlgSelectHashFunction::CDlgSelectHashFunction(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSelectHashFunction::IDD, pParent)
-{
-	m_deactivateMD4 = false;
-	m_deactivateSHA2 = false;
-	m_sHashAlg = "MD2";
-	//{{AFX_DATA_INIT(CDlgSelectHashFunction)
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	//}}AFX_DATA_INIT
-}
-
-
-void CDlgSelectHashFunction::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSelectHashFunction)
-	DDX_Control(pDX, IDC_RADIO2, m_selectedHashFunctionMD4Ctrl);
-	DDX_Radio(pDX, IDC_RADIO1, m_selectedHashFunctionMD2);
-	DDX_Radio(pDX, IDC_RADIO2, m_selectedHashFunctionMD4);
-	DDX_Radio(pDX, IDC_RADIO3, m_selectedHashFunctionMD5);
-	DDX_Radio(pDX, IDC_RADIO4, m_selectedHashFunctionSHA);
-	DDX_Radio(pDX, IDC_RADIO5, m_selectedHashFunctionSHA_1);
-	DDX_Radio(pDX, IDC_RADIO7, m_selectedHashFunctionSHA_256);
-	DDX_Radio(pDX, IDC_RADIO8, m_selectedHashFunctionSHA_512);
-	DDX_Radio(pDX, IDC_RADIO6, m_selectedHashFunctionRIPEMD_160);
-	//}}AFX_DATA_MAP
-}
-
-
-BEGIN_MESSAGE_MAP(CDlgSelectHashFunction, CDialog)
-	//{{AFX_MSG_MAP(CDlgSelectHashFunction)
-	ON_BN_CLICKED(IDC_RADIO1, OnSelectedMD2)
-	ON_BN_CLICKED(IDC_RADIO2, OnSelectedMD4)
-	ON_BN_CLICKED(IDC_RADIO3, OnSelectedMD5)
-	ON_BN_CLICKED(IDC_RADIO4, OnSelectSHA)
-	ON_BN_CLICKED(IDC_RADIO5, OnSelectedSHA_1)
-	ON_BN_CLICKED(IDC_RADIO7, OnSelectedSHA_256)
-	ON_BN_CLICKED(IDC_RADIO8, OnSelectedSHA_512)
-	ON_BN_CLICKED(IDC_RADIO6, OnSelectedRIPEMD_160)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSelectHashFunction 
-
-void CDlgSelectHashFunction::OnSelectedMD2() 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-	m_selectedHashFunctionMD2 = 0;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	m_selectedHashFunction = 0;
-	UpdateData(FALSE);	
-}
-
-void CDlgSelectHashFunction::OnSelectedMD4() 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = 0;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	m_selectedHashFunction = 1;
-	UpdateData(FALSE);		
-}
-
-void CDlgSelectHashFunction::OnSelectedMD5() 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = 0;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	UpdateData(FALSE);		
-	m_selectedHashFunction = 2;
-}
-
-void CDlgSelectHashFunction::OnSelectSHA() 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = 0;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	UpdateData(FALSE);		
-	m_selectedHashFunction = 3;
-}
-
-void CDlgSelectHashFunction::OnSelectedSHA_1() 
-{
-	// TODO: Code fü	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = 0;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	UpdateData(FALSE);		
-	m_selectedHashFunction = 4;
-}
-
-void CDlgSelectHashFunction::OnSelectedSHA_256() 
-{
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = 0;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	UpdateData(FALSE);		
-	m_selectedHashFunction = 6;
-}
-
-void CDlgSelectHashFunction::OnSelectedSHA_512() 
-{
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = 0;
-	m_selectedHashFunctionRIPEMD_160 = -1;
-	UpdateData(FALSE);		
-	m_selectedHashFunction = 7;
-}
-
-void CDlgSelectHashFunction::OnSelectedRIPEMD_160() 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-	m_selectedHashFunctionMD2 = -1;
-	m_selectedHashFunctionMD4 = -1;
-	m_selectedHashFunctionMD5 = -1;
-	m_selectedHashFunctionSHA = -1;
-	m_selectedHashFunctionSHA_1 = -1;
-	m_selectedHashFunctionSHA_256 = -1;
-	m_selectedHashFunctionSHA_512 = -1;
-	m_selectedHashFunctionRIPEMD_160 = 0;
-	UpdateData(FALSE);		
-	m_selectedHashFunction = 5;	
-}
-
-BOOL CDlgSelectHashFunction::OnInitDialog() 
-{
-	CDialog::OnInitDialog();
+CDlgSelectHashFunction::CDlgSelectHashFunction(CWnd* pParent) :
+	CDialog(CDlgSelectHashFunction::IDD, pParent) {
 	
-	// TODO: Zusätzliche Initialisierung hier einfügen
-	if ( m_deactivateMD4 )
-	{
-		m_selectedHashFunctionMD4Ctrl.EnableWindow(false);		
-	}
-
-	if ( m_deactivateSHA2 )
-	{
-		GetDlgItem(IDC_RADIO7)->EnableWindow(false);
-		GetDlgItem(IDC_RADIO8)->EnableWindow(false);
-	}
-
-	if(m_sHashAlg=="MD2")			OnSelectedMD2();
-	if(m_sHashAlg=="MD4")			OnSelectedMD4(); 
-	if(m_sHashAlg=="MD5")			OnSelectedMD5(); 	
-	if(m_sHashAlg=="SHA")			OnSelectSHA();
-	if(m_sHashAlg=="SHA-1")			OnSelectedSHA_1();
-	if(m_sHashAlg=="SHA-256")		OnSelectedSHA_256();
-	if(m_sHashAlg=="SHA-512")		OnSelectedSHA_512();
-	if(m_sHashAlg=="RIPEMD-160")	OnSelectedRIPEMD_160(); 
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
 }
 
+CrypTool::Cryptography::Hash::HashAlgorithmType CDlgSelectHashFunction::getHashAlgorithmType() const {
+	if (selectedHashFunctionMD4 == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD4;
+	else if (selectedHashFunctionMD5 == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5;
+	else if (selectedHashFunctionSHA == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA;
+	else if (selectedHashFunctionSHA1 == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1;
+	else if (selectedHashFunctionSHA256 == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA256;
+	else if (selectedHashFunctionSHA512 == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512;
+	else if (selectedHashFunctionRIPEMD160 == 0) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160;
+	else return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
+}
 
-void CDlgSelectHashFunction::OnOK() 
-{
-	switch(m_selectedHashFunction)
-	{
-		case 0: m_sHashAlg = "MD2"; break;
-		case 1: m_sHashAlg = "MD4"; break;
-		case 2: m_sHashAlg = "MD5"; break;
-		case 3: m_sHashAlg = "SHA"; break;
-		case 4: m_sHashAlg = "SHA-1"; break;
-		case 6: m_sHashAlg = "SHA-256"; break;
-		case 7: m_sHashAlg = "SHA-512"; break;
-		case 5: m_sHashAlg = "RIPEMD-160"; break;
-		default: m_sHashAlg.Empty();
-	}
+BOOL CDlgSelectHashFunction::OnInitDialog() {
+	CDialog::OnInitDialog();
+	OnSelectedHashFunctionMD4();
+	return FALSE;
+}
+
+void CDlgSelectHashFunction::DoDataExchange(CDataExchange* pDX) {
+	CDialog::DoDataExchange(pDX);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_MD4, selectedHashFunctionMD4);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_MD5, selectedHashFunctionMD5);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_SHA, selectedHashFunctionSHA);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_SHA1, selectedHashFunctionSHA1);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_SHA256, selectedHashFunctionSHA256);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_SHA512, selectedHashFunctionSHA512);
+	DDX_Radio(pDX, IDC_RADIO_HASH_FUNCTION_RIPEMD160, selectedHashFunctionRIPEMD160);
+}
+
+void CDlgSelectHashFunction::deselectAllHashFunctions() {
+	selectedHashFunctionMD4 = -1;
+	selectedHashFunctionMD5 = -1;
+	selectedHashFunctionSHA = -1;
+	selectedHashFunctionSHA1 = -1;
+	selectedHashFunctionSHA256 = -1;
+	selectedHashFunctionSHA512 = -1;
+	selectedHashFunctionRIPEMD160 = -1;
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionMD4() {
+	deselectAllHashFunctions();
+	selectedHashFunctionMD4 = 0;
+	UpdateData(false);		
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionMD5() {
+	deselectAllHashFunctions();
+	selectedHashFunctionMD5 = 0;
+	UpdateData(false);
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionSHA() {
+	deselectAllHashFunctions();
+	selectedHashFunctionSHA = 0;
+	UpdateData(false);
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionSHA1() {
+	deselectAllHashFunctions();
+	selectedHashFunctionSHA1 = 0;
+	UpdateData(false);
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionSHA256() {
+	deselectAllHashFunctions();
+	selectedHashFunctionSHA256 = 0;
+	UpdateData(false);
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionSHA512() {
+	deselectAllHashFunctions();
+	selectedHashFunctionSHA512 = 0;
+	UpdateData(false);
+}
+
+void CDlgSelectHashFunction::OnSelectedHashFunctionRIPEMD160() {
+	deselectAllHashFunctions();
+	selectedHashFunctionRIPEMD160 = 0;
+	UpdateData(false);
+}
+
+void CDlgSelectHashFunction::OnOK() {
 	CDialog::OnOK();
 }
+
+BEGIN_MESSAGE_MAP(CDlgSelectHashFunction, CDialog)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_MD4, OnSelectedHashFunctionMD4)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_MD5, OnSelectedHashFunctionMD5)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_SHA, OnSelectedHashFunctionSHA)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_SHA1, OnSelectedHashFunctionSHA1)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_SHA256, OnSelectedHashFunctionSHA256)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_SHA512, OnSelectedHashFunctionSHA512)
+	ON_BN_CLICKED(IDC_RADIO_HASH_FUNCTION_RIPEMD160, OnSelectedHashFunctionRIPEMD160)
+END_MESSAGE_MAP()

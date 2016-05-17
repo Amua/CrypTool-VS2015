@@ -18,70 +18,42 @@
 
 **************************************************************************/
 
-#if !defined(AFX_SELCTAHASHFUNCTION_H__F4D10A11_197E_11D6_9392_00B0D0161C45__INCLUDED_)
-#define AFX_SELCTAHASHFUNCTION_H__F4D10A11_197E_11D6_9392_00B0D0161C45__INCLUDED_
+#ifndef _DLGSELECTHASHFUNCTION_H_
+#define _DLGSELECTHASHFUNCTION_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// SelctAHashfunction.h : Header-Datei
-//
+#include "CrypToolBase.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSelectHashFunction 
-
-class CDlgSelectHashFunction : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSelectHashFunction(CWnd* pParent = NULL);   // Standardkonstruktor
-
-	bool    m_deactivateMD4;
-	bool    m_deactivateSHA2;
-	int		m_selectedHashFunction;
-	CString m_sHashAlg;
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSelectHashFunction)
+class CDlgSelectHashFunction : public CDialog {
 	enum { IDD = IDD_SELECT_HASHFUNCTION };
-	CButton	m_selectedHashFunctionMD4Ctrl;
-	int		m_selectedHashFunctionMD2;
-	int		m_selectedHashFunctionMD4;
-	int		m_selectedHashFunctionMD5;
-	int		m_selectedHashFunctionSHA;
-	int		m_selectedHashFunctionSHA_1;
-	int		m_selectedHashFunctionSHA_256;
-	int		m_selectedHashFunctionSHA_512;
-	int		m_selectedHashFunctionRIPEMD_160;
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSelectHashFunction)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSelectHashFunction(CWnd* pParent = NULL);
+public:
+	CrypTool::Cryptography::Hash::HashAlgorithmType getHashAlgorithmType() const;
 protected:
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSelectHashFunction)
-	afx_msg void OnSelectedMD2();
-	afx_msg void OnSelectedMD4();
-	afx_msg void OnSelectedMD5();
 	virtual BOOL OnInitDialog();
-	afx_msg void OnSelectSHA();
-	afx_msg void OnSelectedSHA_1();
-	afx_msg void OnSelectedSHA_256();
-	afx_msg void OnSelectedSHA_512();
-	afx_msg void OnSelectedRIPEMD_160();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
+	void deselectAllHashFunctions();
+protected:
+	afx_msg void OnSelectedHashFunctionMD4();
+	afx_msg void OnSelectedHashFunctionMD5();
+	afx_msg void OnSelectedHashFunctionSHA();
+	afx_msg void OnSelectedHashFunctionSHA1();
+	afx_msg void OnSelectedHashFunctionSHA256();
+	afx_msg void OnSelectedHashFunctionSHA512();
+	afx_msg void OnSelectedHashFunctionRIPEMD160();
+protected:
 	virtual void OnOK();
-	//}}AFX_MSG
+private:
+	int selectedHashFunctionMD4;
+	int selectedHashFunctionMD5;
+	int selectedHashFunctionSHA;
+	int selectedHashFunctionSHA1;
+	int selectedHashFunctionSHA256;
+	int selectedHashFunctionSHA512;
+	int selectedHashFunctionRIPEMD160;
+
 	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_SELCTAHASHFUNCTION_H__F4D10A11_197E_11D6_9392_00B0D0161C45__INCLUDED_
+#endif
