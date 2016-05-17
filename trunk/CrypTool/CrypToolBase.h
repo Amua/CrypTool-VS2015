@@ -24,6 +24,7 @@ limitations under the License.
 #include <afx.h>
 #include <afxmt.h>
 #include <afxwin.h>
+#include <afxcmn.h>
 #include <atlstr.h>
 #include <cstdint>
 #include <cstring>
@@ -110,7 +111,7 @@ namespace CrypTool {
 				HashOperation(const HashAlgorithmType _hashAlgorithmType, const CString &_fileNameSource, const CString &_fileNameTarget);
 				virtual ~HashOperation();
 			public:
-				void execute(double *_progress = 0);
+				void execute(const bool *_cancelled = 0, double *_progress = 0);
 			private:
 				const HashAlgorithmType hashAlgorithmType;
 				const CString fileNameSource;
@@ -153,13 +154,28 @@ namespace CrypTool {
 	namespace Internal {
 
 		class DialogOperationController : public CDialog {
-		public:
-			struct OperationParameters {
-				struct OperationParametersHash {
+		private:
+			// this struct is passed to the individual execution threads to 
+			// communicate with the main thread (where this dialog lives in)
+			struct Parameters {
+				// whether the operation has been started
+				bool started;
+				// whether the operation has been finished
+				bool finished;
+				// whether the operation has been cancelled
+				bool cancelled;
+				// the progress of the operation (0.0 to 1.0)
+				double progress;
+				// parameters specific to hash operations
+				struct ParametersHash {
 					CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
 					CString documentFileName;
 					CString documentTitle;
+					// construction
+					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle("") { }
 				} parametersHash;
+				// construction
+				Parameters() : started(false), finished(false), cancelled(false), progress(0.0) { }
 			} parameters;
 		public:
 			DialogOperationController();
@@ -168,22 +184,28 @@ namespace CrypTool {
 			void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 			// TODO/FIXME: insert functions for other operations here
 		private:
-			static UINT executeHashOperation(LPVOID _operationController);
+			static UINT executeHashOperation(LPVOID _parameters);
 			// TODO/FIXME: insert functions for other operations here
 		private:
-			static UINT updateOperation(LPVOID _operationController);
-		private:
 			// this thread is used for executing the actual operation
-			CWinThread *operationExecutionThread;
-			// this thread is used for updating the operation progress in the dialog
-			CWinThread *operationUpdateThread;
+			CWinThread *operationThread;
 		private:
-			double operationProgress;
-			void updateOperationProgress();
+			// the identifier of the update timer
+			UINT_PTR updateTimer;
+			// the identifier for the update timer event
+			const UINT ID_TIMER_EVENT_UPDATE;
 		private:
-			afx_msg void OnClose();
+			virtual BOOL OnInitDialog();
+			virtual void OnTimer(UINT_PTR _event);
+			virtual void OnCancel();
+			virtual void OnClose();
 		private:
 			void PostNcDestroy();
+		private:
+			virtual void DoDataExchange(CDataExchange *_pDX);
+		private:
+			CProgressCtrl controlProgress;
+			CStatic controlText;
 		private:
 			DECLARE_MESSAGE_MAP()
 		private:
