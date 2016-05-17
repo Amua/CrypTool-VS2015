@@ -377,8 +377,9 @@ namespace CrypTool {
 			Parameters *parameters = (Parameters*)(_parameters);
 			ASSERT(parameters);
 			// execute the operation
-			CrypTool::Cryptography::Hash::HashOperation operation(parameters->parametersHash.hashAlgorithmType, parameters->parametersHash.documentFileName, Utilities::createTemporaryFile());
-			operation.execute(&parameters->cancelled, &parameters->progress);
+			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType, parameters->parametersHash.documentFileName, Utilities::createTemporaryFile());
+			operation->execute(&parameters->cancelled, &parameters->progress);
+			delete operation;
 			// mark the operation as finished, and end the thread
 			parameters->finished = true;
 			AfxEndThread(0);
