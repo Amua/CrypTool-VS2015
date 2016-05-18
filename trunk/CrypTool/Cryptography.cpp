@@ -3067,7 +3067,7 @@ void Hashdemo(const char *infile,const char *OldTitle)
 	const CString documentTitle = OldTitle;
 	// create and fire up hash demo dialog
 	CDlgHashDemo dlgHashDemo(documentFileName, documentTitle);
-	AfxInitRichEdit(); // GRRMPF
+	AfxInitRichEdit();
 	dlgHashDemo.DoModal();
 }
 

@@ -991,8 +991,6 @@ void CCrypToolApp::OnOpttext()
 	TextOptions.DoModal();
 }
 
-
-
 int CCrypToolApp::ExitInstance()
 {
 	if(CaPseDatei) free(CaPseDatei);
@@ -1004,7 +1002,6 @@ int CCrypToolApp::ExitInstance()
 	if (ScintillaLib) FreeLibrary(ScintillaLib);
 
 	return CWinApp::ExitInstance();
-//	m_pRecentFileList->WriteList();
 }
 
 void CCrypToolApp::OnUpdateNeedSecudeTicket(CCmdUI* pCmdUI) 
@@ -1048,39 +1045,16 @@ void CCrypToolApp::OnEinzelverfahrenTutorialRsaalgorithmus()
 
 void CCrypToolApp::OnEinzelverfahrenTutorialfrkleinezahlenFaktorisieren() 
 {
-	CDlgFactorisationDemo FAKT;
+	CDlgFactorisationDemo dlgFactorisationDemo;
 	AfxInitRichEdit();
-        FAKT.DoModal();
-/*
-	if ( FAKT.DetailsFactorisation.b_SaveFactorList )
-	{
-		CAppDocument *NewDoc;
-		NewDoc = theApp.OpenDocumentFileNoMRU( FAKT.DetailsFactorisation.outfile);
-		remove(FAKT.DetailsFactorisation.outfile);
-		LoadString(AfxGetInstanceHandle(),IDS_DETFACTORISATION_HL_OUTPUT,
-				pc_str,STR_LAENGE_STRING_TABLE);
-		char line[256];
-		CString tmp = FAKT.DetailsFactorisation.m_orignNumber;
-		if ( tmp.GetLength() < 20 )
-		{
-			sprintf( line, pc_str, tmp.GetBuffer(0) );
-		}
-		else
-		{
-			CString tmp2 = tmp.Left(9) + "..." + tmp.Right(8);
-			sprintf( line, pc_str, tmp2.GetBuffer(0) );
-		}
-		NewDoc->SetTitle(line);
-	}
-*/
+	dlgFactorisationDemo.DoModal();
 }
 
 void CCrypToolApp::OnEinzelverfahrenSchluesselgenerieren() 
 {
-	CDlgKeyFromPassword SG;
-	SG.DoModal();
+	CDlgKeyFromPassword dlgKeyFromPassword;
+	dlgKeyFromPassword.DoModal();
 }
-
 
 void CCrypToolApp::OnGenRandomData()
 {
@@ -1088,20 +1062,17 @@ void CCrypToolApp::OnGenRandomData()
 	DGR.DoModal();
 }
 
-
 void CCrypToolApp::OnHashOfAFile() 
 {
 	// TODO: Code für Befehlsbehandlungsroutine hier einfügen
 	HashOfAFile();	
 }
 
-
 void CCrypToolApp::OnEinzelverfahrenTutorialSignaturerzeugung() 
 {
 	CDlgSignatureDemo DST;
 	DST.DoModal();
 }
-
 
 #if !defined(_MSC_VER) || _MSC_VER <= 1200		
 // HTML Help for VC++ 6.0
