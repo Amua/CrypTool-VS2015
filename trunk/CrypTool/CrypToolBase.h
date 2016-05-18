@@ -33,7 +33,7 @@ limitations under the License.
 #include <vector>
 #include <set>
 
-// this struct encapsulates an octet string (TODO/FIXME: TEMPORARY SOLUTION FOR COMPATIBILITY WITH LEGACY CODE)
+// this struct encapsulates an octet string for compatibility with legacy code
 struct OctetString {
 	// construction
 	OctetString();
@@ -60,6 +60,26 @@ namespace CrypTool {
 		bool readFromFile(const CString &_fileName);
 		// write byte string to file; in case of errors, false is returned
 		bool writeToFile(const CString &_fileName) const;
+	public:
+		// this function is provided for compatibility with legacy code; 
+		// it calls the fromBuffer implementation internally (see below)
+		size_t fromOctetString(OctetString *_octetString);
+		// this function is provided for compatibility with legacy code; 
+		// it calls the toBuffer implementation internally (see below)
+		size_t toOctetString(OctetString *_octetString) const;
+	public:
+		// read data from the specified buffer; this function is "dumb" in that the 
+		// caller needs to make sure the memory of the specified buffer is valid; 
+		// zero pointers make this function return zero without doing anything else; 
+		// otherwise this function returns the number of bytes copied to the internal 
+		// buffer (it allocates new memory internally)
+		size_t fromBuffer(const unsigned char *_bufferData, const size_t _bufferLength);
+		// write data to the specified buffer; this function is "dumb" in that the 
+		// caller needs to make sure the memory of the specified buffer is valid; 
+		// zero pointers make this function return zero without doing anything else; 
+		// otherwise this function returns the number of bytes copied to the specified 
+		// buffer
+		size_t toBuffer(unsigned char *_bufferData, const size_t _bufferLength) const;
 	public:
 		// convert byte string to a hexadecimal string: if a separator is 
 		// specified, the result will contain a separator after each byte

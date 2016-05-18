@@ -43,9 +43,9 @@ namespace CrypTool {
 		byteData(0),
 		byteLength(0) {
 		if (_byteLength > 0) {
+			byteLength = _byteLength;
 			byteData = new unsigned char[byteLength];
 			std::memset(byteData, 0, byteLength);
-			byteLength = _byteLength;
 		}
 	}
 
@@ -80,6 +80,40 @@ namespace CrypTool {
 			outfile.Close();
 		}
 		return false;
+	}
+
+	size_t ByteString::fromOctetString(OctetString *_octetString) {
+		return fromBuffer((unsigned char*)(_octetString->octets), _octetString->noctets);
+	}
+
+	size_t ByteString::toOctetString(OctetString *_octetString) const {
+		return toBuffer((unsigned char*)(_octetString->octets), _octetString->noctets);
+	}
+
+	size_t ByteString::fromBuffer(const unsigned char *_bufferData, const size_t _bufferLength) {
+		if (!_bufferData) {
+			return 0;
+		}
+		reset();
+		byteLength = _bufferLength;
+		byteData = new unsigned char[_bufferLength];
+		std::memset(byteData, 0, byteLength);
+		std::memcpy(byteData, _bufferData, byteLength);
+		return byteLength;
+	}
+
+	size_t ByteString::toBuffer(unsigned char *_bufferData, const size_t _bufferLength) const {
+		if (!_bufferData) {
+			return 0;
+		}
+		if (_bufferLength > byteLength) {
+			std::memcpy(_bufferData, byteData, byteLength);
+			return byteLength;
+		}
+		else {
+			std::memcpy(_bufferData, byteData, _bufferLength);
+			return _bufferLength;
+		}
 	}
 
 	CString ByteString::toStringHex(const CString &_separator) const {
