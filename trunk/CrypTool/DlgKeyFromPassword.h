@@ -49,7 +49,6 @@ protected:
 	afx_msg void OnUpdateEdit5();
 	afx_msg void OnBnClickedRadio1();
 	afx_msg void OnBnClickedRadio2();
-	afx_msg void OnBnClickedRadio3();
 	afx_msg void OnBUTTONcancel();
 	afx_msg void OnBUTTONUebernehmen();
 private:

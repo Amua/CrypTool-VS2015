@@ -79,9 +79,8 @@ void CDlgKeyFromPassword::OnBUTTONGenerieren() {
 	// acquire hash algorithm type
 	CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
 	switch (m_radio1) {
-	case 0: break;
-	case 1: hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5; break;
-	case 2: hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1; break;
+	case 0: hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5; break;
+	case 1: hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1; break;
 	default: break;
 	}
 	// declare input variables for key generation function
@@ -145,12 +144,6 @@ void CDlgKeyFromPassword::OnBnClickedRadio1() {
 
 void CDlgKeyFromPassword::OnBnClickedRadio2() {
 	m_radio1 = 1;
-	m_dkLen = "16";
-	UpdateData(false);
-}
-
-void CDlgKeyFromPassword::OnBnClickedRadio3() {
-	m_radio1 = 2;
 	m_dkLen = "20";
 	UpdateData(false);
 }
@@ -217,5 +210,4 @@ BEGIN_MESSAGE_MAP(CDlgKeyFromPassword, CDialog)
 	ON_EN_UPDATE(IDC_EDIT5, OnUpdateEdit5)
 	ON_BN_CLICKED(IDC_RADIO1, &CDlgKeyFromPassword::OnBnClickedRadio1)
 	ON_BN_CLICKED(IDC_RADIO2, &CDlgKeyFromPassword::OnBnClickedRadio2)
-	ON_BN_CLICKED(IDC_RADIO3, &CDlgKeyFromPassword::OnBnClickedRadio3)
 END_MESSAGE_MAP()
