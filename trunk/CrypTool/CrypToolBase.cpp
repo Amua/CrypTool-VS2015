@@ -193,7 +193,7 @@ namespace CrypTool {
 		const ByteString byteStringOld = *this;
 		reset(byteStringOld.byteLength + _byteString.byteLength);
 		std::memcpy(byteData, byteStringOld.byteData, byteStringOld.byteLength);
-		std::memcpy(byteData + byteStringOld.byteLength, _byteString.byteData, byteLength);
+		std::memcpy(byteData + byteStringOld.byteLength, _byteString.byteData, _byteString.byteLength);
 		return *this;
 	}
 
