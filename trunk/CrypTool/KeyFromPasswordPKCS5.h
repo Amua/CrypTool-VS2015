@@ -18,27 +18,19 @@
 
 **************************************************************************/
 
-
-// Schluessel_gen.h: Schnittstelle für die Klasse Schluessel_gen.
-//
-//////////////////////////////////////////////////////////////////////
-
-#if !defined(AFX_SCHLUESSEL_GEN_H__68EC2361_1E13_11D5_88AA_00062919F268__INCLUDED_)
-#define AFX_SCHLUESSEL_GEN_H__68EC2361_1E13_11D5_88AA_00062919F268__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
+#ifndef _KEYFROMPASSWORDPKCS5_H_
+#define _KEYFROMPASSWORDPKCS5_H_
 
 #include <string.h>
-
 #include <math.h>
 
-//#include "CrypToolApp.h"
-
-class CKeyFromPasswordPKCS5  
-{
+// original implementation: Roger Oyono, 2001
+class CKeyFromPasswordPKCS5 {
+public:
+	CKeyFromPasswordPKCS5();
+	virtual ~CKeyFromPasswordPKCS5();
+public:
+	int password_based_key_deriv_funct(CString Passwort, CString Salt, CString dkLen, int AlgId, CString zaehler);
 public:
 	char *str1;
 	OctetString Salt_octetstring;
@@ -52,10 +44,6 @@ public:
 	L_NUMBER hashwert[MAXLGTH];
 #endif
 	int base;
-	int password_based_key_deriv_funct (CString Passwort, CString Salt, CString dkLen, int AlgId, CString zaehler);
-	CKeyFromPasswordPKCS5();
-	virtual ~CKeyFromPasswordPKCS5();
-
 };
 
-#endif // !defined(AFX_SCHLUESSEL_GEN_H__68EC2361_1E13_11D5_88AA_00062919F268__INCLUDED_)
+#endif

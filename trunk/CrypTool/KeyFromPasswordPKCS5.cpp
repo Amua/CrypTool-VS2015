@@ -18,24 +18,9 @@
 
 **************************************************************************/
 
-
-/******************************************************************************************************/
-/*                  Schluessel_gen.cpp: Implementierung der Klasse Schluessel_gen.                    */
-/*                     Copyright 1998-2000 Deutsche Bank AG, Frankfurt am Main                        */
-/*                                                                                                    */
-/*                         Programmiert von Roger Oyono März 2001                                     */
-/*                                                                                                    */
-/*                         Deutsche Bank AG Frankfurt - IT Security                                   */
-/******************************************************************************************************/
-
 #include "stdafx.h"
-#include "stdafx.h"
-
-
 #include "CrypToolApp.h"
 #include "KeyFromPasswordPKCS5.h"
-#include "DialogeMessage.h"
-//#include "DlgKeyHex.h"	// Dialog-Box für die Schlüsseleingabe
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -43,24 +28,15 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-// Konstruktion/Destruktion
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-CKeyFromPasswordPKCS5::CKeyFromPasswordPKCS5()
-{
+CKeyFromPasswordPKCS5::CKeyFromPasswordPKCS5() {
 
 }
 
-CKeyFromPasswordPKCS5::~CKeyFromPasswordPKCS5()
-{
+CKeyFromPasswordPKCS5::~CKeyFromPasswordPKCS5() {
 
 }
 
-/****************************************************************************************************/
-
-int CKeyFromPasswordPKCS5::password_based_key_deriv_funct(CString Passwort, CString Salt, CString dkLen, int AlgId, CString zaehler)
-{
+int CKeyFromPasswordPKCS5::password_based_key_deriv_funct(CString Passwort, CString Salt, CString dkLen, int AlgId, CString zaehler) {
 #ifndef _UNSTABLE
 	if (atoi(zaehler) < 0)
 	{// Der Zahler muß positiv sein

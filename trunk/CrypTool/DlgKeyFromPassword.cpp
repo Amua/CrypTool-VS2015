@@ -28,9 +28,11 @@
 /******************************************************************************************************/
 
 #include "stdafx.h"
-#include "CrypToolApp.h"
-#include "DlgKeyFromPassword.h"
 #include "string.h"
+#include "CrypToolApp.h"
+#include "FileTools.h"
+#include "DlgKeyFromPassword.h"
+#include "KeyFromPasswordPKCS5.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -75,6 +77,7 @@ void CDlgKeyFromPassword::DoDataExchange(CDataExchange* pDX) {
 void CDlgKeyFromPassword::OnBUTTONGenerieren() {
 	UpdateData(true);
 	SHOW_HOUR_GLASS
+	CKeyFromPasswordPKCS5 SG;
 	if (0==SG.password_based_key_deriv_funct(m_passwort, m_salt,m_dkLen,m_radio1,m_zaehler))
 	{
 		int ndx = 0, md = 0;

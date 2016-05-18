@@ -22,8 +22,6 @@
 #define _DLGKEYFROMPASSWORD_H_
 
 #include "stdafx.h"
-#include "FileTools.h"
-#include "KeyFromPasswordPKCS5.h"
 
 class CDlgKeyFromPassword : public CDialog {
 	enum { IDD = IDD_KEY_FROM_PASSWORD };
@@ -56,8 +54,6 @@ protected:
 	afx_msg void OnBUTTONUebernehmen();
 private:
 	void CheckEdit(CString & m_edit, int & sels, int & sele);
-private:
-	CKeyFromPasswordPKCS5 SG;
 
 	DECLARE_MESSAGE_MAP()
 };
