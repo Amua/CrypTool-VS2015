@@ -1472,9 +1472,6 @@ void CCryptDoc::OnUpdateAesSelfextract(CCmdUI* pCmdUI)
 void CCryptDoc::OnEinzelverfahrenHashwerteHashdemo() 
 {
 	UpdateContent();
-
-	//ContentName ist eine globale Variable, die den Dateinamen der Temp-Datei enthält
-	//GetTitle Titelüberschrift des aktuellen Dlgs (Bsp. "Unbenannt1")
 	Hashdemo(ContentName,GetTitle());
 }
 

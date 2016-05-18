@@ -48,7 +48,7 @@ CrypTool::Cryptography::Hash::HashAlgorithmType CDlgSelectHashFunction::getHashA
 BOOL CDlgSelectHashFunction::OnInitDialog() {
 	CDialog::OnInitDialog();
 	OnSelectedHashFunctionMD4();
-	return FALSE;
+	return TRUE;
 }
 
 void CDlgSelectHashFunction::DoDataExchange(CDataExchange* pDX) {
