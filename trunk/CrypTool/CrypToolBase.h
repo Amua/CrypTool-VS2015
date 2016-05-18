@@ -51,9 +51,10 @@ namespace CrypTool {
 	// makes sure the allocated memory is deleted upon destruction
 	class ByteString {
 	public:
-		// construction: if no parameter is specified, no memory is allocated
-		ByteString(const size_t _byteLength = 0);
-		// destruction: the allocated memory is deleted
+		// construction
+		ByteString();
+		ByteString(const ByteString &_byteString);
+		// destruction
 		~ByteString();
 	public:
 		// read byte string from file: in case of errors, false is returned
@@ -74,6 +75,8 @@ namespace CrypTool {
 		// buffer
 		size_t toBuffer(unsigned char *_bufferData, const size_t _bufferLength) const;
 	public:
+		// this is a convenience function to convert CString objects to byte strings
+		void fromString(const CString &_string);
 		// this is a convenience function to convert byte strings to CString objects; 
 		// note that the result is truncated where the first null byte is spotted
 		CString toString() const;
@@ -100,6 +103,8 @@ namespace CrypTool {
 	public:
 		// operator implementation
 		ByteString &operator=(const ByteString &_byteString);
+		// operator implementation
+		ByteString &operator+=(const ByteString &_byteString);
 	private:
 		// the byte data
 		unsigned char *byteData;
@@ -116,6 +121,18 @@ namespace CrypTool {
 		// folders, it uses the CrypTool directory; if a temporary file name cannot be created, the function 
 		// asserts; the function is thread-safe
 		CString createTemporaryFile(const CString &_extension = ".tmp");
+
+		// this template function is provided for convenience, it returns true if the specified vector 
+		// contains the specified element
+		template<class T>
+		bool vectorContains(const std::vector<T> &_vector, const T &_element) {
+			for (size_t index = 0; index < _vector.size(); index++) {
+				if (_vector[index] == _element) {
+					return true;
+				}
+			}
+			return false;
+		}
 
 	}
 
@@ -186,7 +203,11 @@ namespace CrypTool {
 	// this namespace encapsulates a variety of high-level functions
 	namespace Functions {
 
+		// TODO/FIXME: rename or remove this? the complexity behind this operation is unclear (threading, etc...)
 		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+
+		// this function creates a password-derived key based on the PKCS#5 standard
+		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key);
 
 	}
 

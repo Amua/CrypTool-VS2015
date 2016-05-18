@@ -32,7 +32,6 @@
 #include "CrypToolApp.h"
 #include "FileTools.h"
 #include "DlgKeyFromPassword.h"
-#include "KeyFromPasswordPKCS5.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -77,19 +76,29 @@ void CDlgKeyFromPassword::DoDataExchange(CDataExchange* pDX) {
 void CDlgKeyFromPassword::OnBUTTONGenerieren() {
 	UpdateData(true);
 	SHOW_HOUR_GLASS
-	CKeyFromPasswordPKCS5 SG;
-	if (0==SG.password_based_key_deriv_funct(m_passwort, m_salt,m_dkLen,m_radio1,m_zaehler))
-	{
-		int ndx = 0, md = 0;
-		if ( SG.str[0] == '0' && ( SG.str[1] == 'X' || SG.str[1] == 'x' ) ) ndx = 2;
-		m_schluessel = (CString)"";
-        while ( SG.str[ndx] != 0 )
-		{
-			m_schluessel += SG.str[ndx++]; 
-			md = (md+1) % 2;
-		    if (!md && SG.str[ndx]  != 0 ) m_schluessel += " ";
-		}
+	// acquire hash algorithm type
+	CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
+	switch (m_radio1) {
+	case 0: break;
+	case 1: hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5; break;
+	case 2: hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1; break;
+	default: break;
 	}
+	// declare input variables for key generation function
+	CrypTool::ByteString byteStringPassword;
+	CrypTool::ByteString byteStringSalt;
+	int iterations;
+	int keyLength;
+	CrypTool::ByteString byteStringKey;
+	// initialize input variables for key generation function
+	byteStringPassword.fromString(m_passwort);
+	byteStringSalt.fromString(m_salt);
+	iterations = atoi(m_zaehler);
+	keyLength = atoi(m_dkLen);
+	// generate password-derived key based on the PKCS#5 standard
+	CrypTool::Functions::createKeyFromPasswordPKCS5(hashAlgorithmType, byteStringPassword, byteStringSalt, iterations, keyLength, byteStringKey);
+	// assign result variable
+	m_schluessel = byteStringKey.toString(16, " ");
 	HIDE_HOUR_GLASS
 	UpdateData(false);
 }

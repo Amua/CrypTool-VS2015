@@ -39,14 +39,17 @@ OctetString::OctetString() :
 
 namespace CrypTool {
 
-	ByteString::ByteString(const size_t _byteLength) :
+	ByteString::ByteString() :
 		byteData(0),
 		byteLength(0) {
-		if (_byteLength > 0) {
-			byteLength = _byteLength;
-			byteData = new unsigned char[byteLength];
-			std::memset(byteData, 0, byteLength);
-		}
+
+	}
+
+	ByteString::ByteString(const ByteString &_byteString) :
+		byteData(0),
+		byteLength(0) {
+		reset(_byteString.byteLength);
+		memcpy(byteData, _byteString.byteData, byteLength);
 	}
 
 	ByteString::~ByteString() {
@@ -106,6 +109,13 @@ namespace CrypTool {
 			std::memcpy(_bufferData, byteData, _bufferLength);
 			return _bufferLength;
 		}
+	}
+
+	void ByteString::fromString(const CString &_string) {
+		reset(_string.GetLength());
+		byteLength = _string.GetLength();
+		unsigned char *buffer = (unsigned char*)(LPCTSTR)(_string);
+		std::memcpy(byteData, buffer, byteLength);
 	}
 
 	CString ByteString::toString() const {
@@ -175,8 +185,15 @@ namespace CrypTool {
 
 	ByteString &ByteString::operator=(const ByteString &_byteString) {
 		reset(_byteString.byteLength);
-		byteLength = _byteString.byteLength;
 		std::memcpy(byteData, _byteString.byteData, byteLength);
+		return *this;
+	}
+
+	ByteString &ByteString::operator+=(const ByteString &_byteString) {
+		const ByteString byteStringOld = *this;
+		reset(byteStringOld.byteLength + _byteString.byteLength);
+		std::memcpy(byteData, byteStringOld.byteData, byteStringOld.byteLength);
+		std::memcpy(byteData + byteStringOld.byteLength, _byteString.byteData, byteLength);
 		return *this;
 	}
 
@@ -451,6 +468,48 @@ namespace CrypTool {
 			dialogOperationController->ShowWindow(SW_SHOW);
 			// start the operation in its own thread
 			dialogOperationController->startHashOperation(_hashAlgorithmType, _documentFileName, _documentTitle);
+		}
+
+		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {
+			// the only supported algorithms right now are MD5 and SHA1 (MD2 is deprecated)
+			std::vector<CrypTool::Cryptography::Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
+			vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5);
+			vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1);
+			if (!CrypTool::Utilities::vectorContains<CrypTool::Cryptography::Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, _hashAlgorithmType)) {
+				AfxMessageBox("TODO/FIXME: specified hash algorithm not supported (PKCS5)");
+				return false;
+			}
+			// the number of iterations must be valid [1, 100000]
+			if (_iterations < 1 || _iterations > 100000) {
+				AfxMessageBox("TODO/FIXME: specified number of iterations not supported (PKCS5)");
+				return false;
+			}
+			// the key length must be valid [1, byteLengthHash]
+			if (_keyLength < 1 || _keyLength > CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType)) {
+				AfxMessageBox("TODO/FIXME: specified key length is not supported (PKCS5)");
+				return false;
+			}
+			// create concatenation of password and salt
+			ByteString byteStringPasswordAndSalt;
+			byteStringPasswordAndSalt += _password;
+			byteStringPasswordAndSalt += _salt;
+			// create byte string for temporary hash value
+			ByteString byteStringHashValue;
+			// execute outer hash (hash of password and salt)
+			CrypTool::Cryptography::Hash::HashOperation hashOperationOuter(_hashAlgorithmType);
+			hashOperationOuter.executeOnByteStrings(byteStringPasswordAndSalt, byteStringHashValue);
+			// execute inner hashes (hash of hash of hash...)
+			for (int iteration = 1; iteration < _iterations; iteration++) {
+				ByteString byteStringHashValueNew;
+				CrypTool::Cryptography::Hash::HashOperation hashOperationInner(_hashAlgorithmType);
+				hashOperationInner.executeOnByteStrings(byteStringHashValue, byteStringHashValueNew);
+				byteStringHashValue = byteStringHashValueNew;
+			}
+			// truncate calculated hash value if necessary
+			byteStringHashValue.truncate(CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType));
+			// assign result variable
+			_key = byteStringHashValue;
+			return true;
 		}
 
 	}

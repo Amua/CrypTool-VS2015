@@ -3075,7 +3075,6 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClCompile Include="IntegerArithmetic.cpp" />
     <ClCompile Include="KeyEdit.cpp" />
     <ClCompile Include="KeyFileHandling.cpp" />
-    <ClCompile Include="KeyFromPasswordPKCS5.cpp" />
     <ClCompile Include="keyHillBase.cpp" />
     <ClCompile Include="KeyParameterHomophone.cpp" />
     <ClCompile Include="KeyRepository.cpp" />
@@ -3372,7 +3371,6 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClInclude Include="IntegerArithmetic.h" />
     <ClInclude Include="KeyEdit.h" />
     <ClInclude Include="KeyFileHandling.h" />
-    <ClInclude Include="KeyFromPasswordPKCS5.h" />
     <ClInclude Include="KeyHillBase.h" />
     <ClInclude Include="KeyParameterHomophone.h" />
     <ClInclude Include="KeyRepository.h" />
