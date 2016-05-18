@@ -134,10 +134,17 @@ namespace CrypTool {
 		return stringHex;
 	}
 
-	void ByteString::reset() {
+	void ByteString::reset(const size_t _byteLength) {
 		delete byteData;
-		byteData = 0;
-		byteLength = 0;
+		if (_byteLength > 0) {
+			byteLength = _byteLength;
+			byteData = new unsigned char[byteLength];
+			std::memset(byteData, 0, byteLength);
+		}
+		else {
+			byteData = 0;
+			byteLength = 0;
+		}
 	}
 
 	namespace Utilities {
@@ -262,10 +269,8 @@ namespace CrypTool {
 				return hashAlgorithmBitLength;
 			}
 
-			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType, const CString &_fileNameSource, const CString &_fileNameTarget) :
+			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType) :
 				hashAlgorithmType(_hashAlgorithmType),
-				fileNameSource(_fileNameSource),
-				fileNameTarget(_fileNameTarget),
 				contextSize(0),
 				fpInitialize(0),
 				fpUpdate(0),
@@ -332,8 +337,24 @@ namespace CrypTool {
 				fpFinalize = 0;
 			}
 
-			void HashOperation::execute(const bool *_cancelled, double *_progress) {
-				// acquire the bit length of the desired hash algorithm
+			void HashOperation::executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringDigest) {
+				// acquire the bit and byte length of the desired hash algorithm
+				const unsigned int hashAlgorithmBitLength = getHashAlgorithmBitLength(hashAlgorithmType);
+				const unsigned int hashAlgorithmByteLength = (hashAlgorithmBitLength + 7) / 8;
+				// prepare digest byte string to hold the resulting hash value
+				_byteStringDigest.reset(hashAlgorithmByteLength);
+				// create the OpenSSL context
+				void *context = (void*)(new unsigned char[contextSize]);
+				// the actual operation
+				fpInitialize(context);
+				fpUpdate(context, (void*)(_byteStringMessage.getByteDataConst()), _byteStringMessage.getByteLength());
+				fpFinalize((void*)(_byteStringDigest.getByteData()), context);
+				// free memory
+				delete context;
+			}
+
+			void HashOperation::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameDigest, const bool *_cancelled, double *_progress) {
+				// acquire the bit and byte length of the desired hash algorithm
 				const unsigned int hashAlgorithmBitLength = getHashAlgorithmBitLength(hashAlgorithmType);
 				const unsigned int hashAlgorithmByteLength = (hashAlgorithmBitLength + 7) / 8;
 				// this variable will store the resulting hash value
@@ -344,15 +365,15 @@ namespace CrypTool {
 				// create the OpenSSL context
 				void *context = (void*)(new unsigned char[contextSize]);
 				// open the specified source file
-				CFile fileSource;
-				if (fileSource.Open(fileNameSource, CFile::modeRead)) {
+				CFile fileMessage;
+				if (fileMessage.Open(_fileNameMessage, CFile::modeRead)) {
 					const ULONGLONG positionStart = 0;
-					const ULONGLONG positionEnd = fileSource.GetLength();
+					const ULONGLONG positionEnd = fileMessage.GetLength();
 					ULONGLONG positionCurrent = positionStart;
 					ULONGLONG bytesRead;
 					// the actual hash operation
 					fpInitialize(context);
-					while (bytesRead = fileSource.Read(buffer, bufferByteLength)) {
+					while (bytesRead = fileMessage.Read(buffer, bufferByteLength)) {
 						fpUpdate(context, buffer, bytesRead);
 						positionCurrent += bytesRead;
 						if (_cancelled) {
@@ -366,10 +387,10 @@ namespace CrypTool {
 					}
 					fpFinalize(digest, context);
 					// write the resulting hash value to the specified target file
-					CFile fileTarget;
-					if (fileTarget.Open(fileNameTarget, CFile::modeCreate | CFile::modeWrite)) {
-						fileTarget.Write(digest, hashAlgorithmByteLength);
-						fileTarget.Close();
+					CFile fileDigest;
+					if (fileDigest.Open(_fileNameDigest, CFile::modeCreate | CFile::modeWrite)) {
+						fileDigest.Write(digest, hashAlgorithmByteLength);
+						fileDigest.Close();
 					}
 				}
 				// free memory
@@ -436,8 +457,8 @@ namespace CrypTool {
 			parameters->parametersHash.documentFileNameNew = Utilities::createTemporaryFile();
 			parameters->parametersHash.documentTitleNew.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(parameters->parametersHash.hashAlgorithmType), parameters->parametersHash.documentTitle);
 			// execute the operation
-			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType, parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew);
-			operation->execute(&parameters->cancelled, &parameters->progress);
+			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType);
+			operation->executeOnFiles(parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew, &parameters->cancelled, &parameters->progress);
 			delete operation;
 			// mark the operation as finished
 			parameters->finished = true;

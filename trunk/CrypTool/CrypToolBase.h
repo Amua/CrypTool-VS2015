@@ -84,10 +84,17 @@ namespace CrypTool {
 		// convert byte string to a hexadecimal string: if a separator is 
 		// specified, the result will contain a separator after each byte
 		CString toStringHex(const CString &_separator = "") const;
-	private:
+	public:
 		// resets the byte string: deletes the allocated memory, 
-		// and resets both the byte data and byte length to zero
-		void reset();
+		// and resets both the byte data and byte length to zero 
+		// unless a new byte length is specified
+		void reset(const size_t _byteLength = 0);
+	public:
+		// this function returns a pointer to the internal data
+		unsigned char *getByteData() { return byteData; }
+		const unsigned char *getByteDataConst() const { return byteData; }
+		// this function returns the length of the internal data
+		size_t getByteLength() const { return byteLength; }
 	private:
 		// the byte data
 		unsigned char *byteData;
@@ -130,17 +137,19 @@ namespace CrypTool {
 			// this function returns the bit length of the specified hash algorithm type
 			int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType);
 
-			// this class provides hash operations on all supported hash algorithm types
+			// this class provides hash operations on all supported hash algorithm types 
+			// for both byte strings and files (see different execute functions below); 
+			// the file-based operation provides the ability to cancel the operation 
+			// and track its progress (for example when run in a separate thread)
 			class HashOperation {
 			public:
-				HashOperation(const HashAlgorithmType _hashAlgorithmType, const CString &_fileNameSource, const CString &_fileNameTarget);
+				HashOperation(const HashAlgorithmType _hashAlgorithmType);
 				virtual ~HashOperation();
 			public:
-				void execute(const bool *_cancelled = 0, double *_progress = 0);
+				void executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringDigest);
+				void executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameDigest, const bool *_cancelled = 0, double *_progress = 0);
 			private:
 				const HashAlgorithmType hashAlgorithmType;
-				const CString fileNameSource;
-				const CString fileNameTarget;
 			private:
 				// type definitions for OpenSSL function pointers
 				typedef void(*fpInitialize_t) (void *_context);
