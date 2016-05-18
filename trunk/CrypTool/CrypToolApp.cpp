@@ -1064,7 +1064,6 @@ void CCrypToolApp::OnGenRandomData()
 
 void CCrypToolApp::OnHashOfAFile() 
 {
-	// TODO: Code für Befehlsbehandlungsroutine hier einfügen
 	HashOfAFile();	
 }
 

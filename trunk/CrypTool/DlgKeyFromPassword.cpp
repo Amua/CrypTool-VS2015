@@ -27,7 +27,6 @@
 /*                         Deutsche Bank AG Frankfurt - IT Security                                   */
 /******************************************************************************************************/
 
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
 #include "DlgKeyFromPassword.h"
@@ -39,30 +38,28 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-/******************************************************************************************************/
-/*                                       Dialogfeld CDlgKeyFromPassword                                */
-/******************************************************************************************************/
-
-
-CDlgKeyFromPassword::CDlgKeyFromPassword(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgKeyFromPassword::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgKeyFromPassword)
+CDlgKeyFromPassword::CDlgKeyFromPassword(CWnd* pParent) :
+	CDialog(CDlgKeyFromPassword::IDD, pParent) {
 	m_schluessel = _T("");
 	m_passwort = _T("");
 	m_radio1 = 0;
 	m_salt = _T("");
 	m_dkLen = _T("16");
 	m_zaehler = _T("1000");
-	//}}AFX_DATA_INIT
 }
 
+BOOL CDlgKeyFromPassword::OnInitDialog() {
+	CDialog::OnInitDialog();
+	UpdateData(true);
+	char line[20];
+	sprintf(line, "%i%i", rand(), rand());
+	m_salt = line;
+	UpdateData(false);
+	return FALSE;
+}
 
-void CDlgKeyFromPassword::DoDataExchange(CDataExchange* pDX)
-{
+void CDlgKeyFromPassword::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgKeyFromPassword)
 	DDX_Control(pDX, IDC_EDIT4, m_control_zaehler);
 	DDX_Control(pDX, IDC_EDIT5, m_control_dkLen);
 	DDX_Control(pDX, IDC_EDIT2, m_control_schluessel);
@@ -73,48 +70,11 @@ void CDlgKeyFromPassword::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT3, m_salt);
 	DDX_Text(pDX, IDC_EDIT5, m_dkLen);
 	DDX_Text(pDX, IDC_EDIT4, m_zaehler);
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgKeyFromPassword, CDialog)
-	//{{AFX_MSG_MAP(CDlgKeyFromPassword)
-	ON_BN_CLICKED(IDC_BUTTON_Generieren, OnBUTTONGenerieren)
-	ON_EN_UPDATE(IDC_EDIT1, OnUpdateEdit1)
-	ON_EN_UPDATE(IDC_EDIT2, OnUpdateEdit2)
-	ON_BN_CLICKED(IDC_BUTTON_cancel, OnBUTTONcancel)
-	ON_BN_CLICKED(IDC_BUTTON_Uebernehmen, OnBUTTONUebernehmen)
-	ON_EN_UPDATE(IDC_EDIT4, OnUpdateEdit4)
-	ON_EN_UPDATE(IDC_EDIT5, OnUpdateEdit5)
-	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(IDC_RADIO1, &CDlgKeyFromPassword::OnBnClickedRadio1)
-	ON_BN_CLICKED(IDC_RADIO2, &CDlgKeyFromPassword::OnBnClickedRadio2)
-	ON_BN_CLICKED(IDC_RADIO3, &CDlgKeyFromPassword::OnBnClickedRadio3)
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgKeyFromPassword 
-
-BOOL CDlgKeyFromPassword::OnInitDialog() 
-{
-	CDialog::OnInitDialog();
-
+void CDlgKeyFromPassword::OnBUTTONGenerieren() {
 	UpdateData(true);
-	char line[20];
-	sprintf(line, "%i%i", rand(), rand() );
-	m_salt = line;
-	UpdateData(false);
-	// TODO: Zusätzliche Initialisierung hier einfügen
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
-}
-
-
-void CDlgKeyFromPassword::OnBUTTONGenerieren() 
-{
-	UpdateData(true);
-	SHOW_HOUR_GLASS				// aktiviert die Sanduhr (statt des Mauszeigers)
+	SHOW_HOUR_GLASS
 	if (0==SG.password_based_key_deriv_funct(m_passwort, m_salt,m_dkLen,m_radio1,m_zaehler))
 	{
 		int ndx = 0, md = 0;
@@ -126,14 +86,12 @@ void CDlgKeyFromPassword::OnBUTTONGenerieren()
 			md = (md+1) % 2;
 		    if (!md && SG.str[ndx]  != 0 ) m_schluessel += " ";
 		}
-		// m_schluessel= ((CString) SG.str);
 	}
-	HIDE_HOUR_GLASS				// deaktiviert die Sanduhr (statt des Mauszeigers)
+	HIDE_HOUR_GLASS
 	UpdateData(false);
 }
 
-void CDlgKeyFromPassword::OnUpdateEdit1() 
-{
+void CDlgKeyFromPassword::OnUpdateEdit1() {
 	UpdateData(true);
 	int sels,sele;
 	m_control_passwort.GetSel(sels,sele);
@@ -141,8 +99,7 @@ void CDlgKeyFromPassword::OnUpdateEdit1()
 	m_control_passwort.SetSel(sels,sele);
 }
 
-void CDlgKeyFromPassword::OnUpdateEdit2() 
-{
+void CDlgKeyFromPassword::OnUpdateEdit2() {
 	UpdateData(true);
 	int sels,sele;
 	m_control_schluessel.GetSel(sels,sele);
@@ -150,32 +107,63 @@ void CDlgKeyFromPassword::OnUpdateEdit2()
 	m_control_schluessel.SetSel(sels,sele);
 }
 
-void CDlgKeyFromPassword::OnBUTTONcancel() 
-{
-	CDialog::OnOK();	
+void CDlgKeyFromPassword::OnUpdateEdit4() {
+	UpdateData(true);
+	int sels, sele;
+	m_control_zaehler.GetSel(sels, sele);
+	CheckEdit(m_zaehler, sels, sele);
+	UpdateData(false);
+	m_control_zaehler.SetSel(sels, sele);
 }
 
-void CDlgKeyFromPassword::OnBUTTONUebernehmen() 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
+void CDlgKeyFromPassword::OnUpdateEdit5() {
+	UpdateData(true);
+	int sels, sele;
+	m_control_dkLen.GetSel(sels, sele);
+	CheckEdit(m_dkLen, sels, sele);
+	UpdateData(false);
+	m_control_dkLen.SetSel(sels, sele);
+}
+
+void CDlgKeyFromPassword::OnBnClickedRadio1() {
+	m_radio1 = 0;
+	m_dkLen = "16";
+	UpdateData(false);
+}
+
+void CDlgKeyFromPassword::OnBnClickedRadio2() {
+	m_radio1 = 1;
+	m_dkLen = "16";
+	UpdateData(false);
+}
+
+void CDlgKeyFromPassword::OnBnClickedRadio3() {
+	m_radio1 = 2;
+	m_dkLen = "20";
+	UpdateData(false);
+}
+
+void CDlgKeyFromPassword::OnBUTTONcancel() {
+	CDialog::OnOK();
+}
+
+void CDlgKeyFromPassword::OnBUTTONUebernehmen() {
 	UpdateData(TRUE);
 	m_control_schluessel.SetSel(0,-1);
 	m_control_schluessel.Copy();
 	UpdateData(FALSE);
 }
 
-void CDlgKeyFromPassword::CheckEdit(CString &m_edit,int & sels, int & sele)
-		// sorgt dafür, daß keine syntaktisch falsche Eingabe in die Eingabefelder
-		// möglich ist, führende Nullen werden entfernt, die Variablen sels und sele dienen der
-		// Formatierung
-{
-	while((0==m_edit.IsEmpty())&&('0'==m_edit.GetAt(0)))
-		//Ruft Funktion IsEmpty auf. Diese gibt 0 zurück, wenn der CString nicht leer ist
-		//GetAt(a) gibt Zeichen zurück, das an der a. Position steht
-		//in diesem Fall, wenn dieses Zeichen 0 ist, dann geht er in die Schleife
-		//Diese Funktionen gelten für die übergebenen Wert aus dem Dialog.
-		//* Überprüfung, ob überhaupt was in dem Eingabefeld steht, UND ob das erste Zeichen 0 ist.
-	{
+// sorgt dafür, daß keine syntaktisch falsche Eingabe in die Eingabefelder
+// möglich ist, führende Nullen werden entfernt, die Variablen sels und sele dienen der
+// Formatierung
+void CDlgKeyFromPassword::CheckEdit(CString &m_edit,int & sels, int & sele) {
+	//Ruft Funktion IsEmpty auf. Diese gibt 0 zurück, wenn der CString nicht leer ist
+	//GetAt(a) gibt Zeichen zurück, das an der a. Position steht
+	//in diesem Fall, wenn dieses Zeichen 0 ist, dann geht er in die Schleife
+	//Diese Funktionen gelten für die übergebenen Wert aus dem Dialog.
+	//* Überprüfung, ob überhaupt was in dem Eingabefeld steht, UND ob das erste Zeichen 0 ist.
+	while((0==m_edit.IsEmpty())&&('0'==m_edit.GetAt(0))) {
 		m_edit=m_edit.Right(m_edit.GetLength()-1);
 		//* Var. m_edit ist Beispielsweise 0567. Der Rückgabe der Funktion Right gibt dir letzten x
 		//* Stellen eines CStrings zurück, in diesem Fall gibt er mir 3 Stllen zurück (length-1), so dass die 0 gelöscht wird
@@ -207,43 +195,15 @@ void CDlgKeyFromPassword::CheckEdit(CString &m_edit,int & sels, int & sele)
 	}
 }
 
-void CDlgKeyFromPassword::OnUpdateEdit4() 
-{
-		UpdateData(true);
-	int sels,sele;
-	m_control_zaehler.GetSel(sels,sele);
-	CheckEdit(m_zaehler,sels,sele);
-	UpdateData(false);
-	m_control_zaehler.SetSel(sels,sele);
-}
-
-void CDlgKeyFromPassword::OnUpdateEdit5() 
-{
-	UpdateData(true);
-	int sels,sele;
-	m_control_dkLen.GetSel(sels,sele);
-	CheckEdit(m_dkLen,sels,sele);
-	UpdateData(false);
-	m_control_dkLen.SetSel(sels,sele);
-}
-
-void CDlgKeyFromPassword::OnBnClickedRadio1()
-{
-	m_radio1 = 0;
-	m_dkLen = "16";
-	UpdateData(false);
-}
-
-void CDlgKeyFromPassword::OnBnClickedRadio2()
-{
-	m_radio1 = 1;
-	m_dkLen = "16";
-	UpdateData(false);
-}
-
-void CDlgKeyFromPassword::OnBnClickedRadio3()
-{
-	m_radio1 = 2;
-	m_dkLen = "20";
-	UpdateData(false);
-}
+BEGIN_MESSAGE_MAP(CDlgKeyFromPassword, CDialog)
+	ON_BN_CLICKED(IDC_BUTTON_Generieren, OnBUTTONGenerieren)
+	ON_EN_UPDATE(IDC_EDIT1, OnUpdateEdit1)
+	ON_EN_UPDATE(IDC_EDIT2, OnUpdateEdit2)
+	ON_BN_CLICKED(IDC_BUTTON_cancel, OnBUTTONcancel)
+	ON_BN_CLICKED(IDC_BUTTON_Uebernehmen, OnBUTTONUebernehmen)
+	ON_EN_UPDATE(IDC_EDIT4, OnUpdateEdit4)
+	ON_EN_UPDATE(IDC_EDIT5, OnUpdateEdit5)
+	ON_BN_CLICKED(IDC_RADIO1, &CDlgKeyFromPassword::OnBnClickedRadio1)
+	ON_BN_CLICKED(IDC_RADIO2, &CDlgKeyFromPassword::OnBnClickedRadio2)
+	ON_BN_CLICKED(IDC_RADIO3, &CDlgKeyFromPassword::OnBnClickedRadio3)
+END_MESSAGE_MAP()
