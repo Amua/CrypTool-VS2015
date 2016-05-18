@@ -31,52 +31,65 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-CDlgHashDemo::CDlgHashDemo(CWnd* pParent) :
-	CDialog(CDlgHashDemo::IDD, pParent) {
+CDlgHashDemo::CDlgHashDemo(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
+	CDialog(CDlgHashDemo::IDD, pParent),
+	m_documentFileName(_documentFileName),
+	m_documentTitle(_documentTitle) {
 	m_rb_DarstHW = 1;
 	m_strOrigHash = _T("");
 	m_strNewHash = _T("");
-	m_dataOrig.octets = 0;
 	m_strHashDiffRE = _T("");
-	m_strTitle = _T("");
 }
 
 CDlgHashDemo::~CDlgHashDemo() {
-	if (m_dataOrig.octets)
-		delete []m_dataOrig.octets;
-}
-
-unsigned long CDlgHashDemo::loadData(const char *infile, const char *title, unsigned long filesize, unsigned long max_filesize) {
-	m_strTitle = title;
-	m_dataOrig.noctets = filesize;
-	m_dataOrig.octets = new char[filesize + 1];
-
-	CFile f(infile, CFile::modeRead);
-	f.Read((void *)m_dataOrig.octets, filesize);
-	f.Close();
-	m_dataOrig.octets[filesize] = '\0';
-
-	// flomar, March 2013: in case the inserted data contains null bytes, the user may be 
-	// confused because everything after the first null byte is implicitly removed as we're 
-	// internally working with CStrings (see below)-- integrating a control which is able 
-	// to display null bytes (i.e. Scintilla) into the dialog is not an easy task, thus we 
-	// go with a warning message here to at least make sure the user knows why the hash 
-	// values for original and current document differ right from the get go
-	for (int i = 0; i<filesize; i++) {
-		const char currentByte = m_dataOrig.octets[i];
-		if (currentByte == 0) {
-			LoadString(AfxGetInstanceHandle(), IDS_STRING_HASH_DEMO_SOURCE_DOCUMENT_CONTAINS_NULL_BYTE, pc_str, STR_LAENGE_STRING_TABLE);
-			AfxMessageBox(pc_str, MB_ICONEXCLAMATION);
-		}
-	}
-
-	m_strText = CString((char*)m_dataOrig.octets);
-
-	return (unsigned long)m_strText.GetLength();
+	
 }
 
 BOOL CDlgHashDemo::OnInitDialog() {
 	CDialog::OnInitDialog();
+
+	// try to load document specified at construction into temporary byte string
+	CrypTool::ByteString byteStringTemporary;
+	byteStringTemporary.readFromFile(m_documentFileName);
+	// if the byte string contains null bytes, notify user and truncate it
+	for (size_t index = 0; index < byteStringTemporary.getByteLength(); index++) {
+		const unsigned char currentByte = byteStringTemporary.getByteData()[index];
+		if (currentByte == 0) {
+			// notify user
+			CString message;
+			message.Format(IDS_STRING_HASH_DEMO_SOURCE_DOCUMENT_CONTAINS_NULL_BYTE);
+			AfxMessageBox(message, MB_ICONEXCLAMATION);
+			// truncate the byte string
+			byteStringTemporary.truncate(index);
+			break;
+		}
+	}
+	
+	// if file size exceeds supported maximum, notify user and truncate it
+	if (byteStringTemporary.getByteLength() > MAX_LAENGE_STRTEXT) {
+		// notify user
+		CString message;
+		message.Format(IDS_STRING_Hashdemo_DateilaengeZuLang, MAX_LAENGE_STRTEXT);
+		AfxMessageBox(message, MB_ICONEXCLAMATION);
+		// truncate the byte string
+		byteStringTemporary.truncate(MAX_LAENGE_STRTEXT);
+	}
+	
+	// if file size is zero, notify user and close the dialog
+	if (byteStringTemporary.getByteLength() == 0) {
+		// notify user
+		CString message;
+		message.Format(IDS_STRING_Hashdemo_KeineWerteGefunden);
+		AfxMessageBox(message, MB_ICONEXCLAMATION);
+		EndDialog(IDCANCEL);
+	}
+
+	// at this point we're good to go, now we assign the internal byte string 
+	// holding the contents of the document specified at construction
+	m_dataOrig = byteStringTemporary;
+
+	// we also initialize the text window
+	m_ctrlText.SetWindowText(m_dataOrig.toString());
 
 	LOGFONT lf = { 14,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,"Courier" };
 	m_font.CreateFontIndirect(&lf);
@@ -91,11 +104,6 @@ BOOL CDlgHashDemo::OnInitDialog() {
 	pStatic2->SetFont(&m_font, false);
 	pStatic3->SetFont(&m_font, false);
 
-	CString title;
-	title.LoadString(IDS_HASH_DEMO_TITLE_MD2);
-	SetWindowText((LPCTSTR)title);
-
-	m_strHashFunctionMD2.LoadString(IDS_HASHDEMO_STRING_MD2);
 	m_strHashFunctionMD4.LoadString(IDS_HASHDEMO_STRING_MD4);
 	m_strHashFunctionMD5.LoadString(IDS_HASHDEMO_STRING_MD5);
 	m_strHashFunctionSHA.LoadString(IDS_HASHDEMO_STRING_SHA);
@@ -104,7 +112,6 @@ BOOL CDlgHashDemo::OnInitDialog() {
 	m_strHashFunctionSHA512.LoadString(IDS_HASHDEMO_STRING_SHA512);
 	m_strHashFunctionRIPEMD160.LoadString(IDS_HASHDEMO_STRING_RIPEMD160);
 
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionMD2);
 	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionMD4);
 	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionMD5);
 	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionSHA);
@@ -113,10 +120,10 @@ BOOL CDlgHashDemo::OnInitDialog() {
 	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionSHA512);
 	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionRIPEMD160);
 
-	m_comboCtrlSelectHashFunction.SelectString(-1, m_strHashFunctionMD2);
-
-	m_ctrlText.SetWindowText(m_strText);
+	// by default MD4 is selected
+	m_comboCtrlSelectHashFunction.SelectString(-1, m_strHashFunctionMD4);
 	OnSelendokComboSelectHashFunction();
+
 	return FALSE;
 }
 
@@ -132,48 +139,38 @@ void CDlgHashDemo::DoDataExchange(CDataExchange* pDX) {
 
 void CDlgHashDemo::OnRadioBin() {
 	UpdateData(true);
-	showHashBin(m_hash);
-	showNewHashBin(m_newHash);
+	m_strOrigHash = m_hash.toString(2, "#");
+	m_strNewHash = m_newHash.toString(2, "#");
 	UpdateData(false);
 }
 
 void CDlgHashDemo::OnRadioDec() {
 	UpdateData(true);
-	showHashDec(m_hash);
-	showNewHashDec(m_newHash);
+	m_strOrigHash = m_hash.toString(10, " ");
+	m_strNewHash = m_newHash.toString(10, " ");
 	UpdateData(false);
 }
 
 void CDlgHashDemo::OnRadioHex() {
 	UpdateData(true);
-	showHashHex(m_hash);
-	showNewHashHex(m_newHash);
+	m_strOrigHash = m_hash.toString(16, " ");
+	m_strNewHash = m_newHash.toString(16, " ");
  	UpdateData(false);
 }
 
 void CDlgHashDemo::OnChangeEditText() {
 	UpdateData(true);
-
 	CString text;
 	m_ctrlText.GetWindowText(text);
-
-	OctetString *m_Messg;
-	m_Messg=new OctetString;
-	m_Messg->octets = (LPTSTR)(LPCTSTR)text;
-	int strlaenge = text.GetLength();
-	m_Messg->noctets = strlaenge;
-
-	ComputeHash(m_Messg, &m_newHash);
-
+	CrypTool::ByteString message;
+	message.fromBuffer((unsigned char*)(text.GetBuffer()), text.GetLength());
+	ComputeHash(&message, &m_newHash);
 	switch (m_rb_DarstHW) {
-		case 1: showNewHashHex(m_newHash); break;
-		case 0: showNewHashDec(m_newHash); break;
-		case 2: showNewHashBin(m_newHash); break;
+	case 0: m_strNewHash = m_newHash.toString(10, " "); break;
+	case 1: m_strNewHash = m_newHash.toString(16, " "); break;
+	case 2: m_strNewHash = m_newHash.toString(2, "#"); break;
 	}
-
-	SetHashDiff( m_hash, m_newHash );
-
-	delete m_Messg;
+	SetHashDiff(m_hash, m_newHash);
 	UpdateData(false);	
 	SetRed();
 }
@@ -182,9 +179,9 @@ void CDlgHashDemo::OnSelendokComboSelectHashFunction() {
 	ComputeHash(&m_dataOrig, &m_hash);
 	UpdateData(true);
 	switch (m_rb_DarstHW) {
-	case 1: showHashHex(m_hash); break;
-	case 0: showHashDec(m_hash); break;
-	case 2: showHashBin(m_hash); break;
+	case 0: m_strOrigHash = m_hash.toString(10, " "); break;
+	case 1: m_strOrigHash = m_hash.toString(16, " "); break;
+	case 2: m_strOrigHash = m_hash.toString(2, "#"); break;
 	}
 	UpdateData(false);
 	OnChangeEditText();
@@ -192,7 +189,7 @@ void CDlgHashDemo::OnSelendokComboSelectHashFunction() {
 	m_comboCtrlSelectHashFunction.GetWindowText(strSelectedHash, 20);
 	CString title;
 	title.Format(IDS_STRING_Hashdemo_orighash, strSelectedHash);
-	title += m_strTitle;
+	title += m_documentTitle;
 	this->SetWindowText(title);
 }
 
@@ -313,9 +310,9 @@ void CDlgHashDemo::SetRed() {
 	m_ctrlHashDiff.StreamIn(SF_RTF | SFF_SELECTION, es);
 }
 
-void CDlgHashDemo::SetHashDiff(OctetString &hash1, OctetString &hash2) {
-	showDiffNewHashBin(hash2);
-	showDiffOrigHashBin(hash1);
+void CDlgHashDemo::SetHashDiff(CrypTool::ByteString &hash1, CrypTool::ByteString &hash2) {
+	m_strOrigHashBin = hash1.toString(2, "#");
+	m_strNewHashBin = hash2.toString(2, "#");
 
 	m_strHashDiffRE = "";
 	int iLaengeDerHW;
@@ -338,117 +335,25 @@ void CDlgHashDemo::SetHashDiff(OctetString &hash1, OctetString &hash2) {
 	}
 }
 
-void CDlgHashDemo::showDiffOrigHashBin(OctetString &hash) {
-	m_strOrigHashBin = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strOrigHashBin, hash.octets[i], 2, '#');
+void CDlgHashDemo::ComputeHash(CrypTool::ByteString *data, CrypTool::ByteString *hashValue) {
+	// acquire the selected hash algorithm type
+	const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType();
+	// calculate the hash value
+	CrypTool::Cryptography::Hash::HashOperation hashOperation(hashAlgorithmType);
+	hashOperation.executeOnByteStrings(*data, *hashValue);
 }
 
-void CDlgHashDemo::showDiffNewHashBin(OctetString &hash) {
-	m_strNewHashBin = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strNewHashBin, hash.octets[i], 2, '#');
-}
-
-void CDlgHashDemo::showHashBin(OctetString &hash) {
-	m_strOrigHash = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strOrigHash, hash.octets[i], 2, (i < hash.noctets + 1) ? '#' : '\0');
-}
-
-void CDlgHashDemo::showHashDec(OctetString &hash) {
-	m_strOrigHash = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strOrigHash, hash.octets[i], 10, (i < hash.noctets + 1) ? ' ' : '\0');
-}
-
-void CDlgHashDemo::showHashHex(OctetString &hash) {
-	m_strOrigHash = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strOrigHash, hash.octets[i], 16, (i < hash.noctets + 1) ? ' ' : '\0');
-}
-
-void CDlgHashDemo::showNewHashBin(OctetString &hash) {
-	m_strNewHash = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strNewHash, hash.octets[i], 2, '#');
-}
-
-void CDlgHashDemo::showNewHashDec(OctetString &hash) {
-	m_strNewHash = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strNewHash, hash.octets[i], 10, (i < hash.noctets + 1) ? ' ' : '\0');
-}
-
-void CDlgHashDemo::showNewHashHex(OctetString &hash) {
-	m_strNewHash = "";
-	for (unsigned int i = 0; i<hash.noctets; i++)
-		getNextBlock(m_strNewHash, hash.octets[i], 16, (i < hash.noctets + 1) ? ' ' : '\0');
-}
-
-void CDlgHashDemo::getNextBlock(CString &dispByte, unsigned char inByte, unsigned short numberBase, char seperator) {
-	char digit[8];
-	unsigned short n = 255, modulo;
-	int i;
-	for (i = 0; n>0; i++)
-	{
-		n /= numberBase;
-		modulo = inByte % numberBase;
-		inByte /= numberBase;
-		digit[i] = (modulo >= 10) ? modulo - 10 + 'A' : modulo + '0';
-	}
-	while (i>0)	dispByte += digit[--i];
-	if (seperator) dispByte += seperator;
-}
-
-void CDlgHashDemo::ComputeHash(OctetString *data, OctetString *hashValue)
-{
-#ifndef _UNSTABLE
+CrypTool::Cryptography::Hash::HashAlgorithmType CDlgHashDemo::getHashAlgorithmType() const {
 	char strSelectedHash[256 + 1];
 	m_comboCtrlSelectHashFunction.GetWindowText(strSelectedHash, 256);
-	hashValue->noctets = 0;
-
-	if (!strcmp(strSelectedHash, m_strHashFunctionMD2))
-	{
-		theApp.SecudeLib.sec_hash_all(data, hashValue, theApp.SecudeLib.md2_aid, NULL);
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionMD4))
-	{
-		theApp.SecudeLib.sec_hash_all(data, hashValue, theApp.SecudeLib.md4_aid, NULL);
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionMD5))
-	{
-		theApp.SecudeLib.sec_hash_all(data, hashValue, theApp.SecudeLib.md5_aid, NULL);
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionSHA))
-	{
-		theApp.SecudeLib.sec_hash_all(data, hashValue, theApp.SecudeLib.sha_aid, NULL);
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionSHA1))
-	{
-		theApp.SecudeLib.sec_hash_all(data, hashValue, theApp.SecudeLib.sha1_aid, NULL);
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionSHA256))
-	{
-		// flomar, 04/14/2010
-		// contrary to the approach above, we use OpenSSL (see HashingOperations) for SHA-256
-		HashingOperations hashingOperations(6);
-		hashingOperations.DoHash(data->octets, data->noctets, hashValue->octets);
-		hashValue->noctets = 32;
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionSHA512))
-	{
-		// flomar, 04/14/2010
-		// contrary to the approach above, we use OpenSSL (see HashingOperations) for SHA-512
-		HashingOperations hashingOperations(7);
-		hashingOperations.DoHash(data->octets, data->noctets, hashValue->octets);
-		hashValue->noctets = 64;
-	}
-	if (!strcmp(strSelectedHash, m_strHashFunctionRIPEMD160))
-	{
-		theApp.SecudeLib.sec_hash_all(data, hashValue, theApp.SecudeLib.ripemd160_aid, NULL);
-	}
-#endif
+	if (!strcmp(strSelectedHash, m_strHashFunctionMD4)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD4;
+	else if (!strcmp(strSelectedHash, m_strHashFunctionMD5)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5;
+	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA;
+	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA1)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1;
+	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA256)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA256;
+	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA512)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512;
+	else if (!strcmp(strSelectedHash, m_strHashFunctionRIPEMD160)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160;
+	else return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
 }
 
 BEGIN_MESSAGE_MAP(CDlgHashDemo, CDialog)

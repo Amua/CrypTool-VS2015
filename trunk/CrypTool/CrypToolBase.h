@@ -61,13 +61,6 @@ namespace CrypTool {
 		// write byte string to file; in case of errors, false is returned
 		bool writeToFile(const CString &_fileName) const;
 	public:
-		// this function is provided for compatibility with legacy code; 
-		// it calls the fromBuffer implementation internally (see below)
-		size_t fromOctetString(OctetString *_octetString);
-		// this function is provided for compatibility with legacy code; 
-		// it calls the toBuffer implementation internally (see below)
-		size_t toOctetString(OctetString *_octetString) const;
-	public:
 		// read data from the specified buffer; this function is "dumb" in that the 
 		// caller needs to make sure the memory of the specified buffer is valid; 
 		// zero pointers make this function return zero without doing anything else; 
@@ -81,20 +74,32 @@ namespace CrypTool {
 		// buffer
 		size_t toBuffer(unsigned char *_bufferData, const size_t _bufferLength) const;
 	public:
-		// convert byte string to a hexadecimal string: if a separator is 
-		// specified, the result will contain a separator after each byte
-		CString toStringHex(const CString &_separator = "") const;
+		// this is a convenience function to convert byte strings to CString objects; 
+		// note that the result is truncated where the first null byte is spotted
+		CString toString() const;
+		// this is a convenience function to convert byte strings to either binary, 
+		// octal, decimal, or hexadecimal representations; if an invalid base is 
+		// specified, the function returns an empty string
+		CString toString(const unsigned int _base, const CString &_separator = "") const;
 	public:
 		// resets the byte string: deletes the allocated memory, 
 		// and resets both the byte data and byte length to zero 
 		// unless a new byte length is specified
 		void reset(const size_t _byteLength = 0);
+		// truncates the byte string to the specified size; if the specified 
+		// size is larger than the actual size, the function does nothing; 
+		// otherwise the function allocates new memory for the truncated 
+		// contents and frees the old memory
+		void truncate(const size_t _byteLength);
 	public:
 		// this function returns a pointer to the internal data
 		unsigned char *getByteData() { return byteData; }
 		const unsigned char *getByteDataConst() const { return byteData; }
 		// this function returns the length of the internal data
 		size_t getByteLength() const { return byteLength; }
+	public:
+		// operator implementation
+		ByteString &operator=(const ByteString &_byteString);
 	private:
 		// the byte data
 		unsigned char *byteData;
@@ -135,7 +140,9 @@ namespace CrypTool {
 			// this function returns the name of the specified hash algorithm type
 			CString getHashAlgorithmName(const HashAlgorithmType _hashAlgorithmType);
 			// this function returns the bit length of the specified hash algorithm type
-			int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType);
+			unsigned int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType);
+			// this function returns the byte length of the specified hash algorithm type
+			unsigned int getHashAlgorithmByteLength(const HashAlgorithmType _hashAlgorithmType);
 
 			// this class provides hash operations on all supported hash algorithm types 
 			// for both byte strings and files (see different execute functions below); 

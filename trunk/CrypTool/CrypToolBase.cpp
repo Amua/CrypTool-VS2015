@@ -82,14 +82,6 @@ namespace CrypTool {
 		return false;
 	}
 
-	size_t ByteString::fromOctetString(OctetString *_octetString) {
-		return fromBuffer((unsigned char*)(_octetString->octets), _octetString->noctets);
-	}
-
-	size_t ByteString::toOctetString(OctetString *_octetString) const {
-		return toBuffer((unsigned char*)(_octetString->octets), _octetString->noctets);
-	}
-
 	size_t ByteString::fromBuffer(const unsigned char *_bufferData, const size_t _bufferLength) {
 		if (!_bufferData) {
 			return 0;
@@ -116,22 +108,40 @@ namespace CrypTool {
 		}
 	}
 
-	CString ByteString::toStringHex(const CString &_separator) const {
-		CString stringHex;
-		for (size_t index = 0; index < byteLength; index++) {
-			unsigned char byte = byteData[index];
-			char byteLo;
-			char byteHi;
-			if ((byte % 16) < 10) byteHi = '0' + (byte % 16);
-			else byteHi = 'A' + (byte % 16) - 10;
-			byte /= 16;
-			if (byte < 10) byteLo = '0' + byte;
-			else byteLo = 'A' + byte - 10;
-			stringHex += byteLo;
-			stringHex += byteHi;
-			if (index < byteLength + 1) stringHex += _separator;
+	CString ByteString::toString() const {
+		CString result;
+		for (size_t indexByte = 0; indexByte < byteLength; indexByte++) {
+			const unsigned char byte = byteData[indexByte];
+			if (byte == 0) {
+				break;
+			}
+			result.AppendChar(byte);
 		}
-		return stringHex;
+		return result;
+	}
+
+	CString ByteString::toString(const unsigned int _base, const CString &_separator) const {
+		CString result;
+		if (_base != 2 && _base != 8 && _base != 10 && _base != 16) {
+			return result;
+		}
+		for (size_t indexByte = 0; indexByte < byteLength; indexByte++) {
+			char byteConverted[8];
+			std::memset(byteConverted, 0, 8);
+			CString byteCovertedReversed;
+			unsigned char byte = byteData[indexByte];
+			unsigned int n = 255;
+			for (unsigned int i = 0; n > 0; i++) {
+				n /= _base;
+				unsigned int modulo = byte % _base;
+				byte /= _base;
+				byteConverted[i] = (modulo >= 10) ? modulo - 10 + 'A' : modulo + '0';
+				byteCovertedReversed.AppendChar(byteConverted[i]);
+			}
+			result += byteCovertedReversed.MakeReverse();
+			result += _separator;
+		}
+		return result;
 	}
 
 	void ByteString::reset(const size_t _byteLength) {
@@ -145,6 +155,29 @@ namespace CrypTool {
 			byteData = 0;
 			byteLength = 0;
 		}
+	}
+
+	void ByteString::truncate(const size_t _byteLength) {
+		if (_byteLength >= byteLength) {
+			return;
+		}
+		else if (_byteLength == 0) {
+			reset();
+		}
+		else {
+			byteLength = _byteLength;
+			unsigned char *byteDataNew = new unsigned char[byteLength];
+			std::memcpy(byteDataNew, byteData, byteLength);
+			delete byteData;
+			byteData = byteDataNew;
+		}
+	}
+
+	ByteString &ByteString::operator=(const ByteString &_byteString) {
+		reset(_byteString.byteLength);
+		byteLength = _byteString.byteLength;
+		std::memcpy(byteData, _byteString.byteData, byteLength);
+		return *this;
 	}
 
 	namespace Utilities {
@@ -239,8 +272,8 @@ namespace CrypTool {
 				return hashAlgorithmName;
 			}
 
-			int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType) {
-				int hashAlgorithmBitLength = 0;
+			unsigned int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType) {
+				unsigned int hashAlgorithmBitLength = 0;
 				switch (_hashAlgorithmType) {
 				case HASH_ALGORITHM_TYPE_MD4:
 					hashAlgorithmBitLength = 128;
@@ -267,6 +300,11 @@ namespace CrypTool {
 					break;
 				}
 				return hashAlgorithmBitLength;
+			}
+
+			unsigned int getHashAlgorithmByteLength(const HashAlgorithmType _hashAlgorithmType) {
+				const unsigned int hashAlgorithmByteLength = (unsigned int)((getHashAlgorithmBitLength(_hashAlgorithmType) + 7) / 8);
+				return hashAlgorithmByteLength;
 			}
 
 			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType) :
@@ -338,9 +376,8 @@ namespace CrypTool {
 			}
 
 			void HashOperation::executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringDigest) {
-				// acquire the bit and byte length of the desired hash algorithm
-				const unsigned int hashAlgorithmBitLength = getHashAlgorithmBitLength(hashAlgorithmType);
-				const unsigned int hashAlgorithmByteLength = (hashAlgorithmBitLength + 7) / 8;
+				// acquire byte length of the desired hash algorithm
+				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
 				// prepare digest byte string to hold the resulting hash value
 				_byteStringDigest.reset(hashAlgorithmByteLength);
 				// create the OpenSSL context
@@ -354,9 +391,8 @@ namespace CrypTool {
 			}
 
 			void HashOperation::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameDigest, const bool *_cancelled, double *_progress) {
-				// acquire the bit and byte length of the desired hash algorithm
-				const unsigned int hashAlgorithmBitLength = getHashAlgorithmBitLength(hashAlgorithmType);
-				const unsigned int hashAlgorithmByteLength = (hashAlgorithmBitLength + 7) / 8;
+				// acquire byte length of the desired hash algorithm
+				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
 				// this variable will store the resulting hash value
 				unsigned char *digest = new unsigned char[hashAlgorithmByteLength];
 				// the buffer size we're working with (the size of the chunks to be read from the source file)
@@ -468,7 +504,7 @@ namespace CrypTool {
 			ByteString byteStringHash;
 			byteStringHash.readFromFile(parameters->parametersHash.documentFileNameNew);
 			CDlgShowHash dlgShowHash;
-			dlgShowHash.initialize(parameters->parametersHash.documentTitleNew, byteStringHash.toStringHex(" "));
+			dlgShowHash.initialize(parameters->parametersHash.documentTitleNew, byteStringHash.toString(16, " "));
 			if (dlgShowHash.DoModal() == IDOK) {
 				theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersHash.documentFileNameNew, parameters->parametersHash.documentTitleNew);
 			}

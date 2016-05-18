@@ -3037,7 +3037,7 @@ void Permutation(const char *infileName, const char *OldTitle, BOOL TEXTMODE)
 	}  // IDOK == DoModal()
 }
 
-// original version: Henrik Koy, 2002
+// original implementation: Henrik Koy, 2002
 void HashOfAFile() {
 	// initialize parameters for file dialog
 	CString stringFilter = "*.*";
@@ -3050,53 +3050,25 @@ void HashOfAFile() {
 	CFileDialog dlgFile(TRUE, NULL, stringFilter, dwFlags, stringFileFilter);
 	dlgFile.m_ofn.lpstrTitle = title;
 	if (dlgFile.DoModal() == IDOK) {
+		// fire up select hash function dialog
 		CDlgSelectHashFunction dlgSelectHashFunction;
 		if (dlgSelectHashFunction.DoModal() == IDOK) {
+			// execute the hash operation
 			CrypTool::Functions::executeHashOperation(dlgSelectHashFunction.getHashAlgorithmType(), dlgFile.GetPathName(), dlgFile.GetFileName());
 		}
 	}
 }
 
-//####################################
-//Myriam Zeuner, Projekt Hashdemo
-
+// original implementation: Myriam Zeuner, 2002-ish
 void Hashdemo(const char *infile,const char *OldTitle)
-{
-	long FileSize;
-	{
-		struct stat *obj;
-		obj = new (struct stat);
-		int result = stat((const char*)infile,obj);
-		FileSize = obj->st_size;
-		delete obj;
-		if ( result != 0 )
-		{
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_Hashdemo_FileNotFound,pc_str,100);
-			AfxMessageBox(pc_str,MB_ICONEXCLAMATION);
-			return;
-		}
-	}
-	if ( FileSize > 16000 )
-	{
-		CString msg;
-		msg.Format(IDS_STRING_Hashdemo_DateilaengeZuLang,MAX_LAENGE_STRTEXT);
-		AfxMessageBox((LPCTSTR)msg,MB_ICONEXCLAMATION,IDD_HASH_DEMO + 0x20000UL - 0x30000);	
-		FileSize = 16000;
-	}
-
-	CDlgHashDemo HashDlg;
-	if ( 0 == HashDlg.loadData(infile, OldTitle, FileSize) )
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_Hashdemo_KeineWerteGefunden,pc_str,100);
-		AfxMessageBox(pc_str,MB_ICONEXCLAMATION);
-		return;
-	}
-
-
+{	
+	// initialize parameters for hash demo dialog
+	const CString documentFileName = infile;
+	const CString documentTitle = OldTitle;
+	// create and fire up hash demo dialog
+	CDlgHashDemo dlgHashDemo(documentFileName, documentTitle);
 	AfxInitRichEdit(); // GRRMPF
-	HashDlg.DoModal();
-	// Die Instanz der Klasse (Der Dialog) wird modal aufgerufen
-
+	dlgHashDemo.DoModal();
 }
 
 //crypt.cpp

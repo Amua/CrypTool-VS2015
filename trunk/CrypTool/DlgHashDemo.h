@@ -21,15 +21,15 @@
 #ifndef _DLGHASHDEMO_H_
 #define _DLGHASHDEMO_H_
 
+#include "CrypToolBase.h"
+
 #define MAX_LAENGE_STRTEXT 16000
 
 class CDlgHashDemo : public CDialog {
 	enum { IDD = IDD_HASH_DEMO };
 public:
-	CDlgHashDemo(CWnd* pParent = NULL);
+	CDlgHashDemo(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent = NULL);
 	~CDlgHashDemo();
-public:
-	unsigned long loadData(const char *infile, const char *title, unsigned long filesize, unsigned long max_filesize = MAX_LAENGE_STRTEXT);
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);
@@ -41,28 +41,22 @@ protected:
 	afx_msg void OnSelendokComboSelectHashFunction();
 private:
 	void SetRed();
-	void SetHashDiff(OctetString &hash1, OctetString &hash2);
-	void showDiffOrigHashBin(OctetString &hash);
-	void showDiffNewHashBin(OctetString &hash);
-	void showHashBin(OctetString &hash);
-	void showHashDec(OctetString &hash);
-	void showHashHex(OctetString &hash);
-	void showNewHashBin(OctetString &hash);
-	void showNewHashDec(OctetString &hash);
-	void showNewHashHex(OctetString &hash);
+	void SetHashDiff(CrypTool::ByteString &hash1, CrypTool::ByteString &hash2);
 private:
-	void getNextBlock(CString &dispByte, unsigned char inByte, unsigned short numberBase, char seperator = '\0');
-	void ComputeHash(OctetString *data, OctetString *hashValue);
+	void ComputeHash(CrypTool::ByteString *data, CrypTool::ByteString *hashValue);
+private:
+	CrypTool::Cryptography::Hash::HashAlgorithmType getHashAlgorithmType() const;
+private:
+	CString m_documentFileName;
+	CString m_documentTitle;
 private:
 	CString	m_strHashDiffRE;
 	CString m_strNewHashBin;
 	CString m_strOrigHashBin;
-	CString m_strTitle;
-	OctetString m_hash, m_newHash; 
-	OctetString m_dataOrig; 
-	CString m_strText;
+	CrypTool::ByteString m_hash;
+	CrypTool::ByteString m_newHash;
+	CrypTool::ByteString m_dataOrig; 
 private:
-	CString m_strHashFunctionMD2;
 	CString m_strHashFunctionMD4;
 	CString m_strHashFunctionMD5;
 	CString m_strHashFunctionSHA;
