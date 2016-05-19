@@ -122,6 +122,11 @@ namespace CrypTool {
 		// asserts; the function is thread-safe
 		CString createTemporaryFile(const CString &_extension = ".tmp");
 
+		// this function truncates the specified byte string to the specified length; this function also 
+		// removes all bytes at (and beyond) the first null byte; if the byte string is modified in any 
+		// way, the user is notified; the function returns the length of the resulting byte string
+		size_t truncateByteString(ByteString &_byteString, const unsigned int _truncateAtLength, const bool _truncateAtFirstNullByte);
+
 		// this template function is provided for convenience, it returns true if the specified vector 
 		// contains the specified element
 		template<class T>

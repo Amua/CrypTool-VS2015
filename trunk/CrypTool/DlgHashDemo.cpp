@@ -48,44 +48,23 @@ CDlgHashDemo::~CDlgHashDemo() {
 BOOL CDlgHashDemo::OnInitDialog() {
 	CDialog::OnInitDialog();
 
-	// try to load document specified at construction into temporary byte string
+	// load document specified at construction into temporary byte string
 	CrypTool::ByteString byteStringTemporary;
 	byteStringTemporary.readFromFile(m_documentFileName);
-	// if the byte string contains null bytes, notify user and truncate it
-	for (size_t index = 0; index < byteStringTemporary.getByteLength(); index++) {
-		const unsigned char currentByte = byteStringTemporary.getByteData()[index];
-		if (currentByte == 0) {
-			// notify user
-			CString message;
-			message.Format(IDS_STRING_HASH_DEMO_SOURCE_DOCUMENT_CONTAINS_NULL_BYTE);
-			AfxMessageBox(message, MB_ICONEXCLAMATION);
-			// truncate the byte string
-			byteStringTemporary.truncate(index);
-			break;
-		}
-	}
-	
-	// if file size exceeds supported maximum, notify user and truncate it
-	if (byteStringTemporary.getByteLength() > MAX_LAENGE_STRTEXT) {
-		// notify user
+	// try to truncate the temporary byte string to the specified length limit, 
+	// and also remove all bytes (including and) beyond the first null byte; if 
+	// the byte string is modified in any way, the user is notified; if the 
+	// resulting byte string is empty, the user is notified again and then the 
+	// dialog is cancelled
+	const unsigned int truncateAtLength = 16000;
+	const bool truncateAtFirstNullByte = true;
+	if (CrypTool::Utilities::truncateByteString(byteStringTemporary, truncateAtLength, truncateAtFirstNullByte) == 0) {
 		CString message;
-		message.Format(IDS_STRING_Hashdemo_DateilaengeZuLang, MAX_LAENGE_STRTEXT);
-		AfxMessageBox(message, MB_ICONEXCLAMATION);
-		// truncate the byte string
-		byteStringTemporary.truncate(MAX_LAENGE_STRTEXT);
-	}
-	
-	// if file size is zero, notify user and close the dialog
-	if (byteStringTemporary.getByteLength() == 0) {
-		// notify user
-		CString message;
-		message.Format(IDS_STRING_Hashdemo_KeineWerteGefunden);
+		message.Format("CRYPTOOL_BASE: string empty, dialog is closed");
 		AfxMessageBox(message, MB_ICONEXCLAMATION);
 		EndDialog(IDCANCEL);
 	}
-
-	// at this point we're good to go, now we assign the internal byte string 
-	// holding the contents of the document specified at construction
+	// assign the temporary byte string to the internal byte string
 	m_dataOrig = byteStringTemporary;
 
 	// we also initialize the text window

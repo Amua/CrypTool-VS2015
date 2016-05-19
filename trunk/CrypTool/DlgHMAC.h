@@ -21,6 +21,8 @@
 #ifndef _DLGHMAC_H_
 #define _DLGHMAC_H_
 
+#include "CrypToolBase.h"
+
 class CDlgHMAC : public CDialog {
 	enum { IDD = IDD_HMAC };
 public:
@@ -58,8 +60,8 @@ private:
 	// update the user interface accordingly
 	void calculateMACAndUpdateGUI();
 private:
-	const CString documentFileName;
-	const CString documentTitle;
+	const CString m_documentFileName;
+	const CString m_documentTitle;
 private:
 	// flomar, 01/20/2010
 	bool shownInfoMessageNoKey;

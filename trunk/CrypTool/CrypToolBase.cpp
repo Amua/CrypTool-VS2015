@@ -253,6 +253,32 @@ namespace CrypTool {
 			return temporaryFileName;
 		}
 
+		size_t truncateByteString(ByteString &_byteString, const unsigned int _truncateAtLength, const bool _truncateAtFirstNullByte) {
+			// if the byte string contains null bytes, notify user and truncate it
+			if (_truncateAtFirstNullByte) {
+				for (size_t index = 0; index < _byteString.getByteLength(); index++) {
+					const unsigned char currentByte = _byteString.getByteData()[index];
+					if (currentByte == 0) {
+						CString message;
+						message.Format("CRYPTOOL_BASE: null bytes not allowed, string is truncated");
+						AfxMessageBox(message, MB_ICONEXCLAMATION);
+						_byteString.truncate(index);
+						break;
+					}
+				}
+			}
+			// if the byte string exceeds the specified length, notify user and truncate it
+			if (_byteString.getByteLength() > _truncateAtLength) {
+				CString message;
+				message.Format("CRYPTOOL_BASE: string length exceeded, string is truncated to %d bytes", _truncateAtLength);
+				AfxMessageBox(message, MB_ICONEXCLAMATION);
+				// truncate the byte string
+				_byteString.truncate(_truncateAtLength);
+			}
+			// return the length of the resulting byte string
+			return _byteString.getByteLength();
+		}
+
 	}
 
 	namespace Cryptography {

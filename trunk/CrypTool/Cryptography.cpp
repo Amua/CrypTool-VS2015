@@ -3089,56 +3089,6 @@ void CreateMac(const char *infile, const char *OldTitle) {
 	// create and fire up HMAC dialog
 	CDlgHMAC dlgHMAC(documentFileName, documentTitle);
 	dlgHMAC.DoModal();
-#if 0
-	long FileSize;
-	{
-		struct stat *obj;	
-		obj = new (struct stat);
-		//obj speichert Statusinformationen über infile
-		int result = stat((const char*)infile, obj);
-		//FileSize = Größe der Datei in Bytes
-		FileSize = obj->st_size;
-		delete obj;
-		//wenn ein Fehler zurückgegeben wurde
-		if ( result != 0 )
-		{
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_Hashdemo_FileNotFound,pc_str,100);
-			AfxMessageBox(pc_str,MB_ICONEXCLAMATION);
-			return;
-		}
-	}
-	if ( FileSize > 16000 )
-	{
-		LoadString(AfxGetInstanceHandle(), IDS_STRING_MAC_ZuLang, pc_str, 120);
-		AfxMessageBox(pc_str, MB_ICONEXCLAMATION|MB_OK);	
-		FileSize = 16000;
-	}
-	
-	OctetString *TextFile;
-	TextFile = new OctetString;
-	//noctets enthält die Anzahl der Bytes, octets ist ein Feld er entsprechenden Größe
-	TextFile->noctets = FileSize;
-	TextFile->octets  = new char [FileSize+1];
-	//die aktuelle Datei kann zum Lesen geöffnet werden
-	CFile text(infile, CFile::modeRead);
-	//liest Daten aus der verknüpften Datei in einen Puffer
-	text.Read((void *)TextFile->octets, FileSize);
-	text.Close();
-	//Endekennung für das letzte Element
-	TextFile->octets[FileSize] = '\0';
-	if (strlen(TextFile->octets) == 0)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_Hashdemo_KeineWerteGefunden,pc_str,100);
-		AfxMessageBox(pc_str,MB_ICONEXCLAMATION);
-		return;
-	}
-	CDlgHMAC macdlg;
-	//das file wird im CString strText des Dialogs gespeichert
-	macdlg.strText = CString((char*)TextFile->octets);
-	macdlg.DoModal();
-	delete []TextFile->octets;
-	delete TextFile;
-#endif
 }
 
 long Rot13CaesarAscStart(SymbolArray & text, const char *infile)

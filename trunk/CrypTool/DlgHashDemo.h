@@ -23,8 +23,6 @@
 
 #include "CrypToolBase.h"
 
-#define MAX_LAENGE_STRTEXT 16000
-
 class CDlgHashDemo : public CDialog {
 	enum { IDD = IDD_HASH_DEMO };
 public:

@@ -37,8 +37,8 @@ const int hashSize[8]      = { 16, 16, 16, 20, 20, 32, 64, 20 };
 
 CDlgHMAC::CDlgHMAC(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
 	CDialog(CDlgHMAC::IDD, pParent),
-	documentFileName(_documentFileName),
-	documentTitle(_documentTitle) {
+	m_documentFileName(_documentFileName),
+	m_documentTitle(_documentTitle) {
 	m_alg = -1;
 	m_position = -1;
 	m_key = _T("");
@@ -48,6 +48,25 @@ CDlgHMAC::CDlgHMAC(const CString &_documentFileName, const CString &_documentTit
 
 BOOL CDlgHMAC::OnInitDialog() {
 	CDialog::OnInitDialog();
+
+	// load document specified at construction into temporary byte string
+	CrypTool::ByteString byteStringTemporary;
+	byteStringTemporary.readFromFile(m_documentFileName);
+	// try to truncate the temporary byte string to the specified length limit, 
+	// and also remove all bytes (including and) beyond the first null byte; if 
+	// the byte string is modified in any way, the user is notified; if the 
+	// resulting byte string is empty, the user is notified again and then the 
+	// dialog is cancelled
+	const unsigned int truncateAtLength = 16000;
+	const bool truncateAtFirstNullByte = true;
+	if (CrypTool::Utilities::truncateByteString(byteStringTemporary, truncateAtLength, truncateAtFirstNullByte) == 0) {
+		CString message;
+		message.Format(IDS_STRING_Hashdemo_KeineWerteGefunden);
+		AfxMessageBox(message, MB_ICONEXCLAMATION);
+		EndDialog(IDCANCEL);
+	}
+	// assign the temporary byte string to the internal CString variable
+	strText = byteStringTemporary.toString();
 	
 	LOGFONT lf = { 8,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,"Courier" };
 	m_font.CreateFontIndirect(&lf);
