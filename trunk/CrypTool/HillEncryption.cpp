@@ -592,7 +592,13 @@ void CHillEncryption::OutputHillmatrix(CString &MatOut)
 	char num[4];
 	CString tmpStr;
 
-	MatOut.LoadString(IDS_HILL_DUMP);
+	// we need two resource strings here due to MFC length constraints
+	CString stringResourceHillDump1;
+	CString stringResourceHillDump2;
+	stringResourceHillDump1.LoadString(IDS_HILL_DUMP_1);
+	stringResourceHillDump2.LoadString(IDS_HILL_DUMP_2);
+	MatOut.Append(stringResourceHillDump1);
+	MatOut.Append(stringResourceHillDump2);
 
 	CString strExmpl;
 	//reading example from userinput
