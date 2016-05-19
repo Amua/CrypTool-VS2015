@@ -24,7 +24,6 @@
 #include "CrypToolTools.h"
 #include "FileTools.h"
 #include "ChrTools.h"
-#include "HashingOperations.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,14 +31,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const int hashIDmapping[8] = { 0,   1,  2,  3,  4,  6,  7,  5 };
-const int hashSize[8]      = { 16, 16, 16, 20, 20, 32, 64, 20 };
-
 CDlgHMAC::CDlgHMAC(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
 	CDialog(CDlgHMAC::IDD, pParent),
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle) {
-	m_alg = -1;
 	m_position = -1;
 	m_key = _T("");
 	m_secondkey = _T("");
@@ -67,6 +62,7 @@ BOOL CDlgHMAC::OnInitDialog() {
 	}
 	// assign the temporary byte string to the internal CString variable
 	strText = byteStringTemporary.toString();
+	m_originalMessage = strText;
 	
 	LOGFONT lf = { 8,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,"Courier" };
 	m_font.CreateFontIndirect(&lf);
@@ -82,25 +78,39 @@ BOOL CDlgHMAC::OnInitDialog() {
 	pStatic3->SetFont(&m_font, false);
 	pStatic4->SetFont(&m_font, false);
 
-	CString str;
-	str.LoadStringA(IDS_HASHDEMO_SELALGORITHM);		m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_MD2);		m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_MD4);		m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_MD5);		m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_SHA);		m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_SHA1);		m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_SHA_256);	m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_SHA_512);	m_comboCtrlSelectHashFunction.AddString(str);
-	str.LoadStringA(IDS_HASHDEMO_STRING_RIPEMD160);	m_comboCtrlSelectHashFunction.AddString(str);
-	m_comboCtrlSelectHashFunction.SetCurSel(0);
+	// initialize the supported hash algorithm types
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD4);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA256);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160);
 
-	str.LoadStringA(IDS_HMAC_SELALGORITHM);			m_comboCtrlSelectHMACFunction.AddString(str);
+	// initialize combo box with supported hash algorithm types
+	for (size_t index = 0; index < vectorHashAlgorithmTypes.size(); index++) {
+		const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = vectorHashAlgorithmTypes[index];
+		m_comboCtrlSelectHashFunction.AddString(CrypTool::Cryptography::Hash::getHashAlgorithmName(hashAlgorithmType));
+	}
+
+	// initialize combox box with supported HMAC variants
+	CString str;
 	str.LoadStringA(IDS_HMAC_ALGORITHM_HKM);		m_comboCtrlSelectHMACFunction.AddString(str);
 	str.LoadStringA(IDS_HMAC_ALGORITHM_HMK);		m_comboCtrlSelectHMACFunction.AddString(str);
 	str.LoadStringA(IDS_HMAC_ALGORITHM_HKMK);		m_comboCtrlSelectHMACFunction.AddString(str);
 	str.LoadStringA(IDS_HMAC_ALGORITHM_HK1MK2);		m_comboCtrlSelectHMACFunction.AddString(str);
 	str.LoadStringA(IDS_HMAC_ALGORITHM_RFC2104);	m_comboCtrlSelectHMACFunction.AddString(str);
+
+	// flomar, 08/13/2015: here we try to select some meaningful default values for both algorithms 
+	// (SHA256 and HKM) and the key-- this may be useful for inexperienced users; please note that this
+	// extension might be ignored if someone tampers with the algorithms above, which in turn might 
+	// cause assertions
+	m_comboCtrlSelectHashFunction.SetCurSel(4);
 	m_comboCtrlSelectHMACFunction.SetCurSel(0);
+	m_key = "foobar";
+	UpdateData(false);
+	OnCbnSelendokComboSelectHashFunction();
+	OnCbnSelendokComboSelectHmacAlgorithm();
 
 	// flomar, 01/20/2010
 	shownInfoMessageNoKey = false;
@@ -111,19 +121,6 @@ BOOL CDlgHMAC::OnInitDialog() {
 	m_text.SetWindowText(strText);
 	m_originalMessage = strText;
 	UpdateData(false);
-
-	// flomar, 08/13/2015: here we try to select some meaningful default values for both algorithms 
-	// (SHA256 and HKM) and the key-- this may be useful for inexperienced users; please note that this
-	// extension might be ignored if someone tampers with the algorithms above, which in turn might 
-	// cause assertions
-	if (m_comboCtrlSelectHashFunction.GetCount() > 6 && m_comboCtrlSelectHMACFunction.GetCount() > 1) {
-		m_comboCtrlSelectHashFunction.SetCurSel(6);
-		m_comboCtrlSelectHMACFunction.SetCurSel(1);
-		m_key = "foobar";
-		UpdateData(false);
-		OnCbnSelendokComboSelectHashFunction();
-		OnCbnSelendokComboSelectHmacAlgorithm();
-	}
 
 	return TRUE;
 }
@@ -181,21 +178,19 @@ void CDlgHMAC::OnEditSecondKey() {
 }
 
 void CDlgHMAC::OnCbnSelendokComboSelectHashFunction() {
-	UpdateData();
-	m_alg = m_comboCtrlSelectHashFunction.GetCurSel() - 1;
+	UpdateData(true);
 	calculateMACAndUpdateGUI();
 }
 
 void CDlgHMAC::OnCbnSelendokComboSelectHmacAlgorithm() {
-	UpdateData();
-	m_position = m_comboCtrlSelectHMACFunction.GetCurSel() - 1;
+	UpdateData(true);
+	m_position = m_comboCtrlSelectHMACFunction.GetCurSel();
 
 	switch (m_position) {
-	case -1:
-	case  0: // H(m, k)
-	case  1: // H(k, m)
-	case  2: // H(k,m,k)
-	case  4: // H(k,H(m,k))
+	case 0: // H(m, k)
+	case 1: // H(k, m)
+	case 2: // H(k,m,k)
+	case 4: // H(k,H(m,k))
 		m_ctrl_secondkey.EnableWindow(FALSE);
 		if (m_key.GetLength() == 0)
 			this->GetDlgItem(IDC_EDIT_KEY)->SetFocus();
@@ -210,29 +205,6 @@ void CDlgHMAC::OnCbnSelendokComboSelectHmacAlgorithm() {
 	}
 	UpdateData(false);
 	calculateMACAndUpdateGUI();
-}
-
-void CDlgHMAC::hash(char *data, int data_len, char *digest, int &len) {
-	HashingOperations hashOp(hashIDmapping[m_alg]);
-	hashOp.DoHash(data, data_len, digest);
-	len = hashSize[m_alg];
-}
-
-void CDlgHMAC::hash(CString &data, char *digest, int &len) {
-	hash(data.GetBuffer(), data.GetLength(), digest, len);
-}
-
-CString CDlgHMAC::hex_dump(const char *data, int len) {
-	CString hexaString = _T("");
-	char str[3];
-	str[2] = '\0';
-	for (int i = 0; i<len; i++)
-	{
-		sprintf(str, "%02X", (unsigned char)data[i]);
-		hexaString += str;
-		if (i < len + 1) hexaString += ' ';
-	}
-	return hexaString;
 }
 
 void CDlgHMAC::keyEmpty(int IDS) {
@@ -257,17 +229,12 @@ void CDlgHMAC::keyEmpty(int IDS) {
 }
 
 void CDlgHMAC::SetMac(CString input) {
-	char digest[64];
-	int  digest_length;
-	hash(input, digest, digest_length);
-	m_str_mac = hex_dump(digest, digest_length);
-}
-
-CString CDlgHMAC::CalculateMac(CString tmpStr) {
-	char digest[64];
-	int  digest_length;
-	hash(tmpStr, digest, digest_length);
-	return hex_dump( digest, digest_length );
+	CrypTool::ByteString byteStringInput;
+	CrypTool::ByteString byteStringOutput;
+	byteStringInput.fromString(input);
+	CrypTool::Cryptography::Hash::HashOperation hashOperation(getHashAlgorithmType());
+	hashOperation.executeOnByteStrings(byteStringInput, byteStringOutput);
+	m_str_mac = byteStringOutput.toString(16, " ");
 }
 
 void CDlgHMAC::calculateMACAndUpdateGUI() {
@@ -276,12 +243,6 @@ void CDlgHMAC::calculateMACAndUpdateGUI() {
 	m_str_mac = _T("");
 	m_innerHash = _T("");
 	m_str_outer_input = _T("");
-
-	if ( m_alg < 0 || m_position < 0 )
-	{
-		UpdateData(false);
-		return;
-	}
 
 	switch (m_position)
 	{
@@ -301,71 +262,75 @@ void CDlgHMAC::calculateMACAndUpdateGUI() {
 				break;//zwei Schlüssel
 		case 4: 
 				{
+					if (m_key == "") keyEmpty(IDS_STRING_MAC_Double);
+
 					// flomar, 01/31/2012: the old RFC2104 implementation assumed a block size of 
 					// 64 bytes; that's fine for all the hash functions we use in this dialog except 
 					// SHA512, which operates with 128 bytes; the old implementation with SHA512 did 
 					// not produce the expected test vectors (see http://tools.ietf.org/html/rfc4231);
 					// thanks to peter.brand@haw-hamburg.de for noticing and reporting this bug
 
-					// determine the block size (see above, m_alg==6 is SHA512)
-					const int blockSize = (m_alg == 6) ? 128 : 64;
+					// determine the block size (see above)
+					const size_t blockSize = getHashAlgorithmType() == CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512 ? 128 : 64;
 
-					if (m_key == "") keyEmpty(IDS_STRING_MAC_Double); 
-					// acoording RFC 2104
-					unsigned char *k_ipad = new unsigned char[blockSize];
-					unsigned char *k_opad = new unsigned char[blockSize];
-					unsigned char *keyData = new unsigned char[blockSize];
-					int keyLen;
-					if ( m_key.GetLength() > blockSize )
-						hash(m_key, (char*)keyData, keyLen);
-					else
-					{
-						keyLen = m_key.GetLength();
-						memcpy(keyData, m_key.GetBuffer(), keyLen);
+					// declare byte strings
+					CrypTool::ByteString byteStringIPad;
+					CrypTool::ByteString byteStringIPadAndMessage;
+					CrypTool::ByteString byteStringOPad;
+					CrypTool::ByteString byteStringOPadAndHashValueInner;
+					CrypTool::ByteString byteStringKey;
+					CrypTool::ByteString byteStringKeyOriginal;
+					CrypTool::ByteString byteStringMessage;
+					CrypTool::ByteString byteStringHashValueInner;
+					CrypTool::ByteString byteStringHashValueOuter;
+					// initialize byte strings
+					byteStringIPad.reset(blockSize);
+					byteStringOPad.reset(blockSize);
+					byteStringKey.reset(blockSize);
+					// initialize k_ipad and k_opad according to RFC2104
+					for (size_t index = 0; index < blockSize; index++) {
+						byteStringIPad.getByteData()[index] ^= 0x36;
+						byteStringOPad.getByteData()[index] ^= 0x5c;
 					}
-					memset(k_ipad, '\0', blockSize);
-					memset(k_opad, '\0', blockSize);
-					memcpy(k_ipad, keyData, keyLen);
-					memcpy(k_opad, keyData, keyLen);
-					for (int i=0; i<blockSize; i++) { 
-						k_ipad[i] ^= 0x36;
-						k_opad[i] ^= 0x5c;
-					}
-
-					char *digest = new char[blockSize];
-					int  digest_length;
-
-					// inner hashing
-					HashingOperations hashOp(hashIDmapping[m_alg]);
-					hashOp.chunkHashInit();
-					hashOp.chunkHashUpdate(k_ipad, blockSize);
-					hashOp.chunkHashUpdate(m_originalMessage.GetBuffer(), m_originalMessage.GetLength());
-					hashOp.chunkHashFinal(digest);
-					digest_length = hashSize[m_alg];
-					m_innerHash = hex_dump( digest, digest_length );
-					m_str_outer_input = hex_dump((char*)k_opad, blockSize) + hex_dump( digest, digest_length );
-
-					// outer hashing
-					hashOp.chunkHashInit();
-					hashOp.chunkHashUpdate(k_opad, blockSize);				
-					hashOp.chunkHashUpdate(digest, digest_length);				
-					hashOp.chunkHashFinal(digest);
-
-					m_str_mac = hex_dump( digest, digest_length );
-
-					// free memory
-					delete[] k_ipad;
-					delete[] k_opad;
-					delete[] keyData;
-					delete[] digest;
+					// hash the key
+					byteStringKeyOriginal.fromString(m_key);
+					CrypTool::Cryptography::Hash::HashOperation hashOperationKey(getHashAlgorithmType());
+					hashOperationKey.executeOnByteStrings(byteStringKeyOriginal, byteStringKey);
+					// initialize the message byte string
+					byteStringMessage.fromString(m_originalMessage);
+					// initialize the ipad and message byte string
+					byteStringIPadAndMessage += byteStringIPad;
+					byteStringIPadAndMessage += byteStringMessage;
+					// inner hash
+					CrypTool::Cryptography::Hash::HashOperation hashOperationInner(getHashAlgorithmType());
+					hashOperationInner.executeOnByteStrings(byteStringIPadAndMessage, byteStringHashValueInner);
+					// initialize the opad and hash value inner byte string
+					byteStringOPadAndHashValueInner += byteStringOPad;
+					byteStringOPadAndHashValueInner += byteStringHashValueInner;
+					// update display variables
+					m_innerHash = byteStringHashValueInner.toString(16, " ");
+					m_str_outer_input = byteStringOPadAndHashValueInner.toString(16, " ");
+					// outer hash
+					CrypTool::Cryptography::Hash::HashOperation hashOperationOuter(getHashAlgorithmType());
+					hashOperationOuter.executeOnByteStrings(byteStringOPadAndHashValueInner, byteStringHashValueOuter);
+					// update display variables
+					m_str_mac = byteStringHashValueOuter.toString(16, " ");
 				}
-				break;//doppelte Ausführung der Hashfunktion
+				break;
 	}
 	if ( m_position != 4 )
 	{
 		SetMac(m_str_outer_input);
 	}
 	UpdateData(false);	
+}
+
+CrypTool::Cryptography::Hash::HashAlgorithmType CDlgHMAC::getHashAlgorithmType() const {
+	CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
+	const int currentSelection = m_comboCtrlSelectHashFunction.GetCurSel();
+	if (currentSelection >= 0 && currentSelection < vectorHashAlgorithmTypes.size())
+		hashAlgorithmType = vectorHashAlgorithmTypes[currentSelection];
+	return hashAlgorithmType;
 }
 
 BEGIN_MESSAGE_MAP(CDlgHMAC, CDialog)

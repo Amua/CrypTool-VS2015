@@ -43,6 +43,7 @@ private:
 private:
 	void ComputeHash(CrypTool::ByteString *data, CrypTool::ByteString *hashValue);
 private:
+	std::vector<CrypTool::Cryptography::Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
 	CrypTool::Cryptography::Hash::HashAlgorithmType getHashAlgorithmType() const;
 private:
 	const CString m_documentFileName;
@@ -53,15 +54,7 @@ private:
 	CString m_strOrigHashBin;
 	CrypTool::ByteString m_hash;
 	CrypTool::ByteString m_newHash;
-	CrypTool::ByteString m_dataOrig; 
-private:
-	CString m_strHashFunctionMD4;
-	CString m_strHashFunctionMD5;
-	CString m_strHashFunctionSHA;
-	CString m_strHashFunctionSHA1;
-	CString m_strHashFunctionSHA256;
-	CString m_strHashFunctionSHA512;
-	CString m_strHashFunctionRIPEMD160;
+	CrypTool::ByteString m_dataOrig;
 private:
 	CComboBox m_comboCtrlSelectHashFunction;
 	CEdit m_ctrlText;

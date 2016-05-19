@@ -83,24 +83,23 @@ BOOL CDlgHashDemo::OnInitDialog() {
 	pStatic2->SetFont(&m_font, false);
 	pStatic3->SetFont(&m_font, false);
 
-	m_strHashFunctionMD4.LoadString(IDS_HASHDEMO_STRING_MD4);
-	m_strHashFunctionMD5.LoadString(IDS_HASHDEMO_STRING_MD5);
-	m_strHashFunctionSHA.LoadString(IDS_HASHDEMO_STRING_SHA);
-	m_strHashFunctionSHA1.LoadString(IDS_HASHDEMO_STRING_SHA1);
-	m_strHashFunctionSHA256.LoadString(IDS_HASHDEMO_STRING_SHA256);
-	m_strHashFunctionSHA512.LoadString(IDS_HASHDEMO_STRING_SHA512);
-	m_strHashFunctionRIPEMD160.LoadString(IDS_HASHDEMO_STRING_RIPEMD160);
+	// initialize the supported hash algorithm types
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD4);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA256);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512);
+	vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160);
 
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionMD4);
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionMD5);
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionSHA);
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionSHA1);
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionSHA256);
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionSHA512);
-	m_comboCtrlSelectHashFunction.AddString(m_strHashFunctionRIPEMD160);
+	// initialize combo box with supported hash algorithm types
+	for (size_t index = 0; index < vectorHashAlgorithmTypes.size(); index++) {
+		const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = vectorHashAlgorithmTypes[index];
+		m_comboCtrlSelectHashFunction.AddString(CrypTool::Cryptography::Hash::getHashAlgorithmName(hashAlgorithmType));
+	}
 
-	// by default MD4 is selected
-	m_comboCtrlSelectHashFunction.SelectString(-1, m_strHashFunctionMD4);
+	// select MD4 by default
+	m_comboCtrlSelectHashFunction.SetCurSel(0);
 	OnSelendokComboSelectHashFunction();
 
 	return TRUE;
@@ -323,16 +322,11 @@ void CDlgHashDemo::ComputeHash(CrypTool::ByteString *data, CrypTool::ByteString 
 }
 
 CrypTool::Cryptography::Hash::HashAlgorithmType CDlgHashDemo::getHashAlgorithmType() const {
-	char strSelectedHash[256 + 1];
-	m_comboCtrlSelectHashFunction.GetWindowText(strSelectedHash, 256);
-	if (!strcmp(strSelectedHash, m_strHashFunctionMD4)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD4;
-	else if (!strcmp(strSelectedHash, m_strHashFunctionMD5)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5;
-	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA;
-	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA1)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1;
-	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA256)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA256;
-	else if (!strcmp(strSelectedHash, m_strHashFunctionSHA512)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA512;
-	else if (!strcmp(strSelectedHash, m_strHashFunctionRIPEMD160)) return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160;
-	else return CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
+	CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
+	const int currentSelection = m_comboCtrlSelectHashFunction.GetCurSel();
+	if (currentSelection >= 0 && currentSelection < vectorHashAlgorithmTypes.size())
+		hashAlgorithmType = vectorHashAlgorithmTypes[currentSelection];
+	return hashAlgorithmType;
 }
 
 BEGIN_MESSAGE_MAP(CDlgHashDemo, CDialog)

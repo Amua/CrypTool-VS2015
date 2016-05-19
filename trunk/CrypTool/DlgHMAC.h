@@ -43,22 +43,20 @@ protected:
 	CEdit m_ctrl_key;
 	CEdit m_mac;
 	CEdit m_text;
-	int m_alg;
 	int m_position;
 	CComboBox m_comboCtrlSelectHashFunction;
 	CComboBox m_comboCtrlSelectHMACFunction;
 private:
-	void hash(char *data, int data_len, char *digest, int &len);
-	void hash(CString &data, char *digest, int &len);
-	CString hex_dump(const char *data, int len);
 	void keyEmpty(int IDS);
 	void SetMac(CString input);
-	CString CalculateMac(CString tmpStr);
 private:
 	// this function is used for the live-update functionality of this dialog; as soon as a dialog 
 	// control is invoked that changes a variable, use this function to both re-calculate the MAC and 
 	// update the user interface accordingly
 	void calculateMACAndUpdateGUI();
+private:
+	std::vector<CrypTool::Cryptography::Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
+	CrypTool::Cryptography::Hash::HashAlgorithmType getHashAlgorithmType() const;
 private:
 	const CString m_documentFileName;
 	const CString m_documentTitle;
