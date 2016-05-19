@@ -493,17 +493,18 @@ namespace CrypTool {
 			ByteString byteStringPasswordAndSalt;
 			byteStringPasswordAndSalt += _password;
 			byteStringPasswordAndSalt += _salt;
-			// create byte string for temporary hash value
+			// create byte strings for temporary hash values
 			ByteString byteStringHashValue;
-			// execute outer hash (hash of password and salt)
+			ByteString byteStringHashValueTemp;
+			// create objects for inner and outer hash operations
 			CrypTool::Cryptography::Hash::HashOperation hashOperationOuter(_hashAlgorithmType);
+			CrypTool::Cryptography::Hash::HashOperation hashOperationInner(_hashAlgorithmType);
+			// execute outer hash (hash of password and salt)
 			hashOperationOuter.executeOnByteStrings(byteStringPasswordAndSalt, byteStringHashValue);
 			// execute inner hashes (hash of hash of hash...)
 			for (int iteration = 1; iteration < _iterations; iteration++) {
-				ByteString byteStringHashValueNew;
-				CrypTool::Cryptography::Hash::HashOperation hashOperationInner(_hashAlgorithmType);
-				hashOperationInner.executeOnByteStrings(byteStringHashValue, byteStringHashValueNew);
-				byteStringHashValue = byteStringHashValueNew;
+				hashOperationInner.executeOnByteStrings(byteStringHashValue, byteStringHashValueTemp);
+				byteStringHashValue = byteStringHashValueTemp;
 			}
 			// truncate calculated hash value if necessary
 			byteStringHashValue.truncate(CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType));
