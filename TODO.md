@@ -19,6 +19,7 @@ This document contains the most important TODOs for the project.
 - remove MD2 implementations (no longer supported by updated OpenSSL version)
 - implement OpenSSL-based abstraction layer to replace legacy code (see CrypToolBase.{h|cpp} files)
 - replace all instances of "CRYPTOOL_BASE" with the appropriate resource strings, but don't bother with this until the source is set for release as the constant refactoring may make maintaining the intended naming convention (i.e. CRYPTOOL_BASE_UTILITIES_xxx, CRYPTOOL_BASE_CRYPTOGRAPHY_xxx, etc.) a nightmare
+- speed up the CrypTool::ByteString implementation: the constant re-allocation of memory, for example when concatenating byte strings, is significantly dragging down overall performance (this is particularly evident when using the key from password dialog with an iteration count of 10000 or higher)
 
 ## Other
 
