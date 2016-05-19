@@ -476,17 +476,17 @@ namespace CrypTool {
 			vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5);
 			vectorHashAlgorithmTypes.push_back(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1);
 			if (!CrypTool::Utilities::vectorContains<CrypTool::Cryptography::Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, _hashAlgorithmType)) {
-				AfxMessageBox("TODO/FIXME: specified hash algorithm not supported (PKCS5)");
+				AfxMessageBox("CRYPTOOL_BASE: specified hash algorithm not supported (PKCS5)");
 				return false;
 			}
 			// the number of iterations must be valid [1, 100000]
 			if (_iterations < 1 || _iterations > 100000) {
-				AfxMessageBox("TODO/FIXME: specified number of iterations not supported (PKCS5)");
+				AfxMessageBox("CRYPTOOL_BASE: specified number of iterations not supported (PKCS5)");
 				return false;
 			}
 			// the key length must be valid [1, byteLengthHash]
 			if (_keyLength < 1 || _keyLength > CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType)) {
-				AfxMessageBox("TODO/FIXME: specified key length is not supported (PKCS5)");
+				AfxMessageBox("CRYPTOOL_BASE: specified key length is not supported (PKCS5)");
 				return false;
 			}
 			// create concatenation of password and salt
