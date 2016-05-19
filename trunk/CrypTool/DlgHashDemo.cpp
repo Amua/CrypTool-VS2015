@@ -124,7 +124,7 @@ BOOL CDlgHashDemo::OnInitDialog() {
 	m_comboCtrlSelectHashFunction.SelectString(-1, m_strHashFunctionMD4);
 	OnSelendokComboSelectHashFunction();
 
-	return FALSE;
+	return TRUE;
 }
 
 void CDlgHashDemo::DoDataExchange(CDataExchange* pDX) {

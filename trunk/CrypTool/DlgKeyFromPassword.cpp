@@ -56,7 +56,7 @@ BOOL CDlgKeyFromPassword::OnInitDialog() {
 	sprintf(line, "%i%i", rand(), rand());
 	m_salt = line;
 	UpdateData(false);
-	return FALSE;
+	return TRUE;
 }
 
 void CDlgKeyFromPassword::DoDataExchange(CDataExchange* pDX) {
