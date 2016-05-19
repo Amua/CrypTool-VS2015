@@ -18,17 +18,12 @@
 
 **************************************************************************/
 
-// DlgHMAC.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
-
 #include "CrypToolApp.h"
 #include "DlgHMAC.h"
 #include "CrypToolTools.h"
 #include "FileTools.h"
 #include "ChrTools.h"
-
 #include "HashingOperations.h"
 
 #ifdef _DEBUG
@@ -37,76 +32,36 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgHMAC 
-
 const int hashIDmapping[8] = { 0,   1,  2,  3,  4,  6,  7,  5 };
 const int hashSize[8]      = { 16, 16, 16, 20, 20, 32, 64, 20 };
 
-CDlgHMAC::CDlgHMAC(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgHMAC::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgHMAC)
+CDlgHMAC::CDlgHMAC(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
+	CDialog(CDlgHMAC::IDD, pParent),
+	documentFileName(_documentFileName),
+	documentTitle(_documentTitle) {
 	m_alg = -1;
 	m_position = -1;
 	m_key = _T("");
 	m_secondkey = _T("");
 	m_str_outer_input = _T("");
-	//}}AFX_DATA_INIT
 }
 
-
-void CDlgHMAC::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgHMAC)
-	DDX_Control(pDX, IDC_EDIT_KEY2, m_ctrl_secondkey);
-	DDX_Control(pDX, IDC_EDIT_KEY, m_ctrl_key);
-	DDX_Control(pDX, IDC_SHOW_MAC, m_mac);
-	DDX_Control(pDX, IDC_SHOW_TEXT, m_text);
-	DDX_Text(pDX, IDC_EDIT_KEY, m_key);
-	DDX_Text(pDX, IDC_EDIT_KEY2, m_secondkey);
-	DDX_Text(pDX, IDC_SHOW_MAC, m_str_mac);
-	DDX_Text(pDX, IDC_SHOW_TEXT, m_str_outer_input);
-	DDX_Text(pDX, IDC_EDIT_ORIGINAL_MESSAGE, m_originalMessage);
-	DDX_Text(pDX, IDC_SHOW_HASH, m_innerHash);
-	DDX_Control(pDX, IDC_COMBO_SELECT_HASH_FUNCTION, m_comboCtrlSelectHashFunction);
-	DDX_Control(pDX, IDC_COMBO_SELECT_HMAC_ALGORITHM, m_comboCtrlSelectHMACFunction);
-	//}}AFX_DATA_MAP
-}
-
-
-BEGIN_MESSAGE_MAP(CDlgHMAC, CDialog)
-	//{{AFX_MSG_MAP(CDlgHMAC)
-	ON_EN_CHANGE(IDC_SHOW_TEXT, OnEditText)
-	ON_EN_CHANGE(IDC_EDIT_KEY, OnEditKey)
-	ON_EN_CHANGE(IDC_EDIT_ORIGINAL_MESSAGE, OnEditOriginalMessage)
-	ON_EN_CHANGE(IDC_EDIT_KEY2, OnEditSecondKey)
-	//}}AFX_MSG_MAP
-	ON_CBN_SELENDOK(IDC_COMBO_SELECT_HASH_FUNCTION, &CDlgHMAC::OnCbnSelendokComboSelectHashFunction)
-	ON_CBN_SELENDOK(IDC_COMBO_SELECT_HMAC_ALGORITHM, &CDlgHMAC::OnCbnSelendokComboSelectHmacAlgorithm)
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgHMAC 
-
-BOOL CDlgHMAC::OnInitDialog() 
-{
+BOOL CDlgHMAC::OnInitDialog() {
 	CDialog::OnInitDialog();
-	LOGFONT lf={8,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_DONTCARE,"Courier"};
-	//Struktur lf wird deklariert und initialisiert
+	
+	LOGFONT lf = { 8,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,"Courier" };
 	m_font.CreateFontIndirect(&lf);
-	CWnd* pStatic1=GetDlgItem(IDC_EDIT_KEY);
-	CWnd* pStatic2=GetDlgItem(IDC_EDIT_KEY2);
-	CWnd* pStatic =GetDlgItem(IDC_SHOW_TEXT);
-	CWnd* pStatic3=GetDlgItem(IDC_SHOW_MAC);
-	CWnd* pStatic4=GetDlgItem(IDC_SHOW_HASH);
+	CWnd* pStatic1 = GetDlgItem(IDC_EDIT_KEY);
+	CWnd* pStatic2 = GetDlgItem(IDC_EDIT_KEY2);
+	CWnd* pStatic = GetDlgItem(IDC_SHOW_TEXT);
+	CWnd* pStatic3 = GetDlgItem(IDC_SHOW_MAC);
+	CWnd* pStatic4 = GetDlgItem(IDC_SHOW_HASH);
 
-	pStatic->SetFont(&m_font,false);
-	pStatic1->SetFont(&m_font,false);
-	pStatic2->SetFont(&m_font,false);
-	pStatic3->SetFont(&m_font,false);
-	pStatic4->SetFont(&m_font,false);
+	pStatic->SetFont(&m_font, false);
+	pStatic1->SetFont(&m_font, false);
+	pStatic2->SetFont(&m_font, false);
+	pStatic3->SetFont(&m_font, false);
+	pStatic4->SetFont(&m_font, false);
 
 	CString str;
 	str.LoadStringA(IDS_HASHDEMO_SELALGORITHM);		m_comboCtrlSelectHashFunction.AddString(str);
@@ -138,12 +93,11 @@ BOOL CDlgHMAC::OnInitDialog()
 	m_originalMessage = strText;
 	UpdateData(false);
 
-
 	// flomar, 08/13/2015: here we try to select some meaningful default values for both algorithms 
 	// (SHA256 and HKM) and the key-- this may be useful for inexperienced users; please note that this
 	// extension might be ignored if someone tampers with the algorithms above, which in turn might 
 	// cause assertions
-	if(m_comboCtrlSelectHashFunction.GetCount() > 6 && m_comboCtrlSelectHMACFunction.GetCount() > 1) {
+	if (m_comboCtrlSelectHashFunction.GetCount() > 6 && m_comboCtrlSelectHMACFunction.GetCount() > 1) {
 		m_comboCtrlSelectHashFunction.SetCurSel(6);
 		m_comboCtrlSelectHMACFunction.SetCurSel(1);
 		m_key = "foobar";
@@ -152,57 +106,26 @@ BOOL CDlgHMAC::OnInitDialog()
 		OnCbnSelendokComboSelectHmacAlgorithm();
 	}
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
+	return TRUE;
 }
 
-void CDlgHMAC::hash(char *data, int data_len, char *digest, int &len)
-{
-	HashingOperations hashOp(hashIDmapping[m_alg]);
-	// NOTE: make sure digest has enough memeory
-	hashOp.DoHash(data, data_len, digest);
-	len = hashSize[m_alg];
+void CDlgHMAC::DoDataExchange(CDataExchange* pDX) {
+	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_KEY2, m_ctrl_secondkey);
+	DDX_Control(pDX, IDC_EDIT_KEY, m_ctrl_key);
+	DDX_Control(pDX, IDC_SHOW_MAC, m_mac);
+	DDX_Control(pDX, IDC_SHOW_TEXT, m_text);
+	DDX_Text(pDX, IDC_EDIT_KEY, m_key);
+	DDX_Text(pDX, IDC_EDIT_KEY2, m_secondkey);
+	DDX_Text(pDX, IDC_SHOW_MAC, m_str_mac);
+	DDX_Text(pDX, IDC_SHOW_TEXT, m_str_outer_input);
+	DDX_Text(pDX, IDC_EDIT_ORIGINAL_MESSAGE, m_originalMessage);
+	DDX_Text(pDX, IDC_SHOW_HASH, m_innerHash);
+	DDX_Control(pDX, IDC_COMBO_SELECT_HASH_FUNCTION, m_comboCtrlSelectHashFunction);
+	DDX_Control(pDX, IDC_COMBO_SELECT_HMAC_ALGORITHM, m_comboCtrlSelectHMACFunction);
 }
 
-void CDlgHMAC::hash(CString &data, char *digest, int &len)
-{
-	hash(data.GetBuffer(), data.GetLength(), digest, len);
-}
-
-
-CString CDlgHMAC::CalculateMac(CString tmpStr)
-{
-	char digest[64];
-	int  digest_length;
-	hash(tmpStr, digest, digest_length);
-	return hex_dump( digest, digest_length );
-}
-
-void CDlgHMAC::SetMac(CString input)
-{
-	char digest[64];
-	int  digest_length;
-	hash(input, digest, digest_length);
-	m_str_mac = hex_dump( digest, digest_length );
-}
-
-CString CDlgHMAC::hex_dump( const char *data, int len )
-{
-	CString hexaString = _T("");
-	char str[3];
-	str[2] = '\0';
-	for (int i=0; i<len; i++)
-	{
-		sprintf(str, "%02X", (unsigned char)data[i]);
-		hexaString += str;
-		if (i < len+1) hexaString += ' ';
-	}
-	return hexaString;
-}
-
-
-void CDlgHMAC::OnBUTTONSecondKey() 
-{
+void CDlgHMAC::OnBUTTONSecondKey() {
 	UpdateData(true);
 	m_ctrl_secondkey.EnableWindow(TRUE);
 	UpdateData(false);
@@ -210,64 +133,125 @@ void CDlgHMAC::OnBUTTONSecondKey()
 	calculateMACAndUpdateGUI();
 
 	// if there is no key selected, set focus to first key
-	if(m_key.GetLength() == 0 && m_secondkey.GetLength() == 0)
+	if (m_key.GetLength() == 0 && m_secondkey.GetLength() == 0)
 		this->GetDlgItem(IDC_EDIT_KEY)->SetFocus();
 	// if there is the first key selected, set focus to second key
-	if(m_key.GetLength() > 0)
+	if (m_key.GetLength() > 0)
 		this->GetDlgItem(IDC_EDIT_KEY2)->SetFocus();
 }
 
-void CDlgHMAC::OnEditText() 
-{
+void CDlgHMAC::OnEditText() {
 	UpdateData(true);
 	m_text.GetWindowText(strText);
 	UpdateData(false);
 }
 
-void CDlgHMAC::OnEditKey() 
-{
+void CDlgHMAC::OnEditKey() {
 	UpdateData(true);
 	calculateMACAndUpdateGUI();
 }
 
-void CDlgHMAC::OnEditOriginalMessage()
-{
+void CDlgHMAC::OnEditOriginalMessage() {
 	UpdateData(true);
 	calculateMACAndUpdateGUI();
 }
 
-void CDlgHMAC::OnEditSecondKey() 
-{
+void CDlgHMAC::OnEditSecondKey() {
 	UpdateData(true);
 	calculateMACAndUpdateGUI();
 }
 
-void CDlgHMAC::keyEmpty(int IDS)
-{
+void CDlgHMAC::OnCbnSelendokComboSelectHashFunction() {
+	UpdateData();
+	m_alg = m_comboCtrlSelectHashFunction.GetCurSel() - 1;
+	calculateMACAndUpdateGUI();
+}
+
+void CDlgHMAC::OnCbnSelendokComboSelectHmacAlgorithm() {
+	UpdateData();
+	m_position = m_comboCtrlSelectHMACFunction.GetCurSel() - 1;
+
+	switch (m_position) {
+	case -1:
+	case  0: // H(m, k)
+	case  1: // H(k, m)
+	case  2: // H(k,m,k)
+	case  4: // H(k,H(m,k))
+		m_ctrl_secondkey.EnableWindow(FALSE);
+		if (m_key.GetLength() == 0)
+			this->GetDlgItem(IDC_EDIT_KEY)->SetFocus();
+		break;
+	case 3: // H(k,m,k')
+		m_ctrl_secondkey.EnableWindow(TRUE);
+		if (m_key.GetLength() == 0)
+			this->GetDlgItem(IDC_EDIT_KEY)->SetFocus();
+		else if (m_secondkey.GetLength() == 0)
+			this->GetDlgItem(IDC_EDIT_KEY2)->SetFocus();
+		break;
+	}
+	UpdateData(false);
+	calculateMACAndUpdateGUI();
+}
+
+void CDlgHMAC::hash(char *data, int data_len, char *digest, int &len) {
+	HashingOperations hashOp(hashIDmapping[m_alg]);
+	hashOp.DoHash(data, data_len, digest);
+	len = hashSize[m_alg];
+}
+
+void CDlgHMAC::hash(CString &data, char *digest, int &len) {
+	hash(data.GetBuffer(), data.GetLength(), digest, len);
+}
+
+CString CDlgHMAC::hex_dump(const char *data, int len) {
+	CString hexaString = _T("");
+	char str[3];
+	str[2] = '\0';
+	for (int i = 0; i<len; i++)
+	{
+		sprintf(str, "%02X", (unsigned char)data[i]);
+		hexaString += str;
+		if (i < len + 1) hexaString += ' ';
+	}
+	return hexaString;
+}
+
+void CDlgHMAC::keyEmpty(int IDS) {
 	// flomar, 01/20/2010
 	// this is dirty, but I don't want to dig any deeper than necessary before the beta release;
 	// what we're doing here is making sure the info messages for certain events are not displayed 
 	// over and over again, but only once during dialog lifetime
-	if(IDS == IDS_STRING_MAC_NoKey) {
-		if(!shownInfoMessageNoKey) shownInfoMessageNoKey = true;
+	if (IDS == IDS_STRING_MAC_NoKey) {
+		if (!shownInfoMessageNoKey) shownInfoMessageNoKey = true;
 		else return;
 	}
-	if(IDS == IDS_STRING_MAC_OnlyOneKey) {
-		if(!shownInfoMessageOneKey) shownInfoMessageOneKey = true;
+	if (IDS == IDS_STRING_MAC_OnlyOneKey) {
+		if (!shownInfoMessageOneKey) shownInfoMessageOneKey = true;
 		else return;
 	}
-	if(IDS == IDS_STRING_MAC_Double) {
-		if(!shownInfoMessageDouble) shownInfoMessageDouble = true;
+	if (IDS == IDS_STRING_MAC_Double) {
+		if (!shownInfoMessageDouble) shownInfoMessageDouble = true;
 		else return;
 	}
-
 	LoadString(AfxGetInstanceHandle(), IDS, pc_str, 150);
-	AfxMessageBox(pc_str, MB_ICONINFORMATION|MB_OK);
+	AfxMessageBox(pc_str, MB_ICONINFORMATION | MB_OK);
 }
 
+void CDlgHMAC::SetMac(CString input) {
+	char digest[64];
+	int  digest_length;
+	hash(input, digest, digest_length);
+	m_str_mac = hex_dump(digest, digest_length);
+}
 
-void CDlgHMAC::calculateMACAndUpdateGUI()
-{
+CString CDlgHMAC::CalculateMac(CString tmpStr) {
+	char digest[64];
+	int  digest_length;
+	hash(tmpStr, digest, digest_length);
+	return hex_dump( digest, digest_length );
+}
+
+void CDlgHMAC::calculateMACAndUpdateGUI() {
 	UpdateData(true);
 
 	m_str_mac = _T("");
@@ -364,36 +348,12 @@ void CDlgHMAC::calculateMACAndUpdateGUI()
 	}
 	UpdateData(false);	
 }
-void CDlgHMAC::OnCbnSelendokComboSelectHashFunction()
-{
-	UpdateData();
-	m_alg = m_comboCtrlSelectHashFunction.GetCurSel() -1;
-	calculateMACAndUpdateGUI();
-}
 
-void CDlgHMAC::OnCbnSelendokComboSelectHmacAlgorithm()
-{
-	UpdateData();
-	m_position = m_comboCtrlSelectHMACFunction.GetCurSel() -1;
-
-	switch ( m_position ) {
-		case -1:
-		case  0: // H(m, k)
-		case  1: // H(k, m)
-		case  2: // H(k,m,k)
-		case  4: // H(k,H(m,k))
-			m_ctrl_secondkey.EnableWindow(FALSE);
-			if(m_key.GetLength() == 0)
-				this->GetDlgItem(IDC_EDIT_KEY)->SetFocus();
-			break;
-		case 3: // H(k,m,k')
-			m_ctrl_secondkey.EnableWindow(TRUE);
-			if(m_key.GetLength() == 0)
-				this->GetDlgItem(IDC_EDIT_KEY)->SetFocus();
-			else if ( m_secondkey.GetLength() == 0)
-				this->GetDlgItem(IDC_EDIT_KEY2)->SetFocus();
-			break;
-	}			
-	UpdateData(false);
-	calculateMACAndUpdateGUI();
-}
+BEGIN_MESSAGE_MAP(CDlgHMAC, CDialog)
+	ON_EN_CHANGE(IDC_SHOW_TEXT, OnEditText)
+	ON_EN_CHANGE(IDC_EDIT_KEY, OnEditKey)
+	ON_EN_CHANGE(IDC_EDIT_ORIGINAL_MESSAGE, OnEditOriginalMessage)
+	ON_EN_CHANGE(IDC_EDIT_KEY2, OnEditSecondKey)
+	ON_CBN_SELENDOK(IDC_COMBO_SELECT_HASH_FUNCTION, &CDlgHMAC::OnCbnSelendokComboSelectHashFunction)
+	ON_CBN_SELENDOK(IDC_COMBO_SELECT_HMAC_ALGORITHM, &CDlgHMAC::OnCbnSelendokComboSelectHmacAlgorithm)
+END_MESSAGE_MAP()

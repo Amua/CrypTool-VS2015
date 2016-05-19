@@ -47,8 +47,8 @@ private:
 private:
 	CrypTool::Cryptography::Hash::HashAlgorithmType getHashAlgorithmType() const;
 private:
-	CString m_documentFileName;
-	CString m_documentTitle;
+	const CString m_documentFileName;
+	const CString m_documentTitle;
 private:
 	CString	m_strHashDiffRE;
 	CString m_strNewHashBin;

@@ -3060,8 +3060,7 @@ void HashOfAFile() {
 }
 
 // original implementation: Myriam Zeuner, 2002-ish
-void Hashdemo(const char *infile,const char *OldTitle)
-{	
+void Hashdemo(const char *infile,const char *OldTitle) {
 	// initialize parameters for hash demo dialog
 	const CString documentFileName = infile;
 	const CString documentTitle = OldTitle;
@@ -3082,11 +3081,15 @@ void SignatureTutorial(const char *infile, const char* OldTitle)
 	}
 }
 
-
-//Christine Stötzel, September 2004
-//Message Authentication Code
-void CreateMac(const char *infile, const char *OldTitle)
-{
+// original implementation: Christine Stötzel, 2004
+void CreateMac(const char *infile, const char *OldTitle) {
+	// initialize parameters for HMAC dialog
+	const CString documentFileName = infile;
+	const CString documentTitle = OldTitle;
+	// create and fire up HMAC dialog
+	CDlgHMAC dlgHMAC(documentFileName, documentTitle);
+	dlgHMAC.DoModal();
+#if 0
 	long FileSize;
 	{
 		struct stat *obj;	
@@ -3135,6 +3138,7 @@ void CreateMac(const char *infile, const char *OldTitle)
 	macdlg.DoModal();
 	delete []TextFile->octets;
 	delete TextFile;
+#endif
 }
 
 long Rot13CaesarAscStart(SymbolArray & text, const char *infile)
