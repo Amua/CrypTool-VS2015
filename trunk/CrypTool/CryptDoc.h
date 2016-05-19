@@ -88,7 +88,12 @@ protected:
 	afx_msg void OnHistogram();
 	afx_msg void OnCryptIdea();
 	afx_msg void OnCryptRc2();
+	afx_msg void OnCryptRc4();
 	afx_msg void OnCryptDesDesecb();
+	afx_msg void OnCryptDesDescbc();
+	afx_msg void OnCrypt3desEcb();
+	afx_msg void OnCrypt3desCbc();
+	afx_msg void OnCryptAesRijndael();
 	afx_msg void OnCryptHashMd4();
 	afx_msg void OnCryptHashMd5();
 	afx_msg void OnCryptHashRipemd160();
@@ -97,10 +102,6 @@ protected:
 	afx_msg void OnCryptHashSha256();
 	afx_msg void OnCryptHashSha512();
 	afx_msg void OnVernamBin();
-	afx_msg void OnCrypt3desCbc();
-	afx_msg void OnCrypt3desEcb();
-	afx_msg void OnCryptRc4();
-	afx_msg void OnCryptDesDescbc();
 	afx_msg void OnCaesarAuto();
 	afx_msg void OnVigenereAuto();
 	afx_msg void OnVigenereAnalysisSchroedel();
@@ -129,7 +130,6 @@ protected:
 	afx_msg void OnAnalyseTripledesecb();
 	afx_msg void OnCryptAesMars();
 	afx_msg void OnCryptAesRc6();
-	afx_msg void OnCryptAesRijndael();
 	afx_msg void OnCryptAesSerpent();
 	afx_msg void OnCryptAesTwofish();
 	afx_msg void OnAnalyseAesMars();

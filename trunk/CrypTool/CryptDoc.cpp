@@ -607,22 +607,44 @@ void CHexDoc::OnHistogram()
     HistogramBin(ContentName, GetTitle());	
 }
 
-void CCryptDoc::OnCryptIdea() 
-{
+void CCryptDoc::OnCryptIdea() {
     UpdateContent();
 	SymmetricEncryption(IDS_CRYPT_IDEA, SECUDE_PROVIDER, ContentName, GetTitle());
 }
 
-void CCryptDoc::OnCryptRc2() 
-{
+void CCryptDoc::OnCryptRc2() {
 	UpdateContent();
 	SymmetricEncryption(IDS_CRYPT_RC2, SECUDE_PROVIDER, ContentName, GetTitle());
 }
 
-void CCryptDoc::OnCryptDesDesecb() 
-{
-    UpdateContent();
+void CCryptDoc::OnCryptRc4() {
+	UpdateContent();
+	SymmetricEncryption(IDS_CRYPT_RC4, SECUDE_PROVIDER, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptDesDesecb() {
+	UpdateContent();
 	SymmetricEncryption(IDS_CRYPT_DES_ECB, SECUDE_PROVIDER, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptDesDescbc() {
+	UpdateContent();
+	SymmetricEncryption(IDS_CRYPT_DES_CBC, SECUDE_PROVIDER, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCrypt3desEcb() {
+	UpdateContent();
+	SymmetricEncryption(IDS_CRYPT_TRIPLE_DES_ECB, SECUDE_PROVIDER, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCrypt3desCbc() {
+	UpdateContent();
+	SymmetricEncryption(IDS_CRYPT_TRIPLE_DES_CBC, SECUDE_PROVIDER, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptAesRijndael() {
+	UpdateContent();
+	SymmetricEncryption(IDS_CRYPT_RIJNDAEL, CORE_PROVIDER, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashMd4() 
@@ -785,31 +807,6 @@ BOOL CAscDoc::UpdateContent( void )
 		return TRUE;
 	}
 }
-
-void CCryptDoc::OnCrypt3desCbc() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_TRIPLE_DES_CBC, SECUDE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCrypt3desEcb() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_TRIPLE_DES_ECB, SECUDE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptRc4() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_RC4, SECUDE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptDesDescbc() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_DES_CBC, SECUDE_PROVIDER, ContentName, GetTitle());
-}
-
 
 void CCryptDoc::OnCaesarAuto() 
 {
@@ -1086,12 +1083,6 @@ void CCryptDoc::OnCryptAesRc6()
 {
 	UpdateContent();
 	SymmetricEncryption(IDS_CRYPT_RC6, CORE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptAesRijndael() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_RIJNDAEL, CORE_PROVIDER, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptAesSerpent() 
