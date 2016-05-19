@@ -287,13 +287,17 @@ void CDlgHMAC::calculateMACAndUpdateGUI() {
 					byteStringIPad.reset(blockSize);
 					byteStringOPad.reset(blockSize);
 					byteStringKey.reset(blockSize);
+					// initialize the key
+					byteStringKeyOriginal.fromString(m_key);
+					// copy key into k_ipad and k_opad
+					memcpy(byteStringIPad.getByteData(), byteStringKeyOriginal.getByteData(), byteStringKeyOriginal.getByteLength());
+					memcpy(byteStringOPad.getByteData(), byteStringKeyOriginal.getByteData(), byteStringKeyOriginal.getByteLength());
 					// initialize k_ipad and k_opad according to RFC2104
 					for (size_t index = 0; index < blockSize; index++) {
 						byteStringIPad.getByteData()[index] ^= 0x36;
 						byteStringOPad.getByteData()[index] ^= 0x5c;
 					}
 					// hash the key
-					byteStringKeyOriginal.fromString(m_key);
 					CrypTool::Cryptography::Hash::HashOperation hashOperationKey(getHashAlgorithmType());
 					hashOperationKey.executeOnByteStrings(byteStringKeyOriginal, byteStringKey);
 					// initialize the message byte string
