@@ -610,10 +610,14 @@ namespace CrypTool {
 			}
 
 			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
-				// TODO/FIXME
-				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnFiles");
-
-				// TODO/FIXME
+				
+				// TODO/FIXME: replace byte string implementation with a stream-based implementation
+				ByteString byteStringInput;
+				ByteString byteStringOutput;
+				byteStringInput.readFromFile(_fileNameInput);
+				executeOnByteStrings(byteStringInput, _byteStringKey, byteStringOutput);
+				byteStringOutput.writeToFile(_fileNameOutput);
+				// TODO/FIXME: replace byte string implementation with a stream-based implementation
 
 				// return without errors
 				return true;
