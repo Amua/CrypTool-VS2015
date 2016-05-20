@@ -562,9 +562,6 @@ namespace CrypTool {
 			}
 
 			bool SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
-				// TODO/FIXME
-				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnByteStrings");
-
 				using namespace OpenSSL;
 				// acquire cipher and cipher block size
 				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
@@ -573,19 +570,38 @@ namespace CrypTool {
 				const ByteString byteStringIV(cipherBlockSize);
 				// create cipher context
 				EVP_CIPHER_CTX *context = EVP_CIPHER_CTX_new();
+				// initialize temporary variables
+				const unsigned char *key = _byteStringKey.getByteDataConst();
+				const unsigned char *iv = byteStringIV.getByteDataConst();
+				const unsigned char *input = _byteStringInput.getByteDataConst();
+				const int inputLength = _byteStringInput.getByteLength();
+				unsigned char *output = new unsigned char[inputLength + cipherBlockSize];
+				int outputLength = 0;
+				unsigned char *final = new unsigned char[cipherBlockSize];
+				int finalLength = 0;
 				// encryption
 				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-					EVP_EncryptInit(context, cipher, _byteStringKey.getByteDataConst(), byteStringIV.getByteDataConst());
-					// TODO/FIXME
-					//EVP_EncryptUpdate(...);
-					//EVP_EncryptFinal(...);
+					EVP_EncryptInit(context, cipher, key, iv);
+					EVP_EncryptUpdate(context, output, &outputLength, input, inputLength);
+					ByteString byteStringUpdate;
+					byteStringUpdate.fromBuffer(output, outputLength);
+					_byteStringOutput += byteStringUpdate;
+					EVP_EncryptFinal(context, final, &finalLength);
+					ByteString byteStringFinal;
+					byteStringFinal.fromBuffer(final, finalLength);
+					_byteStringOutput += byteStringFinal;
 				}
 				// decryption
 				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-					EVP_DecryptInit(context, cipher, _byteStringKey.getByteDataConst(), byteStringIV.getByteDataConst());
-					// TODO/FIXME
-					//EVP_DecryptUpdate(...);
-					//EVP_DecryptFinal(...);
+					EVP_DecryptInit(context, cipher, key, iv);
+					EVP_DecryptUpdate(context, output, &outputLength, input, inputLength);
+					ByteString byteStringUpdate;
+					byteStringUpdate.fromBuffer(output, outputLength);
+					_byteStringOutput += byteStringUpdate;
+					EVP_DecryptFinal(context, final, &finalLength);
+					ByteString byteStringFinal;
+					byteStringFinal.fromBuffer(final, finalLength);
+					_byteStringOutput += byteStringFinal;
 				}
 				// delete cipher context
 				EVP_CIPHER_CTX_free(context);
