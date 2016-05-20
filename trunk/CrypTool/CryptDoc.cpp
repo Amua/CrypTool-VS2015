@@ -609,42 +609,42 @@ void CHexDoc::OnHistogram()
 
 void CCryptDoc::OnCryptIdea() {
     UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_IDEA, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_IDEA, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptRc2() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_RC2, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_RC2, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptRc4() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_RC4, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_RC4, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptDesDesecb() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_DES_ECB, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DES_ECB, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptDesDescbc() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_DES_CBC, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DES_CBC, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCrypt3desEcb() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_TRIPLE_DES_ECB, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCrypt3desCbc() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_TRIPLE_DES_CBC, SECUDE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptAesRijndael() {
 	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_RIJNDAEL, CORE_PROVIDER, ContentName, GetTitle());
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptHashMd4() 

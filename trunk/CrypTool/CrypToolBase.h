@@ -169,14 +169,14 @@ namespace CrypTool {
 			// this class provides hash operations on all supported hash algorithm types 
 			// for both byte strings and files (see different execute functions below); 
 			// the file-based operation provides the ability to cancel the operation 
-			// and track its progress (for example when run in a separate thread)
+			// and track its progress when run in a separate thread
 			class HashOperation {
 			public:
 				HashOperation(const HashAlgorithmType _hashAlgorithmType);
 				virtual ~HashOperation();
 			public:
-				void executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringDigest);
-				void executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameDigest, const bool *_cancelled = 0, double *_progress = 0);
+				void executeOnByteStrings(const ByteString &_byteStringInput, ByteString &_byteStringOutput);
+				void executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled = 0, double *_progress = 0);
 			private:
 				const HashAlgorithmType hashAlgorithmType;
 			private:
@@ -193,15 +193,78 @@ namespace CrypTool {
 
 		}
 
-		// the supported symmetric encryption algorithm types
-		enum SymmetricEncrytionAlgorithm {
-			SYMMETRIC_ENCRYPTION_ALGORITHM_TYPE_NULL
-		};
+		// this namespace encapsulates symmetric encryption and decryption functionality
+		namespace Symmetric {
 
-		// the supported asymmetric encryption algorithm types
-		enum AsymmetricEncryptionAlgorithms {
-			ASYMMETRIC_ENCRYPTION_ALGORITHM_TYPE_NULL
-		};
+			// the supported symmetric algorithm types
+			enum SymmetricAlgorithmType {
+				SYMMETRIC_ALGORITHM_TYPE_NULL,
+				SYMMETRIC_ALGORITHM_TYPE_IDEA,
+				SYMMETRIC_ALGORITHM_TYPE_RC2,
+				SYMMETRIC_ALGORITHM_TYPE_RC4,
+				SYMMETRIC_ALGORITHM_TYPE_DES_ECB,
+				SYMMETRIC_ALGORITHM_TYPE_DES_CBC,
+				SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB,
+				SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC,
+				SYMMETRIC_ALGORITHM_TYPE_AES
+			};
+
+			// the supported symmetric operation types
+			enum SymmetricOperationType {
+				SYMMETRIC_OPERATION_TYPE_NULL,
+				SYMMETRIC_OPERATION_TYPE_ENCRYPTION,
+				SYMMETRIC_OPERATION_TYPE_DECRYPTION
+			};
+
+			// this class provides symmetric operations (encryption and decryption) on 
+			// all supported symmetric algorithm types for both byte strings and files 
+			// (see different execute functions below); the file-based operations provide 
+			// the ability to cancel the operations and track their progress when run in 
+			// a separate thread
+			class SymmetricOperation {
+			public:
+				SymmetricOperation(const SymmetricAlgorithmType _symmetricAlgorithmType, const SymmetricOperationType _symmetricOperationType);
+				virtual ~SymmetricOperation();
+			public:
+				void executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput);
+				void executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled = 0, double *_progress = 0);
+			private:
+				const SymmetricAlgorithmType symmetricAlgorithmType;
+				const SymmetricOperationType symmetricOperationType;
+			private:
+#if 0
+				// type definitions for OpenSSL function pointers
+				typedef void(*fpInitialize_t) (void *_context);
+				typedef void(*fpUpdate_t) (void *_context, void *_message, ULONGLONG _length);
+				typedef void(*fpFinalize_t) (void *_digest, void *_context);
+				// context size and function pointers for OpenSSL hash operations
+				size_t contextSize;
+				fpInitialize_t fpInitialize;
+				fpUpdate_t fpUpdate;
+				fpFinalize_t fpFinalize;
+#endif
+			};
+
+		}
+
+		// this namespace encapsulates asymmetric encryption and decryption functionality
+		namespace Asymmetric {
+
+			// the supported asymmetric algorithm types
+			enum AsymmetricAlgorithmType {
+				ASYMMETRIC_ALGORITHM_TYPE_NULL
+			};
+
+			// the supported asymmetric operation types
+			enum AsymmetricOperationType {
+				ASYMMETRIC_OPERATION_TYPE_NULL,
+				ASYMMETRIC_OPERATION_TYPE_ENCRYPTION,
+				ASYMMETRIC_OPERATION_TYPE_DECRYPTION
+			};
+
+			// TODO/FIXME: implement "AsymmetricOperation" class (see symmetric counterpart above)
+
+		}
 
 	}
 
@@ -210,6 +273,8 @@ namespace CrypTool {
 
 		// TODO/FIXME: rename or remove this? the complexity behind this operation is unclear (threading, etc...)
 		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+		// TODO/FIXME: rename or remove this? the complexity behind this operation is unclear (threading, etc...)
+		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 
 		// this function creates a password-derived key based on the PKCS#5 standard
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key);

@@ -23,10 +23,13 @@ limitations under the License.
 #include "resource.h"
 
 namespace OpenSSL {
+	// hash algorithms
 #include "OpenSSL/md4.h"
 #include "OpenSSL/md5.h"
 #include "OpenSSL/ripemd.h"
 #include "OpenSSL/sha.h"
+	// symmetric encryption algorithms
+#include "OpenSSL/evp.h"
 }
 
 #include "DlgShowHash.h"
@@ -418,41 +421,41 @@ namespace CrypTool {
 				fpFinalize = 0;
 			}
 
-			void HashOperation::executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringDigest) {
+			void HashOperation::executeOnByteStrings(const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
 				// acquire byte length of the desired hash algorithm
 				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
-				// prepare digest byte string to hold the resulting hash value
-				_byteStringDigest.reset(hashAlgorithmByteLength);
+				// prepare output byte string to hold the resulting hash value
+				_byteStringOutput.reset(hashAlgorithmByteLength);
 				// create the OpenSSL context
 				void *context = (void*)(new unsigned char[contextSize]);
 				// the actual operation
 				fpInitialize(context);
-				fpUpdate(context, (void*)(_byteStringMessage.getByteDataConst()), _byteStringMessage.getByteLength());
-				fpFinalize((void*)(_byteStringDigest.getByteData()), context);
+				fpUpdate(context, (void*)(_byteStringInput.getByteDataConst()), _byteStringInput.getByteLength());
+				fpFinalize((void*)(_byteStringOutput.getByteData()), context);
 				// free memory
 				delete context;
 			}
 
-			void HashOperation::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameDigest, const bool *_cancelled, double *_progress) {
+			void HashOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled, double *_progress) {
 				// acquire byte length of the desired hash algorithm
 				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
 				// this variable will store the resulting hash value
-				unsigned char *digest = new unsigned char[hashAlgorithmByteLength];
+				unsigned char *output = new unsigned char[hashAlgorithmByteLength];
 				// the buffer size we're working with (the size of the chunks to be read from the source file)
 				const unsigned int bufferByteLength = 4096;
 				char *buffer = new char[bufferByteLength];
 				// create the OpenSSL context
 				void *context = (void*)(new unsigned char[contextSize]);
 				// open the specified source file
-				CFile fileMessage;
-				if (fileMessage.Open(_fileNameMessage, CFile::modeRead)) {
+				CFile fileInput;
+				if (fileInput.Open(_fileNameInput, CFile::modeRead)) {
 					const ULONGLONG positionStart = 0;
-					const ULONGLONG positionEnd = fileMessage.GetLength();
+					const ULONGLONG positionEnd = fileInput.GetLength();
 					ULONGLONG positionCurrent = positionStart;
 					ULONGLONG bytesRead;
 					// the actual hash operation
 					fpInitialize(context);
-					while (bytesRead = fileMessage.Read(buffer, bufferByteLength)) {
+					while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
 						fpUpdate(context, buffer, bytesRead);
 						positionCurrent += bytesRead;
 						if (_cancelled) {
@@ -464,19 +467,67 @@ namespace CrypTool {
 							*_progress = (double)(positionCurrent) / (double)(positionEnd);
 						}
 					}
-					fpFinalize(digest, context);
+					fpFinalize(output, context);
 					// write the resulting hash value to the specified target file
-					CFile fileDigest;
-					if (fileDigest.Open(_fileNameDigest, CFile::modeCreate | CFile::modeWrite)) {
-						fileDigest.Write(digest, hashAlgorithmByteLength);
-						fileDigest.Close();
+					CFile fileOutput;
+					if (fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
+						fileOutput.Write(output, hashAlgorithmByteLength);
+						fileOutput.Close();
 					}
 				}
 				// free memory
 				delete context;
-				delete digest;
+				delete output;
 				delete buffer;
 			}
+
+		}
+
+		namespace Symmetric {
+
+			SymmetricOperation::SymmetricOperation(const SymmetricAlgorithmType _symmetricAlgorithmType, const SymmetricOperationType _symmetricOperationType) :
+				symmetricAlgorithmType(_symmetricAlgorithmType),
+				symmetricOperationType(_symmetricOperationType) {
+
+			}
+
+			SymmetricOperation::~SymmetricOperation() {
+
+			}
+
+			void SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
+				AfxMessageBox("TODO/FIXME: SymmetricOperation::executeOnByteStrings");
+#if 0
+				ByteString byteStringKey;
+				ByteString byteStringIV;
+				byteStringKey.reset(16);
+				byteStringIV.reset(16);
+				unsigned char ciphertext[4096];
+				unsigned char cleartext[4096];
+				int ciphertextLength = 0;
+				int cleartextLength = 0;
+				memset(ciphertext, 0, 4096);
+				memset(cleartext, 0, 4096);
+				memcpy(cleartext, "hallo", 5);
+				cleartextLength = 5;
+				using namespace OpenSSL;
+				EVP_CIPHER_CTX *context = EVP_CIPHER_CTX_new();
+				EVP_EncryptInit_ex(context, EVP_idea_ecb(), NULL, byteStringKey.getByteData(), byteStringIV.getByteData());
+				EVP_EncryptUpdate(context, ciphertext, &ciphertextLength, cleartext, cleartextLength);
+				EVP_EncryptFinal(context, ciphertext, &ciphertextLength);
+				bool testCiphertext = true;
+#endif
+			}
+
+			void SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
+				AfxMessageBox("TODO/FIXME: SymmetricOperation::executeOnFiles");
+			}
+
+		}
+
+		namespace Asymmetric {
+
+			// TODO/FIXME
 
 		}
 
@@ -494,6 +545,10 @@ namespace CrypTool {
 			dialogOperationController->ShowWindow(SW_SHOW);
 			// start the operation in its own thread
 			dialogOperationController->startHashOperation(_hashAlgorithmType, _documentFileName, _documentTitle);
+		}
+
+		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+			AfxMessageBox("TODO/FIXME: ask for key!!!");
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {
