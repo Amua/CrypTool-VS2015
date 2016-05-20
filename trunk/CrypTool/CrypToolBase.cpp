@@ -23,6 +23,7 @@ limitations under the License.
 #include "resource.h"
 
 #include "DlgShowHash.h"
+#include "DlgKeyHexFixedLen.h"
 
 OctetString::OctetString() :
 	noctets(0),
@@ -475,6 +476,60 @@ namespace CrypTool {
 
 		namespace Symmetric {
 
+			CString getSymmetricAlgorithmName(const SymmetricAlgorithmType _symmetricAlgorithmType) {
+				CString symmetricAlgorithmName = "";
+				switch (_symmetricAlgorithmType) {
+				case SYMMETRIC_ALGORITHM_TYPE_IDEA:
+					symmetricAlgorithmName = "IDEA";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_RC2:
+					symmetricAlgorithmName = "RC2";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_RC4:
+					symmetricAlgorithmName = "RC4";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_DES_ECB:
+					symmetricAlgorithmName = "DES (ECB)";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_DES_CBC:
+					symmetricAlgorithmName = "DES (CBC)";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB:
+					symmetricAlgorithmName = "Triple-DES (ECB)";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC:
+					symmetricAlgorithmName = "Triple-DES (CBC)";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_AES:
+					symmetricAlgorithmName = "AES";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_MARS:
+					symmetricAlgorithmName = "MARS";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_RC6:
+					symmetricAlgorithmName = "RC6";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_SERPENT:
+					symmetricAlgorithmName = "Serpent";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_TWOFISH:
+					symmetricAlgorithmName = "Twofish";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_DESX:
+					symmetricAlgorithmName = "DESX";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_DESL:
+					symmetricAlgorithmName = "DESL";
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_DESXL:
+					symmetricAlgorithmName = "DESXL";
+					break;
+				default:
+					break;
+				}
+				return symmetricAlgorithmName;
+			}
+
 			SymmetricOperation::SymmetricOperation(const SymmetricAlgorithmType _symmetricAlgorithmType, const SymmetricOperationType _symmetricOperationType) :
 				symmetricAlgorithmType(_symmetricAlgorithmType),
 				symmetricOperationType(_symmetricOperationType) {
@@ -489,7 +544,7 @@ namespace CrypTool {
 				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnByteStrings");
 
 				// TODO/FIXME: stick this cipher into the EVP* functions below
-				const OpenSSL::EVP_CIPHER *cipher = getCipher(symmetricAlgorithmType);
+				const OpenSSL::EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
 
 #if 0
 				ByteString byteStringKey;
@@ -517,7 +572,7 @@ namespace CrypTool {
 				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnFiles");
 			}
 
-			const OpenSSL::EVP_CIPHER *SymmetricOperation::getCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const {
+			const OpenSSL::EVP_CIPHER *SymmetricOperation::getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const {
 				switch (_symmetricAlgorithmType) {
 				case SYMMETRIC_ALGORITHM_TYPE_IDEA:
 					return OpenSSL::EVP_idea_ecb();
@@ -544,15 +599,33 @@ namespace CrypTool {
 			// create the operation controller dialog (implicitly destroyed afterwards)
 			CrypTool::Internal::DialogOperationController *dialogOperationController = new CrypTool::Internal::DialogOperationController();
 			// create the appropriate title for the dialog, and make it visible
-			CString title;
-			title.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(_hashAlgorithmType));
-			dialogOperationController->SetWindowText(title);
+			CString dialogOperationControllerTitle;
+			dialogOperationControllerTitle.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(_hashAlgorithmType));
+			dialogOperationController->SetWindowText(dialogOperationControllerTitle);
 			dialogOperationController->ShowWindow(SW_SHOW);
 			// start the operation in its own thread
 			dialogOperationController->startHashOperation(_hashAlgorithmType, _documentFileName, _documentTitle);
 		}
 
 		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+
+			// TODO/FIXME: encapsulate the code block below into a separate function, 
+			// for example in the "Utilities" namespace, and call maybe call it something 
+			// like "askUserForSymmetricEncryptionKey" or similar
+#if 0
+			// ask the user for the encryption/decryption key
+			CString dlgKeyHexFixedLenTitle;
+			dlgKeyHexFixedLenTitle.Format(IDS_STRING_KEYINPUT_SYMMETRIC, CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(_symmetricAlgorithmType));
+			CDlgKeyHexFixedLen dlgKeyHexFixedLen;
+			// initialize the key dialog depending on the symmetric algorithm type
+			switch (_symmetricAlgorithmType) {
+				...
+			default:
+				AfxMessageBox("CRYPTOOL_BASE: key dialog not properly initialized");
+				break;
+			}
+#endif
+
 			AfxMessageBox("CRYPTOOL_BASE: ask for key!!!");
 		}
 

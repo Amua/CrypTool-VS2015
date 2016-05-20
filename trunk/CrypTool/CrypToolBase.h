@@ -233,6 +233,9 @@ namespace CrypTool {
 				SYMMETRIC_OPERATION_TYPE_DECRYPTION
 			};
 
+			// this function returns the name of the specified symmetric algorithm type
+			CString getSymmetricAlgorithmName(const SymmetricAlgorithmType _symmetricAlgorithmType);
+
 			// this class provides symmetric operations (encryption and decryption) on 
 			// all supported symmetric algorithm types for both byte strings and files 
 			// (see different execute functions below); the file-based operations provide 
@@ -249,7 +252,7 @@ namespace CrypTool {
 				const SymmetricAlgorithmType symmetricAlgorithmType;
 				const SymmetricOperationType symmetricOperationType;
 			private:
-				const OpenSSL::EVP_CIPHER *getCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const;
+				const OpenSSL::EVP_CIPHER *getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const;
 			private:
 #if 0
 				// type definitions for OpenSSL function pointers
