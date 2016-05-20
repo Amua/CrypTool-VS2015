@@ -3064,7 +3064,6 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClCompile Include="FileTools.cpp" />
     <ClCompile Include="FLASH.CPP" />
     <ClCompile Include="FPOLY.CPP" />
-    <ClCompile Include="HashingOperations.cpp" />
     <ClCompile Include="HexEdit.cpp" />
     <ClCompile Include="HexEditBase.cpp" />
     <ClCompile Include="HexEditCtrlDoc.cpp" />
@@ -3360,7 +3359,6 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClInclude Include="FileTools.h" />
     <ClInclude Include="FLASH.H" />
     <ClInclude Include="FPOLY.H" />
-    <ClInclude Include="HashingOperations.h" />
     <ClInclude Include="HexEdit.h" />
     <ClInclude Include="HexEditBase.h" />
     <ClInclude Include="HexEditCtrlDoc.h" />

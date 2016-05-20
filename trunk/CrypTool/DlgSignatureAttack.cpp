@@ -498,9 +498,9 @@ void CDlgSignatureAttack::OnCompute()
 				strlen += _snprintf(hashhex + strlen, 4, "... ");
 			}
 					hashhex[strlen - 1] = '\0';
-
-			_snprintf(doctitle, sizeof(doctitle) - 1, "%s%s, <%s>",
-				msg, OFSA.GetHashOp()->GetHashAlgorithmName(), hashhex);
+#ifndef _UNSTABLE
+			_snprintf(doctitle, sizeof(doctitle) - 1, "%s%s, <%s>", msg, OFSA.GetHashOp()->GetHashAlgorithmName(), hashhex);
+#endif
 			NewHarmlessDocument->SetTitle(doctitle);
 
 			GetTmpName(outfile,"cry",".tmp");
@@ -518,8 +518,9 @@ void CDlgSignatureAttack::OnCompute()
 			
 			// Dokumenttitel für 2. Dokument erstellen:
 			msg.Format(IDS_STRING_SIG_ATT_DOCUMENT_TITLE_DANGEROUS);
-			_snprintf(doctitle, sizeof(doctitle) - 1, "%s%s, <%s>",
-				msg, OFSA.GetHashOp()->GetHashAlgorithmName(), hashhex);
+#ifndef _UNSTABLE
+			_snprintf(doctitle, sizeof(doctitle) - 1, "%s%s, <%s>", msg, OFSA.GetHashOp()->GetHashAlgorithmName(), hashhex);
+#endif
 			NewDangerousDocument->SetTitle(doctitle);
 			
 			HIDE_HOUR_GLASS

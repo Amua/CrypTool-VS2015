@@ -53,8 +53,9 @@ SignatureAttackMFC::SignatureAttackMFC(OptionsForSignatureAttack *OptForSigAtt, 
 	m_hwnd = hWnd;
 	m_messageID = messageID;
 	m_ProgressText.LoadString(IDS_STRING_SIG_ATT_PROGRESS_CYCLE_SEARCH);
-	m_ResSigAtt = new ResultsOfSignatureAttack(m_OptSigAtt->GetHashOp()->GetHashAlgorithmID(),
-		m_OptSigAtt->GetSignificantBitLength());
+#ifndef _UNSTABLE
+	m_ResSigAtt = new ResultsOfSignatureAttack(m_OptSigAtt->GetHashOp()->GetHashAlgorithmID(), m_OptSigAtt->GetSignificantBitLength());
+#endif
 }
 
 SignatureAttackMFC::~SignatureAttackMFC()

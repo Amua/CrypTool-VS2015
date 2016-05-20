@@ -22,7 +22,6 @@
 #include "CrypToolApp.h"
 #include "CrypToolBase.h"
 #include "DlgHashDemo.h"
-#include "HashingOperations.h"
 #include "CrypToolTools.h"
 
 #ifdef _DEBUG

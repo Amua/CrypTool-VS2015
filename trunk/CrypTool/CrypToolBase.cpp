@@ -22,16 +22,6 @@ limitations under the License.
 #include "CrypToolApp.h"
 #include "resource.h"
 
-namespace OpenSSL {
-	// hash algorithms
-#include "OpenSSL/md4.h"
-#include "OpenSSL/md5.h"
-#include "OpenSSL/ripemd.h"
-#include "OpenSSL/sha.h"
-	// symmetric encryption algorithms
-#include "OpenSSL/evp.h"
-}
-
 #include "DlgShowHash.h"
 
 OctetString::OctetString() :
@@ -497,6 +487,10 @@ namespace CrypTool {
 
 			void SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
 				AfxMessageBox("TODO/FIXME: SymmetricOperation::executeOnByteStrings");
+
+				// TODO/FIXME: stick this cipher into the EVP* functions below
+				const OpenSSL::EVP_CIPHER *cipher = getCipher(symmetricAlgorithmType);
+
 #if 0
 				ByteString byteStringKey;
 				ByteString byteStringIV;
@@ -521,6 +515,16 @@ namespace CrypTool {
 
 			void SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
 				AfxMessageBox("TODO/FIXME: SymmetricOperation::executeOnFiles");
+			}
+
+			const OpenSSL::EVP_CIPHER *SymmetricOperation::getCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const {
+				switch (_symmetricAlgorithmType) {
+				case SYMMETRIC_ALGORITHM_TYPE_IDEA:
+					return OpenSSL::EVP_idea_ecb();
+				default:
+					break;
+				}
+				return 0;
 			}
 
 		}

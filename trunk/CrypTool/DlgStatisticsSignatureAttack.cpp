@@ -28,7 +28,6 @@
 #include "ErrorcodesForSignatureAttack.h"
 #include "FileTools.h"
 #include "CrypToolTools.h"
-#include "HashingOperations.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -169,6 +168,7 @@ void CDlgStatisticsSignatureAttack::PrintStatistics()
 		return;
 	}
 
+#ifndef _UNSTABLE
 	HashingOperations HO(m_ResSigAtt->GetHashAlgorithmID());
 	msg.Format(IDS_SIGATT_STAT_HEADER, HO.GetHashAlgorithmName());
 	strlen += _snprintf(doctext + strlen, sizeof(doctext) -1, "%s\n\n", msg);
@@ -230,6 +230,7 @@ void CDlgStatisticsSignatureAttack::PrintStatistics()
 	_snprintf(doctitle, sizeof(doctitle) - 1, "%s", msg);
 	Statistics->SetTitle(doctitle);
 	HIDE_HOUR_GLASS
+#endif
 }
 
 bool CDlgStatisticsSignatureAttack::GetPrintStatistics() const

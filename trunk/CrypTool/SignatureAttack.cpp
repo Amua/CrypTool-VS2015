@@ -50,8 +50,9 @@ SignatureAttack::SignatureAttack()
 SignatureAttack::SignatureAttack(OptionsForSignatureAttack *OptForSigAtt)
 {
 	m_OptSigAtt = OptForSigAtt;
-	m_ResSigAtt = new ResultsOfSignatureAttack(m_OptSigAtt->GetHashOp()->GetHashAlgorithmID(),
-		m_OptSigAtt->GetSignificantBitLength());
+#ifndef _UNSTABLE
+	m_ResSigAtt = new ResultsOfSignatureAttack(m_OptSigAtt->GetHashOp()->GetHashAlgorithmID(), m_OptSigAtt->GetSignificantBitLength());
+#endif
 }
 
 SignatureAttack::SignatureAttack(OptionsForSignatureAttack *OptForSigAtt, FILE *SigAttTest, int TotalAttemptsCounter)
@@ -59,9 +60,9 @@ SignatureAttack::SignatureAttack(OptionsForSignatureAttack *OptForSigAtt, FILE *
 	m_TotalAttemptsCounter = TotalAttemptsCounter;
 	m_TestFile = SigAttTest;
 	m_OptSigAtt = OptForSigAtt;
-	m_ResSigAtt = new ResultsOfSignatureAttack(m_OptSigAtt->GetHashOp()->GetHashAlgorithmID(),
-		m_OptSigAtt->GetSignificantBitLength());
-
+#ifndef _UNSTABLE
+	m_ResSigAtt = new ResultsOfSignatureAttack(m_OptSigAtt->GetHashOp()->GetHashAlgorithmID(), m_OptSigAtt->GetSignificantBitLength());
+#endif
 	irand((unsigned)time(NULL));
 }
 
@@ -90,7 +91,9 @@ void SignatureAttack::InternalStep(int &HashValueParity, char *HashValue)
 		Document = m_OptSigAtt->GetDangerousDocument();
 	}
 	Document->ModifyDocument(HashValue);
+#ifndef _UNSTABLE
 	m_OptSigAtt->GetHashOp()->DoHash(Document->GetDocumentData(), Document->GetDocumentLength(), HashValue);
+#endif
 }
 
 bool SignatureAttack::HashEqual(const char *HashValue_1, const char *HashValue_2) const
@@ -131,7 +134,9 @@ bool SignatureAttack::CollisionConfirmation(char *HashValue_single_step, char *H
 
 	if (m_OptSigAtt->GetTestMode())
 	{
+#ifndef _UNSTABLE
 		HashAlgorithmByteLength = 1 + (m_OptSigAtt->GetHashOp()->GetHashAlgorithmBitLength() - 1) / 8;
+#endif
 		HashValue_pre_success1 = new char[HashAlgorithmByteLength];
 		HashValue_pre_success2 = new char[HashAlgorithmByteLength];
 	}
@@ -222,6 +227,7 @@ UINT SignatureAttack::Do_Floyd()
 // Parameter:		keine;
 // Rückgabewert:	Fehlercode;
 {
+#ifndef _UNSTABLE
 	Big RandomMax = "256", RandomResult = "0";
 	bool DocumentsFound = false;
 	char *HashValue_single_step, *HashValue_double_step, *HashValue_init, *HashValue_confirm_step;
@@ -393,6 +399,7 @@ HASHTOKEN:
 	delete []HashValue_confirm_step;
 
 	SignalEnd();
+#endif
 	return 0;
 }
 

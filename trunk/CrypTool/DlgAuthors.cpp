@@ -29,11 +29,11 @@ extern char *Pfad;
 
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
 #include "DlgAuthors.h"
 #include "DlgPrimesGeneratorDemo.h" // FIXME???
-#include <stdio.h>
-#include "HashingOperations.h"
 
+#include <stdio.h>
 #include <string>
 #include <list>
 
@@ -124,8 +124,10 @@ void CDlgAuthors::readAuthors()
 	n = fread(buffer, 1, m_size, in);
 
 	// create hashing operations object (index 4 = SHA-1)
+#ifndef _UNSTABLE
 	HashingOperations hashingOperations(4);
 	hashingOperations.DoHash(buffer, n, messageDigest);
+#endif
 	
 	delete buffer;
 

@@ -26,7 +26,6 @@
 #include "stdafx.h"
 #include "ResultsOfSignatureAttack.h"
 #include "ErrorcodesForSignatureAttack.h"
-#include "HashingOperations.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -74,6 +73,7 @@ ResultsOfSignatureAttack::~ResultsOfSignatureAttack()
 
 void ResultsOfSignatureAttack::SetData(const int &HashAlgorithmID, const int &BitLength)
 {
+#ifndef _UNSTABLE
 	int ii;
 
 	m_FloydResult = _SIG_ATT_NO_DOCUMENTS_FOUND;
@@ -95,6 +95,7 @@ void ResultsOfSignatureAttack::SetData(const int &HashAlgorithmID, const int &Bi
 	m_ExpectedTime				= (double) m_ExpectedSteps * 5 / HO.GetHashOpsPerSecond();	// rechnerabhängig!
 	m_BitLength					= BitLength;
 	m_MatchingHashBytes			= new char[BitLength / 8];
+#endif
 }
 
 void ResultsOfSignatureAttack::SetMatchingHashBytes(const char *MatchingHashBytes, const int CompleteByteLength)

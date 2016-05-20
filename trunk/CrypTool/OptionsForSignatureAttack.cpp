@@ -28,7 +28,6 @@
 #include "ModifiedDocument_Attachments.h"
 #include "OptionsForSignatureAttack.h"
 #include "ErrorcodesForSignatureAttack.h"
-#include "HashingOperations.h"
 #include "CrypToolTools.h"
 
 #ifdef _DEBUG
@@ -52,6 +51,7 @@ void OptionsForSignatureAttack::SetData(const char *HarmlessFile, const char *Da
 	m_Errorcode = _SIG_ATT_OK;
 	m_IsDataFreed = false;
 
+#ifndef _UNSTABLE
 	if ( CT_OPEN_REGISTRY_SETTINGS( KEY_ALL_ACCESS, IDS_REGISTRY_SETTINGS, "SignatureAttack" ) == ERROR_SUCCESS )
 	{
 
@@ -243,7 +243,7 @@ void OptionsForSignatureAttack::SetData(const char *HarmlessFile, const char *Da
 	{
 		FreeData();
 	}
-
+#endif
 	delete []HarmlessText;
 	delete []DangerousText;
 }

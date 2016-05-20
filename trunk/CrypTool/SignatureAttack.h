@@ -31,7 +31,6 @@
 #endif // _MSC_VER > 1000
 
 #include "BitParity.h"
-#include "HashingOperations.h"
 #include "OptionsForSignatureAttack.h"
 #include "ResultsOfSignatureAttack.h"
 #include "sys\timeb.h"

@@ -33,6 +33,16 @@ limitations under the License.
 #include <vector>
 #include <set>
 
+namespace OpenSSL {
+	// hash algorithms
+	#include "OpenSSL/md4.h"
+	#include "OpenSSL/md5.h"
+	#include "OpenSSL/ripemd.h"
+	#include "OpenSSL/sha.h"
+	// symmetric encryption algorithms
+	#include "OpenSSL/evp.h"
+}
+
 // this struct encapsulates an octet string for compatibility with legacy code
 struct OctetString {
 	// construction
@@ -238,6 +248,8 @@ namespace CrypTool {
 			private:
 				const SymmetricAlgorithmType symmetricAlgorithmType;
 				const SymmetricOperationType symmetricOperationType;
+			private:
+				const OpenSSL::EVP_CIPHER *getCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const;
 			private:
 #if 0
 				// type definitions for OpenSSL function pointers

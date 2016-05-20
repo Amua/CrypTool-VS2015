@@ -31,7 +31,6 @@
 
 #include "CrypToolApp.h"
 #include "ModifiedDocumentForHashing.h"
-#include "HashingOperations.h"
 
 class OptionsForSignatureAttack  
 {
@@ -40,12 +39,16 @@ public:
 	OptionsForSignatureAttack()
 	{
 		m_HarmlessDocument = m_DangerousDocument = NULL;
+#ifndef _UNSTABLE
 		m_HashOp = NULL;
+#endif
 	}
 	OptionsForSignatureAttack(const char *HarmlessFile, const char *DangerousFile, const int TestMode)
 	{
 		m_HarmlessDocument = m_DangerousDocument = NULL;
+#ifndef _UNSTABLE
 		m_HashOp = NULL;
+#endif
 		SetData(HarmlessFile, DangerousFile);
 		m_TestMode = TestMode;
 	}
@@ -66,13 +69,17 @@ public:
 		{
 			delete m_DangerousDocument;
 		}
+#ifndef _UNSTABLE
 		if (NULL != m_HashOp)
 		{
 			delete m_HashOp;
-		}		
+		}
+#endif
 	}
 
+#ifndef _UNSTABLE
 	HashingOperations *GetHashOp() { return m_HashOp; }
+#endif
 	
 	ModifiedDocumentForHashing *GetHarmlessDocument() const
 // Beschreibung:	liefert das "harmlose" Dokument zurück;
@@ -107,7 +114,9 @@ private:
 	bool m_IsDataFreed;
 	ModifiedDocumentForHashing *m_HarmlessDocument;
 	ModifiedDocumentForHashing *m_DangerousDocument;
+#ifndef _UNSTABLE
 	HashingOperations *m_HashOp;
+#endif
 	int m_Errorcode;
 	int m_HashAlgorithmBitLength;
 	int m_SignificantBitLength;
@@ -130,10 +139,12 @@ private:
 		{
 			delete m_DangerousDocument;
 		}
+#ifndef _UNSTABLE
 		if (NULL != m_HashOp)
 		{
 			delete m_HashOp;
 		}
+#endif
 	}
 };
 

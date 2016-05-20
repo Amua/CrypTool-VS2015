@@ -24,7 +24,6 @@
 #include "stdafx.h"
 #include "CrypToolApp.h"
 #include "DlgOptionsSignatureAttack.h"
-#include "HashingOperations.h"
 #include "CrypToolTools.h"
 
 #ifdef _DEBUG
@@ -234,6 +233,7 @@ void CDlgOptionsSignatureAttack::OnOK()
 
 	CString msg;
 	int maxbit;
+#ifndef _UNSTABLE
 	HashingOperations HO(m_hashalgorithm);
 	
 	maxbit = HO.GetHashAlgorithmBitLength();
@@ -271,7 +271,8 @@ void CDlgOptionsSignatureAttack::OnOK()
 	else
 	{
 		// FIXME
-	}	
+	}
+#endif
 
 	CDialog::OnOK();
 }
@@ -321,6 +322,7 @@ void CDlgOptionsSignatureAttack::OnUpdateEdit1()
 
 void CDlgOptionsSignatureAttack::SetTextBitlengthRange()
 {
+#ifndef _UNSTABLE
 	CString msg;
 	HashingOperations HO(m_hashalgorithm);
 	if (0 != HO.GetErrorcode())
@@ -330,6 +332,7 @@ void CDlgOptionsSignatureAttack::SetTextBitlengthRange()
 
 	msg.Format(IDS_STRING_SIG_ATT_BITLENGTH_RANGE, HO.GetHashAlgorithmBitLength());
 	m_control_bitlength_range.SetWindowText(msg);
+#endif
 }
 
 void CDlgOptionsSignatureAttack::OnRadio7() 

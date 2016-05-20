@@ -183,7 +183,7 @@ void CDlgAbout::determineLibraryVersions()
 	this->strVersionMiracl = "4.4.3";
 	this->strVersionMiracl.Insert(0, "Miracl ");
 	// OPENSSL
-	this->strVersionOpenSSL = SSLeay_version(SSLEAY_VERSION);
+	this->strVersionOpenSSL = OpenSSL::SSLeay_version(SSLEAY_VERSION);
 	// NTL
 	this->strVersionNTL = NTL_VERSION;
 	this->strVersionNTL.Insert(0, "NTL ");
