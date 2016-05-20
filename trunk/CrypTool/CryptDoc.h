@@ -94,6 +94,13 @@ protected:
 	afx_msg void OnCrypt3desEcb();
 	afx_msg void OnCrypt3desCbc();
 	afx_msg void OnCryptAesRijndael();
+	afx_msg void OnCryptAesMars();
+	afx_msg void OnCryptAesRc6();
+	afx_msg void OnCryptAesSerpent();
+	afx_msg void OnCryptAesTwofish();
+	afx_msg void OnCryptDESX();
+	afx_msg void OnCryptDESL();
+	afx_msg void OnCryptDESXL();
 	afx_msg void OnCryptHashMd4();
 	afx_msg void OnCryptHashMd5();
 	afx_msg void OnCryptHashRipemd160();
@@ -128,10 +135,6 @@ protected:
 	afx_msg void OnAnalyseRc4();
 	afx_msg void OnAnalyseTripledescbc();
 	afx_msg void OnAnalyseTripledesecb();
-	afx_msg void OnCryptAesMars();
-	afx_msg void OnCryptAesRc6();
-	afx_msg void OnCryptAesSerpent();
-	afx_msg void OnCryptAesTwofish();
 	afx_msg void OnAnalyseAesMars();
 	afx_msg void OnAnalyseAesRc6();
 	afx_msg void OnAnalyseAesRijndael();
@@ -172,9 +175,6 @@ protected:
 	afx_msg void OnAnalyseSymmclassicCiphertextolySolitaire();
 	afx_msg void OnIndivproceduresBase64Encode();
 	afx_msg void OnIndivproceduresBase64Decode();
-    afx_msg void OnCryptDESL();
-	afx_msg void OnCryptDESX();
-	afx_msg void OnCryptDESXL();
 	afx_msg void OnAnalyseDESL();
 	afx_msg void OnAnalyseDESX();
 	afx_msg void OnAnalyseDESXL();

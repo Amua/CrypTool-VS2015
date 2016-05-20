@@ -647,6 +647,41 @@ void CCryptDoc::OnCryptAesRijndael() {
 	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES, ContentName, GetTitle());
 }
 
+void CCryptDoc::OnCryptAesMars() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_MARS, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptAesRc6() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_RC6, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptAesSerpent() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_SERPENT, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptAesTwofish() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TWOFISH, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptDESX() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESX, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptDESL() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESL, ContentName, GetTitle());
+}
+
+void CCryptDoc::OnCryptDESXL() {
+	UpdateContent();
+	CrypTool::Functions::executeSymmetricOperation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESXL, ContentName, GetTitle());
+}
+
 void CCryptDoc::OnCryptHashMd4() 
 {
 	UpdateContent();
@@ -1071,30 +1106,6 @@ void CCryptDoc::OnAnalyseTripledescbc()
 void CCryptDoc::OnAnalyseTripledesecb() 
 {
 	SymCryptBruteForce( IDS_CRYPT_TRIPLE_DES_ECB, SECUDE_PROVIDER, 128, 128 );
-}
-
-void CCryptDoc::OnCryptAesMars() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_MARS, CORE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptAesRc6() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_RC6, CORE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptAesSerpent() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_SERPENT, CORE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptAesTwofish() 
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_TWOFISH, CORE_PROVIDER, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnAnalyseAesMars() 
@@ -1860,24 +1871,6 @@ void CCryptDoc::OnHybridEccDec()
 {
     UpdateContent();
     ECCDec(ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptDESL()
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_DESL, CORE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptDESX()
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_DESX, CORE_PROVIDER, ContentName, GetTitle());
-}
-
-void CCryptDoc::OnCryptDESXL()
-{
-	UpdateContent();
-	SymmetricEncryption(IDS_CRYPT_DESXL, CORE_PROVIDER, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnAnalyseDESL() 
