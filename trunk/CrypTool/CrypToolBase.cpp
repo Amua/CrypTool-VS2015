@@ -43,7 +43,13 @@ namespace CrypTool {
 		byteData(0),
 		byteLength(0) {
 		reset(_byteString.byteLength);
-		memcpy(byteData, _byteString.byteData, byteLength);
+		std::memcpy(byteData, _byteString.byteData, byteLength);
+	}
+
+	ByteString::ByteString(const size_t _byteLength) :
+		byteData(0),
+		byteLength(0) {
+		reset(_byteLength);
 	}
 
 	ByteString::ByteString(const unsigned char *_byteData, const size_t _byteLength) :
@@ -556,37 +562,42 @@ namespace CrypTool {
 			}
 
 			bool SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
+				// TODO/FIXME
 				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnByteStrings");
 
-				// TODO/FIXME: stick this cipher into the EVP* functions below
-				const OpenSSL::EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
-
-#if 0
-				ByteString byteStringKey;
-				ByteString byteStringIV;
-				byteStringKey.reset(16);
-				byteStringIV.reset(16);
-				unsigned char ciphertext[4096];
-				unsigned char cleartext[4096];
-				int ciphertextLength = 0;
-				int cleartextLength = 0;
-				memset(ciphertext, 0, 4096);
-				memset(cleartext, 0, 4096);
-				memcpy(cleartext, "hallo", 5);
-				cleartextLength = 5;
 				using namespace OpenSSL;
+				// acquire cipher and cipher block size
+				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
+				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
+				// create initialization vector (zero bytes only)
+				const ByteString byteStringIV(cipherBlockSize);
+				// create cipher context
 				EVP_CIPHER_CTX *context = EVP_CIPHER_CTX_new();
-				EVP_EncryptInit_ex(context, EVP_idea_ecb(), NULL, byteStringKey.getByteData(), byteStringIV.getByteData());
-				EVP_EncryptUpdate(context, ciphertext, &ciphertextLength, cleartext, cleartextLength);
-				EVP_EncryptFinal(context, ciphertext, &ciphertextLength);
-				bool testCiphertext = true;
-#endif
+				// encryption
+				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+					EVP_EncryptInit(context, cipher, _byteStringKey.getByteDataConst(), byteStringIV.getByteDataConst());
+					// TODO/FIXME
+					//EVP_EncryptUpdate(...);
+					//EVP_EncryptFinal(...);
+				}
+				// decryption
+				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					EVP_DecryptInit(context, cipher, _byteStringKey.getByteDataConst(), byteStringIV.getByteDataConst());
+					// TODO/FIXME
+					//EVP_DecryptUpdate(...);
+					//EVP_DecryptFinal(...);
+				}
+				// delete cipher context
+				EVP_CIPHER_CTX_free(context);
 				// return without errors
 				return true;
 			}
 
 			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
+				// TODO/FIXME
 				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnFiles");
+
+				// TODO/FIXME
 
 				// return without errors
 				return true;

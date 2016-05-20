@@ -64,6 +64,7 @@ namespace CrypTool {
 		// construction
 		ByteString();
 		ByteString(const ByteString &_byteString);
+		ByteString(const size_t _byteLength);
 		ByteString(const unsigned char *_byteData, const size_t _byteLength);
 		// destruction
 		~ByteString();
