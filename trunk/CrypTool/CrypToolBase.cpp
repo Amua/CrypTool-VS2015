@@ -486,7 +486,7 @@ namespace CrypTool {
 			}
 
 			void SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
-				AfxMessageBox("TODO/FIXME: SymmetricOperation::executeOnByteStrings");
+				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnByteStrings");
 
 				// TODO/FIXME: stick this cipher into the EVP* functions below
 				const OpenSSL::EVP_CIPHER *cipher = getCipher(symmetricAlgorithmType);
@@ -514,7 +514,7 @@ namespace CrypTool {
 			}
 
 			void SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
-				AfxMessageBox("TODO/FIXME: SymmetricOperation::executeOnFiles");
+				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnFiles");
 			}
 
 			const OpenSSL::EVP_CIPHER *SymmetricOperation::getCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const {
@@ -524,6 +524,7 @@ namespace CrypTool {
 				default:
 					break;
 				}
+				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::getCipher -> OpenSSL cipher invalid");
 				return 0;
 			}
 
@@ -552,7 +553,7 @@ namespace CrypTool {
 		}
 
 		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
-			AfxMessageBox("TODO/FIXME: ask for key!!!");
+			AfxMessageBox("CRYPTOOL_BASE: ask for key!!!");
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {
