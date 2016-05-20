@@ -596,37 +596,25 @@ namespace CrypTool {
 	namespace Functions {
 
 		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
-			// create the operation controller dialog (implicitly destroyed afterwards)
+			// create the operation controller dialog (implicitly destroyed after the operation)
 			CrypTool::Internal::DialogOperationController *dialogOperationController = new CrypTool::Internal::DialogOperationController();
 			// create the appropriate title for the dialog, and make it visible
 			CString dialogOperationControllerTitle;
-			dialogOperationControllerTitle.Format(IDS_PROGESS_COMPUTE_DIGEST, CrypTool::Cryptography::Hash::getHashAlgorithmName(_hashAlgorithmType));
+			dialogOperationControllerTitle.Format("CRYPTOOL_BASE: hash operation (%s)", CrypTool::Cryptography::Hash::getHashAlgorithmName(_hashAlgorithmType));
 			dialogOperationController->SetWindowText(dialogOperationControllerTitle);
-			dialogOperationController->ShowWindow(SW_SHOW);
 			// start the operation in its own thread
 			dialogOperationController->startHashOperation(_hashAlgorithmType, _documentFileName, _documentTitle);
 		}
 
 		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
-
-			// TODO/FIXME: encapsulate the code block below into a separate function, 
-			// for example in the "Utilities" namespace, and call maybe call it something 
-			// like "askUserForSymmetricEncryptionKey" or similar
-#if 0
-			// ask the user for the encryption/decryption key
-			CString dlgKeyHexFixedLenTitle;
-			dlgKeyHexFixedLenTitle.Format(IDS_STRING_KEYINPUT_SYMMETRIC, CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(_symmetricAlgorithmType));
-			CDlgKeyHexFixedLen dlgKeyHexFixedLen;
-			// initialize the key dialog depending on the symmetric algorithm type
-			switch (_symmetricAlgorithmType) {
-				...
-			default:
-				AfxMessageBox("CRYPTOOL_BASE: key dialog not properly initialized");
-				break;
-			}
-#endif
-
-			AfxMessageBox("CRYPTOOL_BASE: ask for key!!!");
+			// create the operation controller dialog (implicitly destroyed after the operation)
+			CrypTool::Internal::DialogOperationController *dialogOperationController = new CrypTool::Internal::DialogOperationController();
+			// create the appropriate title for the dialog, and make it visible
+			CString dialogOperationControllerTitle;
+			dialogOperationControllerTitle.Format("CRYPTOOL_BASE: symmetric operation (%s)", CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(_symmetricAlgorithmType));
+			dialogOperationController->SetWindowText(dialogOperationControllerTitle);
+			// start the operation in its own thread
+			dialogOperationController->startSymmetricOperation(_symmetricAlgorithmType, _documentFileName, _documentTitle);
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {
@@ -696,11 +684,24 @@ namespace CrypTool {
 			parameters.parametersHash.documentFileName = _documentFileName;
 			parameters.parametersHash.documentTitle = _documentTitle;
 			// mark the operation as started
-			parameters.started = true;
+			parameters.operationStatus = OPERATION_STATUS_STARTED;
 			// start the update timer
 			updateTimer = SetTimer(ID_TIMER_EVENT_UPDATE, 50, NULL);
 			// start the operation thread
 			operationThread = AfxBeginThread(executeHashOperation, &parameters);
+		}
+
+		void DialogOperationController::startSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
+			// ask user for operation parameters (key and encryption/decryption)
+			AfxMessageBox("xxx"); // TODO/FIXME: see old implementation in VS2010
+			// initialize operation parameters
+			AfxMessageBox("xxx"); // TODO/FIXME: see startHashOperation
+			// mark the operation as started
+			parameters.operationStatus = OPERATION_STATUS_STARTED;
+			// start the update timer
+			updateTimer = SetTimer(ID_TIMER_EVENT_UPDATE, 50, NULL);
+			// start the operation thread
+			operationThread = AfxBeginThread(executeSymmetricOperation, &parameters);
 		}
 
 		UINT DialogOperationController::executeHashOperation(LPVOID _parameters) {
@@ -713,10 +714,10 @@ namespace CrypTool {
 			parameters->parametersHash.documentTitleNew.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(parameters->parametersHash.hashAlgorithmType), parameters->parametersHash.documentTitle);
 			// execute the operation
 			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType);
-			operation->executeOnFiles(parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew, &parameters->cancelled, &parameters->progress);
+			operation->executeOnFiles(parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew, &parameters->operationCancelled, &parameters->operationProgress);
 			delete operation;
 			// mark the operation as finished
-			parameters->finished = true;
+			parameters->operationStatus = OPERATION_STATUS_FINISHED;
 			// start post-processing: read the result value into a byte string, and display the 
 			// result value in the show hash dialog; if desired by the user, display the result 
 			// in a new document
@@ -728,8 +729,13 @@ namespace CrypTool {
 				theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersHash.documentFileNameNew, parameters->parametersHash.documentTitleNew);
 			}
 			// mark the operation as done, and end the thread
-			parameters->done = true;
+			parameters->operationStatus = OPERATION_STATUS_DONE;
 			AfxEndThread(0);
+			return 0;
+		}
+
+		UINT DialogOperationController::executeSymmetricOperation(LPVOID _parameters) {
+			AfxMessageBox("xxx"); // TODO/FIXME: see executeHashOperation
 			return 0;
 		}
 
@@ -745,26 +751,34 @@ namespace CrypTool {
 		void DialogOperationController::OnTimer(UINT_PTR _event) {
 			if (_event == ID_TIMER_EVENT_UPDATE) {
 				// update the progress
-				controlProgress.SetPos((int)(parameters.progress * 100));
+				controlProgress.SetPos((int)(parameters.operationProgress * 100));
 				// update the text
 				controlText.SetWindowText("");
-				// if the operation is finished, hide the dialog
-				if (parameters.finished) {
+				// do some magic depending on the operation status
+				switch (parameters.operationStatus) {
+				case OPERATION_STATUS_STARTED:
+					// if the operation has started, show the dialog
+					ShowWindow(SW_SHOW);
+					break;
+				case OPERATION_STATUS_FINISHED:
+					// if the operation has finished, hide the dialog
 					ShowWindow(SW_HIDE);
-				}
-				// if the operation is done, kill the timer and close the dialog
-				if (parameters.done) {
+					break;
+				case OPERATION_STATUS_DONE:
+					// if the operation is done, kill the timer and close the dialog
 					KillTimer(updateTimer);
 					OnClose();
+					break;
+				default:
+					break;
 				}
-				return;
 			}
 			CDialog::OnTimer(_event);
 		}
 
 		void DialogOperationController::OnCancel() {
 			// mark the operation as done
-			parameters.done = true;
+			parameters.operationStatus = OPERATION_STATUS_DONE;
 		}
 
 		void DialogOperationController::OnClose() {

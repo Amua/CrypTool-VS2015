@@ -253,18 +253,6 @@ namespace CrypTool {
 				const SymmetricOperationType symmetricOperationType;
 			private:
 				const OpenSSL::EVP_CIPHER *getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const;
-			private:
-#if 0
-				// type definitions for OpenSSL function pointers
-				typedef void(*fpInitialize_t) (void *_context);
-				typedef void(*fpUpdate_t) (void *_context, void *_message, ULONGLONG _length);
-				typedef void(*fpFinalize_t) (void *_digest, void *_context);
-				// context size and function pointers for OpenSSL hash operations
-				size_t contextSize;
-				fpInitialize_t fpInitialize;
-				fpUpdate_t fpUpdate;
-				fpFinalize_t fpFinalize;
-#endif
 			};
 
 		}
@@ -308,19 +296,21 @@ namespace CrypTool {
 
 		class DialogOperationController : public CDialog {
 		private:
+			enum OperationStatus {
+				OPERATION_STATUS_NULL,
+				OPERATION_STATUS_STARTED,
+				OPERATION_STATUS_FINISHED,
+				OPERATION_STATUS_DONE
+			};
 			// this struct is passed to the individual execution threads to 
 			// communicate with the main thread (where this dialog lives in)
 			struct Parameters {
-				// whether the operation has been started
-				bool started;
-				// whether the operation has been finished
-				bool finished;
-				// whether the operation has been cancelled
-				bool cancelled;
-				// whether the operation is done (including post-processing like displaying the result)
-				bool done;
-				// the progress of the operation (0.0 to 1.0)
-				double progress;
+				// the status of the operation
+				OperationStatus operationStatus;
+				// whether the operation was cancelled
+				bool operationCancelled;
+				// the progress of the operation
+				double operationProgress;
 				// parameters specific to hash operations
 				struct ParametersHash {
 					CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
@@ -333,7 +323,7 @@ namespace CrypTool {
 					virtual ~ParametersHash() { }
 				} parametersHash;
 				// construction/destruction
-				Parameters() : started(false), finished(false), cancelled(false), done(false), progress(0.0) { }
+				Parameters() : operationStatus(OPERATION_STATUS_NULL), operationCancelled(false), operationProgress(0.0) { }
 				virtual ~Parameters() { }
 			} parameters;
 		public:
@@ -341,10 +331,10 @@ namespace CrypTool {
 			virtual ~DialogOperationController();
 		public:
 			void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
-			// TODO/FIXME: insert functions for other operations here
+			void startSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 		private:
 			static UINT executeHashOperation(LPVOID _parameters);
-			// TODO/FIXME: insert functions for other operations here
+			static UINT executeSymmetricOperation(LPVOID _parameters);
 		private:
 			// this thread is used for executing the actual operation
 			CWinThread *operationThread;
