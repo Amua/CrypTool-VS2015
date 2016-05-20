@@ -707,7 +707,52 @@ namespace CrypTool {
 
 		void DialogOperationController::startSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
 			// ask user for operation parameters (key and encryption/decryption)
-			AfxMessageBox("xxx"); // TODO/FIXME: see old implementation in VS2010
+			CString dlgKeyHexFixedLenTitle;
+			dlgKeyHexFixedLenTitle.Format(IDS_STRING_KEYINPUT_SYMMETRIC, CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(_symmetricAlgorithmType));
+			CDlgKeyHexFixedLen dlgKeyHexFixedLen;
+			switch (_symmetricAlgorithmType) {
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_IDEA:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 128, 128, 128);
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_RC2:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_RC4:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 8, 128, 8);
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DES_ECB:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DES_CBC:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 64, 64, 64, 1); // TODO/FIXME: PARITY BIT
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 128, 128, 128, 1); // TODO/FIXME: PARITY BIT
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_MARS:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_RC6:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_SERPENT:
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TWOFISH:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 128, 256, 64);
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESX:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 192, 192, 192, 2); // TODO/FIXME: PARITY BIT
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESL:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 64, 64, 64, 1); // TODO/FIXME: PARITY BIT
+				break;
+			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESXL:
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 192, 192, 192, 2); // TODO/FIXME: PARITY BIT
+				break;
+			default:
+				AfxMessageBox("CRYPTOOL_BASE: unsupported symmetric algorithm");
+				return;
+			}
+			// don't do anything else if dialog is cancelled by the user
+			if (dlgKeyHexFixedLen.DoModal() != IDOK) {
+				return;
+			}
+
+			// TODO/FIXME: see old implementation
+
 			// initialize operation parameters
 			AfxMessageBox("xxx"); // TODO/FIXME: see startHashOperation
 			// mark the operation as started
