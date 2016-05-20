@@ -185,8 +185,8 @@ namespace CrypTool {
 				HashOperation(const HashAlgorithmType _hashAlgorithmType);
 				virtual ~HashOperation();
 			public:
-				void executeOnByteStrings(const ByteString &_byteStringInput, ByteString &_byteStringOutput);
-				void executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled = 0, double *_progress = 0);
+				bool executeOnByteStrings(const ByteString &_byteStringInput, ByteString &_byteStringOutput);
+				bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled = 0, double *_progress = 0);
 			private:
 				const HashAlgorithmType hashAlgorithmType;
 			private:
@@ -246,8 +246,8 @@ namespace CrypTool {
 				SymmetricOperation(const SymmetricAlgorithmType _symmetricAlgorithmType, const SymmetricOperationType _symmetricOperationType);
 				virtual ~SymmetricOperation();
 			public:
-				void executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput);
-				void executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled = 0, double *_progress = 0);
+				bool executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput);
+				bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled = 0, double *_progress = 0);
 			private:
 				const SymmetricAlgorithmType symmetricAlgorithmType;
 				const SymmetricOperationType symmetricOperationType;

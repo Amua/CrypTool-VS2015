@@ -412,7 +412,7 @@ namespace CrypTool {
 				fpFinalize = 0;
 			}
 
-			void HashOperation::executeOnByteStrings(const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
+			bool HashOperation::executeOnByteStrings(const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
 				// acquire byte length of the desired hash algorithm
 				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
 				// prepare output byte string to hold the resulting hash value
@@ -425,9 +425,11 @@ namespace CrypTool {
 				fpFinalize((void*)(_byteStringOutput.getByteData()), context);
 				// free memory
 				delete context;
+				// return without errors
+				return true;
 			}
 
-			void HashOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled, double *_progress) {
+			bool HashOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled, double *_progress) {
 				// acquire byte length of the desired hash algorithm
 				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
 				// this variable will store the resulting hash value
@@ -451,7 +453,12 @@ namespace CrypTool {
 						positionCurrent += bytesRead;
 						if (_cancelled) {
 							if (*_cancelled) {
-								break;
+								// free memory
+								delete context;
+								delete output;
+								delete buffer;
+								// return with errors
+								return false;
 							}
 						}
 						if (_progress) {
@@ -470,6 +477,8 @@ namespace CrypTool {
 				delete context;
 				delete output;
 				delete buffer;
+				// return without errors
+				return true;
 			}
 
 		}
@@ -540,7 +549,7 @@ namespace CrypTool {
 
 			}
 
-			void SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
+			bool SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
 				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnByteStrings");
 
 				// TODO/FIXME: stick this cipher into the EVP* functions below
@@ -566,10 +575,15 @@ namespace CrypTool {
 				EVP_EncryptFinal(context, ciphertext, &ciphertextLength);
 				bool testCiphertext = true;
 #endif
+				// return without errors
+				return true;
 			}
 
-			void SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
+			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
 				AfxMessageBox("CRYPTOOL_BASE: SymmetricOperation::executeOnFiles");
+
+				// return without errors
+				return true;
 			}
 
 			const OpenSSL::EVP_CIPHER *SymmetricOperation::getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const {
@@ -714,19 +728,22 @@ namespace CrypTool {
 			parameters->parametersHash.documentTitleNew.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(parameters->parametersHash.hashAlgorithmType), parameters->parametersHash.documentTitle);
 			// execute the operation
 			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType);
-			operation->executeOnFiles(parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew, &parameters->operationCancelled, &parameters->operationProgress);
+			const bool result = operation->executeOnFiles(parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew, &parameters->operationCancelled, &parameters->operationProgress);
 			delete operation;
 			// mark the operation as finished
 			parameters->operationStatus = OPERATION_STATUS_FINISHED;
-			// start post-processing: read the result value into a byte string, and display the 
-			// result value in the show hash dialog; if desired by the user, display the result 
-			// in a new document
-			ByteString byteStringHash;
-			byteStringHash.readFromFile(parameters->parametersHash.documentFileNameNew);
-			CDlgShowHash dlgShowHash;
-			dlgShowHash.initialize(parameters->parametersHash.documentTitleNew, byteStringHash.toString(16, " "));
-			if (dlgShowHash.DoModal() == IDOK) {
-				theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersHash.documentFileNameNew, parameters->parametersHash.documentTitleNew);
+			// start post-processing only if operation was successful
+			if (result) {
+				// start post-processing: read the result value into a byte string, and display the 
+				// result value in the show hash dialog; if desired by the user, display the result 
+				// in a new document
+				ByteString byteStringHash;
+				byteStringHash.readFromFile(parameters->parametersHash.documentFileNameNew);
+				CDlgShowHash dlgShowHash;
+				dlgShowHash.initialize(parameters->parametersHash.documentTitleNew, byteStringHash.toString(16, " "));
+				if (dlgShowHash.DoModal() == IDOK) {
+					theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersHash.documentFileNameNew, parameters->parametersHash.documentTitleNew);
+				}
 			}
 			// mark the operation as done, and end the thread
 			parameters->operationStatus = OPERATION_STATUS_DONE;
@@ -772,13 +789,14 @@ namespace CrypTool {
 				default:
 					break;
 				}
+				return;
 			}
 			CDialog::OnTimer(_event);
 		}
 
 		void DialogOperationController::OnCancel() {
-			// mark the operation as done
-			parameters.operationStatus = OPERATION_STATUS_DONE;
+			// mark the operation as cancelled
+			parameters.operationCancelled = true;
 		}
 
 		void DialogOperationController::OnClose() {
