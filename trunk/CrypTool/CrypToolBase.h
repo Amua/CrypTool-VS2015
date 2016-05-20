@@ -64,6 +64,7 @@ namespace CrypTool {
 		// construction
 		ByteString();
 		ByteString(const ByteString &_byteString);
+		ByteString(const unsigned char *_byteData, const size_t _byteLength);
 		// destruction
 		~ByteString();
 	public:
@@ -322,6 +323,19 @@ namespace CrypTool {
 					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle(""), documentFileNameNew(""), documentTitleNew("") { }
 					virtual ~ParametersHash() { }
 				} parametersHash;
+				// parameters specific to symmetric operations
+				struct ParametersSymmetric {
+					CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
+					CrypTool::Cryptography::Symmetric::SymmetricOperationType symmetricOperationType;
+					CString documentFileName;
+					CString documentTitle;
+					CString documentFileNameNew;
+					CString documentTitleNew;
+					ByteString key;
+					// construction/destruction
+					ParametersSymmetric() : symmetricAlgorithmType(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle(""), documentFileNameNew(""), documentTitleNew(""), key(ByteString()) { }
+					virtual ~ParametersSymmetric() { }
+				} parametersSymmetric;
 				// construction/destruction
 				Parameters() : operationStatus(OPERATION_STATUS_NULL), operationCancelled(false), operationProgress(0.0) { }
 				virtual ~Parameters() { }

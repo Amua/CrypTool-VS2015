@@ -46,6 +46,12 @@ namespace CrypTool {
 		memcpy(byteData, _byteString.byteData, byteLength);
 	}
 
+	ByteString::ByteString(const unsigned char *_byteData, const size_t _byteLength) :
+		byteData(0),
+		byteLength(0) {
+		fromBuffer(_byteData, _byteLength);
+	}
+
 	ByteString::~ByteString() {
 		reset();
 	}
@@ -750,11 +756,15 @@ namespace CrypTool {
 			if (dlgKeyHexFixedLen.DoModal() != IDOK) {
 				return;
 			}
-
-			// TODO/FIXME: see old implementation
-
+			// extract operation key and operation type from key dialog
+			const CrypTool::Cryptography::Symmetric::SymmetricOperationType operationType = dlgKeyHexFixedLen.ModeIsDecrypt() ? CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_DECRYPTION : CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_ENCRYPTION;
+			const ByteString operationKey = ByteString((const unsigned char*)(dlgKeyHexFixedLen.GetKeyBytes()), (const size_t)(dlgKeyHexFixedLen.GetKeyByteLength()));
 			// initialize operation parameters
-			AfxMessageBox("xxx"); // TODO/FIXME: see startHashOperation
+			parameters.parametersSymmetric.symmetricAlgorithmType = _symmetricAlgorithmType;
+			parameters.parametersSymmetric.symmetricOperationType = operationType;
+			parameters.parametersSymmetric.documentFileName = _documentFileName;
+			parameters.parametersSymmetric.documentTitle = _documentTitle;
+			parameters.parametersSymmetric.key = operationKey;
 			// mark the operation as started
 			parameters.operationStatus = OPERATION_STATUS_STARTED;
 			// start the update timer
@@ -797,7 +807,27 @@ namespace CrypTool {
 		}
 
 		UINT DialogOperationController::executeSymmetricOperation(LPVOID _parameters) {
-			AfxMessageBox("xxx"); // TODO/FIXME: see executeHashOperation
+			// acquire the operation parameters
+			Parameters *parameters = (Parameters*)(_parameters);
+			ASSERT(parameters);
+			// create a file name and a title for the new document, 
+			// and update the parameters accordingly
+			parameters->parametersSymmetric.documentFileNameNew = Utilities::createTemporaryFile();
+			parameters->parametersSymmetric.documentTitleNew.Format(parameters->parametersSymmetric.symmetricOperationType == CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_DECRYPTION ? IDS_STRING_DECRYPTION_OF_USING_KEY : IDS_STRING_ENCRYPTION_OF_USING_KEY, CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(parameters->parametersSymmetric.symmetricAlgorithmType), parameters->parametersSymmetric.documentTitle, parameters->parametersSymmetric.key.toString(16, " "));
+			// execute the operation
+			CrypTool::Cryptography::Symmetric::SymmetricOperation *operation = new CrypTool::Cryptography::Symmetric::SymmetricOperation(parameters->parametersSymmetric.symmetricAlgorithmType, parameters->parametersSymmetric.symmetricOperationType);
+			const bool result = operation->executeOnFiles(parameters->parametersSymmetric.documentFileName, parameters->parametersSymmetric.documentFileNameNew, parameters->parametersSymmetric.key, &parameters->operationCancelled, &parameters->operationProgress);
+			delete operation;
+			// mark the operation as finished
+			parameters->operationStatus = OPERATION_STATUS_FINISHED;
+			// start post-processing only if operation was successful
+			if (result) {
+				// start post-processing: display the result in a new document
+				theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersSymmetric.documentFileNameNew, parameters->parametersSymmetric.documentTitleNew);
+			}
+			// mark the operation as done, and end the thread
+			parameters->operationStatus = OPERATION_STATUS_DONE;
+			AfxEndThread(0);
 			return 0;
 		}
 
