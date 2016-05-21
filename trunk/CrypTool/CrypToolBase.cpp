@@ -442,54 +442,56 @@ namespace CrypTool {
 			}
 
 			bool HashOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const bool *_cancelled, double *_progress) {
+				// try to open files
+				CFile fileInput;
+				CFile fileOutput;
+				// try to open the input file for reading
+				if (!fileInput.Open(_fileNameInput, CFile::modeRead)) {
+					return false;
+				}
+				// try to open the output file for writing
+				if (!fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
+					return false;
+				}
 				// acquire byte length of the desired hash algorithm
 				const unsigned int hashAlgorithmByteLength = getHashAlgorithmByteLength(hashAlgorithmType);
 				// this variable will store the resulting hash value
 				unsigned char *output = new unsigned char[hashAlgorithmByteLength];
-				// the buffer size we're working with (the size of the chunks to be read from the source file)
+				// the buffer size we're working with (the size of the chunks to be read from the input file)
 				const unsigned int bufferByteLength = 4096;
 				char *buffer = new char[bufferByteLength];
 				// create the OpenSSL context
 				void *context = (void*)(new unsigned char[contextSize]);
-				// open the specified source file
-				CFile fileInput;
-				if (fileInput.Open(_fileNameInput, CFile::modeRead)) {
-					const ULONGLONG positionStart = 0;
-					const ULONGLONG positionEnd = fileInput.GetLength();
-					ULONGLONG positionCurrent = positionStart;
-					ULONGLONG bytesRead;
-					// the actual hash operation
-					fpInitialize(context);
-					while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
-						fpUpdate(context, buffer, bytesRead);
-						positionCurrent += bytesRead;
-						if (_cancelled) {
-							if (*_cancelled) {
-								// free memory
-								delete context;
-								delete output;
-								delete buffer;
-								// return with errors
-								return false;
-							}
-						}
-						if (_progress) {
-							*_progress = (double)(positionCurrent) / (double)(positionEnd);
+				// initialize some internal variables
+				const ULONGLONG positionStart = 0;
+				const ULONGLONG positionEnd = fileInput.GetLength();
+				ULONGLONG positionCurrent = positionStart;
+				ULONGLONG bytesRead;
+				// the actual hash operation
+				fpInitialize(context);
+				while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
+					fpUpdate(context, buffer, bytesRead);
+					positionCurrent += bytesRead;
+					if (_cancelled) {
+						if (*_cancelled) {
+							// free memory
+							delete context;
+							delete output;
+							delete buffer;
+							return false;
 						}
 					}
-					fpFinalize(output, context);
-					// write the resulting hash value to the specified target file
-					CFile fileOutput;
-					if (fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
-						fileOutput.Write(output, hashAlgorithmByteLength);
-						fileOutput.Close();
+					if (_progress) {
+						*_progress = (double)(positionCurrent) / (double)(positionEnd);
 					}
 				}
+				fpFinalize(output, context);
+				// write the resulting hash value to the output file
+				fileOutput.Write(output, hashAlgorithmByteLength);
 				// free memory
 				delete context;
 				delete output;
 				delete buffer;
-				// return without errors
 				return true;
 			}
 
@@ -610,16 +612,95 @@ namespace CrypTool {
 			}
 
 			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
-				
-				// TODO/FIXME: replace byte string implementation with a stream-based implementation
-				ByteString byteStringInput;
-				ByteString byteStringOutput;
-				byteStringInput.readFromFile(_fileNameInput);
-				executeOnByteStrings(byteStringInput, _byteStringKey, byteStringOutput);
-				byteStringOutput.writeToFile(_fileNameOutput);
-				// TODO/FIXME: replace byte string implementation with a stream-based implementation
-
-				// return without errors
+				using namespace OpenSSL;
+				// try to open files
+				CFile fileInput;
+				CFile fileOutput;
+				// try to open the input file for reading
+				if (!fileInput.Open(_fileNameInput, CFile::modeRead)) {
+					return false;
+				}
+				// try to open the output file for writing
+				if (!fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
+					return false;
+				}
+				// the buffer size we're working with (the size of the chunks to be read from the input file)
+				const unsigned int bufferByteLength = 4096;
+				char *buffer = new char[bufferByteLength];
+				// acquire cipher and cipher block size
+				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
+				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
+				// create initialization vector (zero bytes only)
+				const ByteString byteStringIV(cipherBlockSize);
+				// create cipher context
+				EVP_CIPHER_CTX *context = EVP_CIPHER_CTX_new();
+				// initialize temporary variables
+				const unsigned char *key = _byteStringKey.getByteDataConst();
+				const unsigned char *iv = byteStringIV.getByteDataConst();
+				const unsigned char *input = new unsigned char[bufferByteLength];
+				const int inputLength = bufferByteLength;
+				unsigned char *output = new unsigned char[inputLength + cipherBlockSize];
+				int outputLength = 0;
+				unsigned char *final = new unsigned char[cipherBlockSize];
+				int finalLength = 0;
+				// initialize some internal variables
+				const ULONGLONG positionStart = 0;
+				const ULONGLONG positionEnd = fileInput.GetLength();
+				ULONGLONG positionCurrent = positionStart;
+				ULONGLONG bytesRead;
+				// initialize encryption
+				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+					EVP_EncryptInit(context, cipher, key, iv);
+				}
+				// initialize decryption
+				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					EVP_DecryptInit(context, cipher, key, iv);
+				}
+				// read from the input file
+				while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
+					// encryption
+					if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+						EVP_EncryptUpdate(context, output, &outputLength, (const unsigned char*)(buffer), bytesRead);
+					}
+					// decryption
+					if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+						EVP_DecryptUpdate(context, output, &outputLength, (const unsigned char*)(buffer), bytesRead);
+					}
+					// write to the output file
+					fileOutput.Write(output, outputLength);
+					// update progress
+					positionCurrent += bytesRead;
+					if (_cancelled) {
+						if (*_cancelled) {
+							// free memory
+							EVP_CIPHER_CTX_free(context);
+							delete buffer;
+							delete input;
+							delete output;
+							delete final;
+							return false;
+						}
+					}
+					if (_progress) {
+						*_progress = (double)(positionCurrent) / (double)(positionEnd);
+					}
+				}
+				// finalize encryption
+				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+					EVP_EncryptFinal(context, final, &finalLength);
+				}
+				// finalize decryption
+				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					EVP_DecryptFinal(context, final, &finalLength);
+				}
+				// write to the output file
+				fileOutput.Write(final, finalLength);
+				// free memory
+				EVP_CIPHER_CTX_free(context);
+				delete buffer;
+				delete input;
+				delete output;
+				delete final;
 				return true;
 			}
 
