@@ -600,11 +600,8 @@ namespace CrypTool {
 				if (!cipher) return false;
 				// initialize cipher block size
 				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
-				// initialize cipher initialization vector (zero bytes only)
-				const ByteString byteStringIV(EVP_CIPHER_iv_length(cipher));
 				// initialize temporary variables
 				const unsigned char *key = _byteStringKey.getByteDataConst();
-				const unsigned char *iv = byteStringIV.getByteDataConst();
 				const unsigned char *input = _byteStringInput.getByteDataConst();
 				const int inputLength = _byteStringInput.getByteLength();
 				unsigned char *output = new unsigned char[inputLength + cipherBlockSize];
@@ -615,7 +612,7 @@ namespace CrypTool {
 				ByteString byteStringUpdate;
 				ByteString byteStringFinalize;
 				// encryption/decryption
-				fpInitialize(context, cipher, key, iv);
+				fpInitialize(context, cipher, key, NULL);
 		EVP_CIPHER_CTX_set_key_length(context, _byteStringKey.getByteLength()); // TODO/FIXME
 				fpUpdate(context, output, &outputLength, input, inputLength);
 				byteStringUpdate.fromBuffer(output, outputLength);
