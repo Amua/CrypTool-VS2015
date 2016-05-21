@@ -362,7 +362,7 @@ namespace CrypTool {
 				fpInitialize(0),
 				fpUpdate(0),
 				fpFinalize(0) {
-				// initialize OpenSSL context and function pointers depending on the specified hash algorithm type
+				// initialize context size and OpenSSL function pointers depending on the specified hash algorithm type
 				switch (hashAlgorithmType) {
 				case HASH_ALGORITHM_TYPE_MD4:
 					contextSize = sizeof(OpenSSL::MD4_CTX);
@@ -409,7 +409,7 @@ namespace CrypTool {
 				default:
 					break;
 				}
-				// make sure we have a valid OpenSSL variables
+				// make sure we have valid OpenSSL variables
 				ASSERT(contextSize);
 				ASSERT(fpInitialize);
 				ASSERT(fpUpdate);
@@ -417,7 +417,7 @@ namespace CrypTool {
 			}
 
 			HashOperation::~HashOperation() {
-				// deinitialize variables
+				// deinitialize OpenSSL variables
 				contextSize = 0;
 				fpInitialize = 0;
 				fpUpdate = 0;
@@ -555,23 +555,53 @@ namespace CrypTool {
 
 			SymmetricOperation::SymmetricOperation(const SymmetricAlgorithmType _symmetricAlgorithmType, const SymmetricOperationType _symmetricOperationType) :
 				symmetricAlgorithmType(_symmetricAlgorithmType),
-				symmetricOperationType(_symmetricOperationType) {
-
+				symmetricOperationType(_symmetricOperationType),
+				context(0),
+				fpInitialize(0),
+				fpUpdate(0),
+				fpFinalize(0) {
+				// initialize OpenSSL function pointers depending on the specified symmetric operation type
+				switch (symmetricOperationType) {
+				case SYMMETRIC_OPERATION_TYPE_ENCRYPTION:
+					context = OpenSSL::EVP_CIPHER_CTX_new();
+					fpInitialize = (fpInitialize_t)(OpenSSL::EVP_EncryptInit);
+					fpUpdate = (fpUpdate_t)(OpenSSL::EVP_EncryptUpdate);
+					fpFinalize = (fpFinalize_t)(OpenSSL::EVP_EncryptFinal);
+					break;
+				case SYMMETRIC_OPERATION_TYPE_DECRYPTION:
+					context = OpenSSL::EVP_CIPHER_CTX_new();
+					fpInitialize = (fpInitialize_t)(OpenSSL::EVP_DecryptInit);
+					fpUpdate = (fpUpdate_t)(OpenSSL::EVP_DecryptUpdate);
+					fpFinalize = (fpFinalize_t)(OpenSSL::EVP_DecryptFinal);
+					break;
+				default:
+					break;
+				}
+				// make sure we have valid OpenSSL variables
+				ASSERT(context);
+				ASSERT(fpInitialize);
+				ASSERT(fpUpdate);
+				ASSERT(fpFinalize);
 			}
 
 			SymmetricOperation::~SymmetricOperation() {
-
+				// deinitialize OpenSSL variables
+				OpenSSL::EVP_CIPHER_CTX_free(context);
+				context = 0;
+				fpInitialize = 0;
+				fpUpdate = 0;
+				fpFinalize = 0;
 			}
 
 			bool SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
 				using namespace OpenSSL;
-				// acquire cipher and cipher block size
-				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
+				// make sure we have a valid cipher
+				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType, _byteStringKey.getByteLength());
+				if (!cipher) return false;
+				// initialize cipher block size
 				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
-				// create initialization vector (zero bytes only)
-				const ByteString byteStringIV(cipherBlockSize);
-				// create cipher context
-				EVP_CIPHER_CTX *context = EVP_CIPHER_CTX_new();
+				// initialize cipher initialization vector (zero bytes only)
+				const ByteString byteStringIV(EVP_CIPHER_iv_length(cipher));
 				// initialize temporary variables
 				const unsigned char *key = _byteStringKey.getByteDataConst();
 				const unsigned char *iv = byteStringIV.getByteDataConst();
@@ -581,133 +611,76 @@ namespace CrypTool {
 				int outputLength = 0;
 				unsigned char *final = new unsigned char[cipherBlockSize];
 				int finalLength = 0;
-				// encryption
-				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-					EVP_EncryptInit(context, cipher, key, iv);
-					EVP_EncryptUpdate(context, output, &outputLength, input, inputLength);
-					ByteString byteStringUpdate;
-					byteStringUpdate.fromBuffer(output, outputLength);
-					_byteStringOutput += byteStringUpdate;
-					EVP_EncryptFinal(context, final, &finalLength);
-					ByteString byteStringFinal;
-					byteStringFinal.fromBuffer(final, finalLength);
-					_byteStringOutput += byteStringFinal;
-				}
-				// decryption
-				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-					EVP_DecryptInit(context, cipher, key, iv);
-					EVP_DecryptUpdate(context, output, &outputLength, input, inputLength);
-					ByteString byteStringUpdate;
-					byteStringUpdate.fromBuffer(output, outputLength);
-					_byteStringOutput += byteStringUpdate;
-					EVP_DecryptFinal(context, final, &finalLength);
-					ByteString byteStringFinal;
-					byteStringFinal.fromBuffer(final, finalLength);
-					_byteStringOutput += byteStringFinal;
-				}
-				// delete cipher context
-				EVP_CIPHER_CTX_free(context);
-				// return without errors
-				return true;
-			}
-
-			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
-				using namespace OpenSSL;
-				// try to open files
-				CFile fileInput;
-				CFile fileOutput;
-				// try to open the input file for reading
-				if (!fileInput.Open(_fileNameInput, CFile::modeRead)) {
-					return false;
-				}
-				// try to open the output file for writing
-				if (!fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
-					return false;
-				}
-				// the buffer size we're working with (the size of the chunks to be read from the input file)
-				const unsigned int bufferByteLength = 4096;
-				char *buffer = new char[bufferByteLength];
-				// acquire cipher and cipher block size
-				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType);
-				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
-				// create initialization vector (zero bytes only)
-				const ByteString byteStringIV(cipherBlockSize);
-				// create cipher context
-				EVP_CIPHER_CTX *context = EVP_CIPHER_CTX_new();
-				// initialize temporary variables
-				const unsigned char *key = _byteStringKey.getByteDataConst();
-				const unsigned char *iv = byteStringIV.getByteDataConst();
-				const unsigned char *input = new unsigned char[bufferByteLength];
-				const int inputLength = bufferByteLength;
-				unsigned char *output = new unsigned char[inputLength + cipherBlockSize];
-				int outputLength = 0;
-				unsigned char *final = new unsigned char[cipherBlockSize];
-				int finalLength = 0;
-				// initialize some internal variables
-				const ULONGLONG positionStart = 0;
-				const ULONGLONG positionEnd = fileInput.GetLength();
-				ULONGLONG positionCurrent = positionStart;
-				ULONGLONG bytesRead;
-				// initialize encryption
-				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-					EVP_EncryptInit(context, cipher, key, iv);
-				}
-				// initialize decryption
-				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-					EVP_DecryptInit(context, cipher, key, iv);
-				}
-				// read from the input file
-				while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
-					// encryption
-					if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-						EVP_EncryptUpdate(context, output, &outputLength, (const unsigned char*)(buffer), bytesRead);
-					}
-					// decryption
-					if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-						EVP_DecryptUpdate(context, output, &outputLength, (const unsigned char*)(buffer), bytesRead);
-					}
-					// write to the output file
-					fileOutput.Write(output, outputLength);
-					// update progress
-					positionCurrent += bytesRead;
-					if (_cancelled) {
-						if (*_cancelled) {
-							// free memory
-							EVP_CIPHER_CTX_free(context);
-							delete buffer;
-							delete input;
-							delete output;
-							delete final;
-							return false;
-						}
-					}
-					if (_progress) {
-						*_progress = (double)(positionCurrent) / (double)(positionEnd);
-					}
-				}
-				// finalize encryption
-				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-					EVP_EncryptFinal(context, final, &finalLength);
-				}
-				// finalize decryption
-				if (symmetricOperationType == SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-					EVP_DecryptFinal(context, final, &finalLength);
-				}
-				// write to the output file
-				fileOutput.Write(final, finalLength);
+				// temporary byte strings
+				ByteString byteStringUpdate;
+				ByteString byteStringFinalize;
+				// encryption/decryption
+				fpInitialize(context, cipher, key, iv);
+		EVP_CIPHER_CTX_set_key_length(context, _byteStringKey.getByteLength()); // TODO/FIXME
+				fpUpdate(context, output, &outputLength, input, inputLength);
+				byteStringUpdate.fromBuffer(output, outputLength);
+				fpFinalize(context, final, &finalLength);
+				byteStringFinalize.fromBuffer(final, finalLength);
+				// set output byte string
+				_byteStringOutput += byteStringUpdate;
+				_byteStringOutput += byteStringFinalize;
 				// free memory
-				EVP_CIPHER_CTX_free(context);
-				delete buffer;
-				delete input;
 				delete output;
 				delete final;
 				return true;
 			}
 
-			const OpenSSL::EVP_CIPHER *SymmetricOperation::getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const {
+			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
+				using namespace OpenSSL;
+
+				// TODO/FIXME: temporary implementation
+				ByteString byteStringInput;
+				ByteString byteStringOutput;
+				byteStringInput.readFromFile(_fileNameInput);
+				if (!executeOnByteStrings(byteStringInput, _byteStringKey, byteStringOutput)) {
+					return false;
+				}
+				byteStringOutput.writeToFile(_fileNameOutput);
+				// TODO/FIXME: temporary implementation
+
+				return true;
+			}
+
+			const OpenSSL::EVP_CIPHER *SymmetricOperation::getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType, const size_t _keyLength) const {
 				switch (_symmetricAlgorithmType) {
 				case SYMMETRIC_ALGORITHM_TYPE_IDEA:
 					return OpenSSL::EVP_idea_ecb();
+				case SYMMETRIC_ALGORITHM_TYPE_RC2:
+					return OpenSSL::EVP_rc2_cbc();
+				case SYMMETRIC_ALGORITHM_TYPE_RC4:
+					return OpenSSL::EVP_rc4();
+				case SYMMETRIC_ALGORITHM_TYPE_DES_ECB:
+					return OpenSSL::EVP_des_ecb();
+				case SYMMETRIC_ALGORITHM_TYPE_DES_CBC:
+					return OpenSSL::EVP_des_cbc();
+				case SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB:
+					return OpenSSL::EVP_des_ede3_ecb();
+				case SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC:
+					return OpenSSL::EVP_des_ede3_cbc();
+				case SYMMETRIC_ALGORITHM_TYPE_AES:
+					if (_keyLength == 16) return OpenSSL::EVP_aes_128_cbc();
+					if (_keyLength == 24) return OpenSSL::EVP_aes_192_cbc();
+					if (_keyLength == 32) return OpenSSL::EVP_aes_256_cbc();
+					break;
+				case SYMMETRIC_ALGORITHM_TYPE_MARS:
+					return 0;
+				case SYMMETRIC_ALGORITHM_TYPE_RC6:
+					return 0;
+				case SYMMETRIC_ALGORITHM_TYPE_SERPENT:
+					return 0;
+				case SYMMETRIC_ALGORITHM_TYPE_TWOFISH:
+					return 0;
+				case SYMMETRIC_ALGORITHM_TYPE_DESX:
+					return 0;
+				case SYMMETRIC_ALGORITHM_TYPE_DESL:
+					return 0;
+				case SYMMETRIC_ALGORITHM_TYPE_DESXL:
+					return 0;
 				default:
 					break;
 				}

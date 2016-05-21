@@ -194,9 +194,9 @@ namespace CrypTool {
 			private:
 				// type definitions for OpenSSL function pointers
 				typedef void(*fpInitialize_t) (void *_context);
-				typedef void(*fpUpdate_t) (void *_context, void *_message, ULONGLONG _length);
+				typedef void(*fpUpdate_t) (void *_context, void *_input, ULONGLONG _inputLength);
 				typedef void(*fpFinalize_t) (void *_digest, void *_context);
-				// context size and function pointers for OpenSSL hash operations
+				// context size and function pointers for OpenSSL
 				size_t contextSize;
 				fpInitialize_t fpInitialize;
 				fpUpdate_t fpUpdate;
@@ -254,7 +254,17 @@ namespace CrypTool {
 				const SymmetricAlgorithmType symmetricAlgorithmType;
 				const SymmetricOperationType symmetricOperationType;
 			private:
-				const OpenSSL::EVP_CIPHER *getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType) const;
+				const OpenSSL::EVP_CIPHER *getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType, const size_t _keyLength) const;
+			private:
+				// type definitions for OpenSSL function pointers
+				typedef void(*fpInitialize_t) (void *_context, const void *_cipher, const void *_key, const void *_iv);
+				typedef void(*fpUpdate_t) (void *_context, void *_output, int *_outputLength, const void *_input, int _inputLength);
+				typedef void(*fpFinalize_t) (void *_context, void *_output, int *_outputLength);
+				// context and function pointers for OpenSSL
+				OpenSSL::EVP_CIPHER_CTX *context;
+				fpInitialize_t fpInitialize;
+				fpUpdate_t fpUpdate;
+				fpFinalize_t fpFinalize;
 			};
 
 		}
