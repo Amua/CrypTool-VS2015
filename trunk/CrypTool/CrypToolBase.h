@@ -193,9 +193,9 @@ namespace CrypTool {
 				const HashAlgorithmType hashAlgorithmType;
 			private:
 				// type definitions for OpenSSL function pointers
-				typedef void(*fpInitialize_t) (void *_context);
-				typedef void(*fpUpdate_t) (void *_context, void *_input, ULONGLONG _inputLength);
-				typedef void(*fpFinalize_t) (void *_digest, void *_context);
+				typedef int(*fpInitialize_t) (void *_context);
+				typedef int(*fpUpdate_t) (void *_context, void *_input, ULONGLONG _inputLength);
+				typedef int(*fpFinalize_t) (void *_digest, void *_context);
 				// context size and function pointers for OpenSSL
 				size_t contextSize;
 				fpInitialize_t fpInitialize;
@@ -257,9 +257,9 @@ namespace CrypTool {
 				const OpenSSL::EVP_CIPHER *getOpenSSLCipher(const SymmetricAlgorithmType _symmetricAlgorithmType, const size_t _keyLength) const;
 			private:
 				// type definitions for OpenSSL function pointers
-				typedef void(*fpInitialize_t) (void *_context, const void *_cipher, const void *_key, const void *_iv);
-				typedef void(*fpUpdate_t) (void *_context, void *_output, int *_outputLength, const void *_input, int _inputLength);
-				typedef void(*fpFinalize_t) (void *_context, void *_output, int *_outputLength);
+				typedef int(*fpInitialize_t) (void *_context, const void *_cipher, const void *_key, const void *_iv);
+				typedef int(*fpUpdate_t) (void *_context, void *_output, int *_outputLength, const void *_input, int _inputLength);
+				typedef int(*fpFinalize_t) (void *_context, void *_output, int *_outputLength);
 				// context and function pointers for OpenSSL
 				OpenSSL::EVP_CIPHER_CTX *context;
 				fpInitialize_t fpInitialize;

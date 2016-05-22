@@ -432,9 +432,9 @@ namespace CrypTool {
 				// create the OpenSSL context
 				void *context = (void*)(new unsigned char[contextSize]);
 				// the actual operation
-				fpInitialize(context);
-				fpUpdate(context, (void*)(_byteStringInput.getByteDataConst()), _byteStringInput.getByteLength());
-				fpFinalize((void*)(_byteStringOutput.getByteData()), context);
+				ASSERT(fpInitialize(context));
+				ASSERT(fpUpdate(context, (void*)(_byteStringInput.getByteDataConst()), _byteStringInput.getByteLength()));
+				ASSERT(fpFinalize((void*)(_byteStringOutput.getByteData()), context));
 				// free memory
 				delete context;
 				// return without errors
@@ -468,9 +468,9 @@ namespace CrypTool {
 				ULONGLONG positionCurrent = positionStart;
 				ULONGLONG bytesRead;
 				// the actual hash operation
-				fpInitialize(context);
+				ASSERT(fpInitialize(context));
 				while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
-					fpUpdate(context, buffer, bytesRead);
+					ASSERT(fpUpdate(context, buffer, bytesRead));
 					positionCurrent += bytesRead;
 					if (_cancelled) {
 						if (*_cancelled) {
@@ -485,7 +485,7 @@ namespace CrypTool {
 						*_progress = (double)(positionCurrent) / (double)(positionEnd);
 					}
 				}
-				fpFinalize(output, context);
+				ASSERT(fpFinalize(output, context));
 				// write the resulting hash value to the output file
 				fileOutput.Write(output, hashAlgorithmByteLength);
 				// free memory
@@ -611,16 +611,15 @@ namespace CrypTool {
 				// temporary byte strings
 				ByteString byteStringUpdate;
 				ByteString byteStringFinalize;
-				// encryption/decryption
-				fpInitialize(context, cipher, key, NULL);
-
+				// encryption/decryption initialization
+				ASSERT(fpInitialize(context, cipher, key, NULL));
 				// this is for ciphers with variable key sizes
 				EVP_CIPHER_CTX_set_key_length(context, _byteStringKey.getByteLength());
 				EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_SET_RC2_KEY_BITS, _byteStringKey.getByteLength() * 8, NULL);
-
-				fpUpdate(context, output, &outputLength, input, inputLength);
+				// encryption/decryption update and finalization
+				ASSERT(fpUpdate(context, output, &outputLength, input, inputLength));
 				byteStringUpdate.fromBuffer(output, outputLength);
-				fpFinalize(context, final, &finalLength);
+				ASSERT(fpFinalize(context, final, &finalLength));
 				byteStringFinalize.fromBuffer(final, finalLength);
 				// set output byte string
 				_byteStringOutput += byteStringUpdate;
