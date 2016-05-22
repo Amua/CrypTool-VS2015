@@ -613,7 +613,11 @@ namespace CrypTool {
 				ByteString byteStringFinalize;
 				// encryption/decryption
 				fpInitialize(context, cipher, key, NULL);
-		EVP_CIPHER_CTX_set_key_length(context, _byteStringKey.getByteLength()); // TODO/FIXME
+
+				// this is for ciphers with variable key sizes
+				EVP_CIPHER_CTX_set_key_length(context, _byteStringKey.getByteLength());
+				EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_SET_RC2_KEY_BITS, _byteStringKey.getByteLength() * 8, NULL);
+
 				fpUpdate(context, output, &outputLength, input, inputLength);
 				byteStringUpdate.fromBuffer(output, outputLength);
 				fpFinalize(context, final, &finalLength);
