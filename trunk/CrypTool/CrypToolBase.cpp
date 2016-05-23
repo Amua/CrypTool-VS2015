@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "CrypToolBase.h"
 #include "CrypToolApp.h"
+#include "Cryptography.h"
 #include "resource.h"
 
 #include "DlgShowHash.h"
@@ -887,11 +888,11 @@ namespace CrypTool {
 				break;
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DES_ECB:
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DES_CBC:
-				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 64, 64, 64, 1); // TODO/FIXME: PARITY BIT
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 64, 64, 64, CRYPT_PARITY_DES);
 				break;
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB:
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC:
-				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 128, 128, 128, 1); // TODO/FIXME: PARITY BIT
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 128, 128, 128, CRYPT_PARITY_DESX);
 				break;
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES:
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_MARS:
@@ -901,13 +902,13 @@ namespace CrypTool {
 				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 128, 256, 64);
 				break;
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESX:
-				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 192, 192, 192, 2); // TODO/FIXME: PARITY BIT
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 192, 192, 192, CRYPT_PARITY_DESX);
 				break;
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESL:
-				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 64, 64, 64, 1); // TODO/FIXME: PARITY BIT
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 64, 64, 64, CRYPT_PARITY_DES);
 				break;
 			case CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_DESXL:
-				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 192, 192, 192, 2); // TODO/FIXME: PARITY BIT
+				dlgKeyHexFixedLen.Init(dlgKeyHexFixedLenTitle, 192, 192, 192, CRYPT_PARITY_DESX);
 				break;
 			default:
 				AfxMessageBox("CRYPTOOL_BASE: unsupported symmetric algorithm");
