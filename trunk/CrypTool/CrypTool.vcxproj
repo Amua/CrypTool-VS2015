@@ -302,7 +302,8 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_fr|Win32'">
@@ -359,7 +360,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Release_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_el|Win32'">
@@ -416,7 +419,8 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_de|Win32'">
@@ -473,7 +477,8 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_pl|Win32'">
@@ -530,9 +535,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy ..\Release_en\CrypTool-en.chm ..\$(Configuration)\CrypTool-en.chm
-perl updateBuildInformation.pl POST
-</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Release_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_de|Win32'">
@@ -599,7 +604,8 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_en|Win32'">
@@ -655,7 +661,8 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_fr|Win32'">
@@ -711,7 +718,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Debug_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_el|Win32'">
@@ -767,7 +776,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Debug_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_pl|Win32'">
@@ -823,9 +834,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy ..\Debug_en\CrypTool-en.chm ..\$(Configuration)\CrypTool-en.chm
-perl updateBuildInformation.pl POST
-</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Debug_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_rs|Win32'">
@@ -881,8 +892,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy ..\Debug_en\CrypTool-en.chm ..\$(Configuration)\CrypTool-en.chm
-perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Debug_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_rs|Win32'">
@@ -939,8 +951,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy ..\Release_en\CrypTool-en.chm ..\$(Configuration)\CrypTool-en.chm
-perl updateBuildInformation.pl POST</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Release_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_es|Win32'">
@@ -997,9 +1010,9 @@ perl updateBuildInformation.pl PRE
     </Link>
     <PostBuildEvent>
       <Message>$(Configuration)</Message>
-      <Command>copy ..\Debug_en\CrypTool-en.chm ..\$(Configuration)\CrypTool-en.chm
-perl updateBuildInformation.pl POST
-</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Debug_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_es|Win32'">
@@ -1056,9 +1069,9 @@ perl updateBuildInformation.pl PRE
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy ..\Release_en\CrypTool-en.chm ..\$(Configuration)\CrypTool-en.chm
-perl updateBuildInformation.pl POST
-</Command>
+      <Command>perl updateBuildInformation.pl POST
+copy $(SolutionDir)..\setup\template\*.dll $(TargetDir)
+copy ..\Release_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
