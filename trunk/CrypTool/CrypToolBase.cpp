@@ -598,25 +598,34 @@ namespace CrypTool {
 				// make sure we have a valid cipher
 				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType, _byteStringKey.getByteLength());
 				if (!cipher) return false;
-				// initialize cipher block size
+				const int cipherIvLength = EVP_CIPHER_iv_length(cipher);
+				const int cipherKeyLength = EVP_CIPHER_key_length(cipher);
 				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
-				// initialize temporary variables
-				const unsigned char *key = _byteStringKey.getByteDataConst();
-				const unsigned char *input = _byteStringInput.getByteDataConst();
-				const int inputLength = _byteStringInput.getByteLength();
-				unsigned char *output = new unsigned char[inputLength + cipherBlockSize];
-				int outputLength = 0;
+				// create variables for iv, key (all zero bytes)
+				unsigned char *iv = new unsigned char[cipherIvLength];
+				std::memset(iv, 0, cipherIvLength);
+				unsigned char *key = new unsigned char[cipherKeyLength];
+				std::memset(key, 0, cipherKeyLength);
+				// create variables for input, output, final (all zero bytes)
+				unsigned char *input = new unsigned char[_byteStringInput.getByteLength()];
+				std::memset(input, 0, _byteStringInput.getByteLength());
+				unsigned char *output = new unsigned char[_byteStringInput.getByteLength() + cipherBlockSize];
+				std::memset(output, 0, _byteStringInput.getByteLength() + cipherBlockSize);
 				unsigned char *final = new unsigned char[cipherBlockSize];
+				std::memset(final, 0, cipherBlockSize);
+				// initialize variables for input length, output length, final length (all zero)
+				int inputLength = _byteStringInput.getByteLength();
+				int outputLength = 0;
 				int finalLength = 0;
-				// temporary byte strings
+				// temporary byte strings for concatenating
 				ByteString byteStringUpdate;
 				ByteString byteStringFinalize;
-				// encryption/decryption initialization
-				ASSERT(fpInitialize(context, cipher, key, NULL));
-				// this is for ciphers with variable key sizes
-				EVP_CIPHER_CTX_set_key_length(context, _byteStringKey.getByteLength());
-				EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_SET_RC2_KEY_BITS, _byteStringKey.getByteLength() * 8, NULL);
-				// encryption/decryption update and finalization
+				// initialize iv, key, input
+				std::memset(iv, 0, cipherIvLength);
+				std::memcpy(key, _byteStringKey.getByteDataConst(), _byteStringKey.getByteLength());
+				std::memcpy(input, _byteStringInput.getByteDataConst(), _byteStringInput.getByteLength());
+				// encryption/decryption (initialize, update, finalize)
+				ASSERT(fpInitialize(context, cipher, key, iv));
 				ASSERT(fpUpdate(context, output, &outputLength, input, inputLength));
 				byteStringUpdate.fromBuffer(output, outputLength);
 				ASSERT(fpFinalize(context, final, &finalLength));
@@ -625,6 +634,9 @@ namespace CrypTool {
 				_byteStringOutput += byteStringUpdate;
 				_byteStringOutput += byteStringFinalize;
 				// free memory
+				delete iv;
+				delete key;
+				delete input;
 				delete output;
 				delete final;
 				return true;
@@ -668,19 +680,19 @@ namespace CrypTool {
 					if (_keyLength == 32) return OpenSSL::EVP_aes_256_cbc();
 					break;
 				case SYMMETRIC_ALGORITHM_TYPE_MARS:
-					return 0;
+					break;
 				case SYMMETRIC_ALGORITHM_TYPE_RC6:
-					return 0;
+					break;
 				case SYMMETRIC_ALGORITHM_TYPE_SERPENT:
-					return 0;
+					break;
 				case SYMMETRIC_ALGORITHM_TYPE_TWOFISH:
-					return 0;
+					break;
 				case SYMMETRIC_ALGORITHM_TYPE_DESX:
-					return 0;
+					break;
 				case SYMMETRIC_ALGORITHM_TYPE_DESL:
-					return 0;
+					break;
 				case SYMMETRIC_ALGORITHM_TYPE_DESXL:
-					return 0;
+					break;
 				default:
 					break;
 				}
