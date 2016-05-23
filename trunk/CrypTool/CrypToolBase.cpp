@@ -598,6 +598,7 @@ namespace CrypTool {
 				// make sure we have a valid cipher
 				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType, _byteStringKey.getByteLength());
 				if (!cipher) return false;
+				// acquire iv length, key length, block size
 				const int cipherIvLength = EVP_CIPHER_iv_length(cipher);
 				const int cipherKeyLength = EVP_CIPHER_key_length(cipher);
 				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
@@ -644,17 +645,80 @@ namespace CrypTool {
 
 			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
 				using namespace OpenSSL;
-
-				// TODO/FIXME: temporary implementation
-				ByteString byteStringInput;
-				ByteString byteStringOutput;
-				byteStringInput.readFromFile(_fileNameInput);
-				if (!executeOnByteStrings(byteStringInput, _byteStringKey, byteStringOutput)) {
+				// make sure we have a valid cipher
+				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType, _byteStringKey.getByteLength());
+				if (!cipher) return false;
+				// try to open files
+				CFile fileInput;
+				CFile fileOutput;
+				// try to open the input file for reading
+				if (!fileInput.Open(_fileNameInput, CFile::modeRead)) {
 					return false;
 				}
-				byteStringOutput.writeToFile(_fileNameOutput);
-				// TODO/FIXME: temporary implementation
-
+				// try to open the output file for writing
+				if (!fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
+					return false;
+				}
+				// the buffer size we're working with (the size of the chunks to be read from the input file)
+				const unsigned int bufferByteLength = 4096;
+				// acquire iv length, key length, block size
+				const int cipherIvLength = EVP_CIPHER_iv_length(cipher);
+				const int cipherKeyLength = EVP_CIPHER_key_length(cipher);
+				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
+				// create variables for iv, key (all zero bytes)
+				unsigned char *iv = new unsigned char[cipherIvLength];
+				std::memset(iv, 0, cipherIvLength);
+				unsigned char *key = new unsigned char[cipherKeyLength];
+				std::memset(key, 0, cipherKeyLength);
+				// create variables for input, output, final (all zero bytes)
+				unsigned char *input = new unsigned char[bufferByteLength];
+				std::memset(input, 0, bufferByteLength);
+				unsigned char *output = new unsigned char[bufferByteLength + cipherBlockSize];
+				std::memset(output, 0, bufferByteLength + cipherBlockSize);
+				unsigned char *final = new unsigned char[cipherBlockSize];
+				std::memset(final, 0, cipherBlockSize);
+				// initialize variables for input length, output length, final length (all zero)
+				int inputLength = bufferByteLength;
+				int outputLength = 0;
+				int finalLength = 0;
+				// initialize iv, key, input
+				std::memset(iv, 0, cipherIvLength);
+				std::memcpy(key, _byteStringKey.getByteDataConst(), _byteStringKey.getByteLength());
+				// encryption/decryption (initialize);
+				ASSERT(fpInitialize(context, cipher, key, iv));
+				// initialize some internal variables
+				const ULONGLONG positionStart = 0;
+				const ULONGLONG positionEnd = fileInput.GetLength();
+				ULONGLONG positionCurrent = positionStart;
+				ULONGLONG bytesRead;
+				while (bytesRead = fileInput.Read(input, bufferByteLength)) {
+					ASSERT(fpUpdate(context, output, &outputLength, input, bytesRead));
+					fileOutput.Write(output, outputLength);
+					positionCurrent += bytesRead;
+					if (_cancelled) {
+						if (*_cancelled) {
+							// free memory
+							delete iv;
+							delete key;
+							delete input;
+							delete output;
+							delete final;
+							return false;
+						}
+					}
+					if (_progress) {
+						*_progress = (double)(positionCurrent) / (double)(positionEnd);
+					}
+				}
+				// ecryption/decryption (finalize)
+				ASSERT(fpFinalize(context, final, &finalLength));
+				fileOutput.Write(final, finalLength);
+				// free memory
+				delete iv;
+				delete key;
+				delete input;
+				delete output;
+				delete final;
 				return true;
 			}
 
