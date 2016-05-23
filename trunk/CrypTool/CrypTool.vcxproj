@@ -251,7 +251,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_en|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -308,7 +308,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_fr|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -365,7 +365,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_el|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -422,7 +422,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_de|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -479,7 +479,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_pl|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -538,7 +538,7 @@ perl updateBuildInformation.pl POST
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_de|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -605,7 +605,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_en|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -661,7 +661,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_fr|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -717,7 +717,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_el|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -773,7 +773,7 @@ perl updateBuildInformation.pl PRE VS2010
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_pl|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -831,7 +831,7 @@ perl updateBuildInformation.pl POST
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_rs|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -888,7 +888,7 @@ perl updateBuildInformation.pl POST</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_rs|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -946,7 +946,7 @@ perl updateBuildInformation.pl POST</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_es|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -1005,7 +1005,7 @@ perl updateBuildInformation.pl POST
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_es|Win32'">
     <PreBuildEvent>
       <Command>perl authorsFileIntegrityCheck.pl
-perl updateBuildInformation.pl PRE VS2010
+perl updateBuildInformation.pl PRE
 </Command>
     </PreBuildEvent>
     <Midl>
