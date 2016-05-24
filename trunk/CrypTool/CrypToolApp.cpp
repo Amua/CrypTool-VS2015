@@ -1014,18 +1014,14 @@ void CCrypToolApp::OnUpdateNeedSecudeTicket(CCmdUI* pCmdUI)
 #endif
 }
 
-void CCrypToolApp::OnShowKeys() 
-{
-	// UpdateContent();
-	CDlgKeyAsym TocDialog;
-	TocDialog.DoModal();
+void CCrypToolApp::OnShowKeys() {
+	CDlgKeyAsym dlgKeyAsym;
+	dlgKeyAsym.DoModal();
 }
 
-void CCrypToolApp::OnKeyGen() 
-{
-#ifndef _UNSTABLE
-	KeyGen();
-#endif
+void CCrypToolApp::OnKeyGen() {
+	CDlgKeyAsymGeneration dlgKeyAsymGeneration;
+	dlgKeyAsymGeneration.DoModal();
 }
 
 void CCrypToolApp::OnEinzelverfahrenTutorialPrimzahlengenerieren() 
