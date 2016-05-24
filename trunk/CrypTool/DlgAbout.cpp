@@ -44,28 +44,35 @@ CDlgAbout::~CDlgAbout() {
 
 BOOL CDlgAbout::OnInitDialog() {
 	CDialog::OnInitDialog();
-	// get CrypTool version for dialog heading
-	LoadString(AfxGetInstanceHandle(), IDR_MAINFRAME, pc_str, STR_LAENGE_STRING_TABLE);
-	stringCrypToolVersion = pc_str;
-	// create font
+	// create font for dialog heading
 	font.CreateFontA(34, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 0, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_ROMAN, "Arial");
-	// hole Bibliotheksinformationen
+	// get CrypTool version for dialog heading
+	stringCrypToolVersion.LoadString(IDR_MAINFRAME);
+	// determine individual library versions
 	determineLibraryVersions();
-	// flomar, 01/20/2009
 	// release information as well as contact information is
 	// displayed in a text field now to allow copy-and-paste
 	CWnd *windowReleaseInformation = GetDlgItem(IDC_EDIT_RELEASE_INFORMATION);
 	CWnd *windowContactInformation = GetDlgItem(IDC_EDIT_CONTACT_INFORMATION);
 	// check if window for release information is valid
 	if (windowReleaseInformation) {
-		// get build information
-		CString buildDate;
-		buildDate.Format("TODO/FIXME: insert build time here");
-		CString buildVersion;
-		buildVersion.Format("MSC %d.%02d", _MSC_VER / 100, _MSC_VER % 100);
+		// construct build information
+		CString stringCrypToolBuildTime;
+		CString stringCrypToolBuildVersion;
+		stringCrypToolBuildTime.LoadString(IDS_CRYPTOOL_BUILD_TIME);
+		stringCrypToolBuildVersion.Format("MSC %d.%02d", _MSC_VER / 100, _MSC_VER % 100);
+		// construct git information
+		CString stringCrypToolGitInformation;
+		CString stringCrypToolGitBranch;
+		CString stringCrypToolGitCommit;
+		stringCrypToolGitBranch.LoadString(IDS_CRYPTOOL_GIT_BRANCH);
+		stringCrypToolGitCommit.LoadString(IDS_CRYPTOOL_GIT_COMMIT);
+		if (stringCrypToolGitBranch.GetLength() > 0 && stringCrypToolGitCommit.GetLength() > 0) {
+			stringCrypToolGitInformation.Format("[%s %s]", stringCrypToolGitBranch, stringCrypToolGitCommit);
+		}
 		// construct release information
 		CString stringReleaseInformation;
-		stringReleaseInformation.Format(IDS_CRYPTOOL_RELEASE_INFORMATION, stringCrypToolVersion, buildDate, buildVersion);
+		stringReleaseInformation.Format(IDS_CRYPTOOL_RELEASE_INFORMATION, stringCrypToolVersion, stringCrypToolBuildTime, stringCrypToolBuildVersion, stringCrypToolGitInformation);
 		stringReleaseInformation.Append(strVersionApfloat); stringReleaseInformation.Append(", ");
 		stringReleaseInformation.Append(strVersionCracklib); stringReleaseInformation.Append(", ");
 		stringReleaseInformation.Append(strVersionCryptovision); stringReleaseInformation.Append(", ");
