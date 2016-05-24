@@ -34,7 +34,8 @@
 #define IDD_OPTIONS_ANALYSIS            121
 #define IDD_HILL_ANALYSIS               122
 #define IDD_RSA_ENCRYPTION              126
-#define IDR_MAINFRAME                   128
+#define IDR_MAINFRAME                   127
+#define IDS_CRYPTOOL_GIT_COMMIT         128
 #define IDR_TEXTTYPE                    129
 #define IDR_HEXTYPE                     130
 #define IDR_ASCTYPE                     131
