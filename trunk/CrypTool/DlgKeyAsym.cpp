@@ -18,11 +18,7 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////
-// DlgAsymKeys.cpp: Implementierungsdatei
-//////////////////////////////////////////////////////////////////
-// Programmiert von Bartol Filipovic 1999-2000
-// Deutsche Bank AG Frankfurt - IT Security
+// original implementation: Bartol Filipovic, 2000
 
 #include "stdafx.h"
 #include "CrypToolApp.h"
@@ -47,16 +43,8 @@ static char THIS_FILE[] = __FILE__;
 // globale Variablen
 extern char *PseVerzeichnis, *CaPseDatei, *CaPseVerzeichnis; // siehe multipda.cpp
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgKeyAsym 
-
-
-CDlgKeyAsym::CDlgKeyAsym(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgKeyAsym::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgKeyAsym)
-	//}}AFX_DATA_INIT
-
+CDlgKeyAsym::CDlgKeyAsym(CWnd* pParent) :
+	CDialog(CDlgKeyAsym::IDD, pParent) {
 	UserKeyId = "";
 	Name = "";
 	Firstname = "";
@@ -64,20 +52,70 @@ CDlgKeyAsym::CDlgKeyAsym(CWnd* pParent /*=NULL*/)
 	KeyInfo = "";
 	CreatTimeUTC = "";
 	CreatTime = "";
-
-	m_lastSelectedRow = -1; //  Änderung in Member-Funktion CDlgKeyAsym::OnClickList3()
+	m_lastSelectedRow = -1;
 }
 
-/*
-CDlgKeyAsym::~CDlgKeyAsym()
-{
-}
-*/
+CDlgKeyAsym::~CDlgKeyAsym() {
 
-void CDlgKeyAsym::DoDataExchange(CDataExchange* pDX)
-{
+}
+
+bool CDlgKeyAsym::AreThereRSAKeys() {
+	return (KeyType.Find(RSA_KEYFILE_IDSTRING) > -1);
+}
+
+void CDlgKeyAsym::setKeyID(const CString &userKeyId) {
+	UserKeyId = userKeyId;
+}
+
+BOOL CDlgKeyAsym::OnInitDialog() {
+	CDialog::OnInitDialog();
+
+	int colWidth = 100;
+
+	m_listview.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	LoadString(AfxGetInstanceHandle(), IDS_STRING_NAME, pc_str, STR_LAENGE_STRING_TABLE);
+	m_listview.InsertColumn(0, pc_str, LVCFMT_LEFT, colWidth - 15, 0); // Name
+
+	LoadString(AfxGetInstanceHandle(), IDS_STRING_PRENAME, pc_str, STR_LAENGE_STRING_TABLE);
+	m_listview.InsertColumn(1, pc_str, LVCFMT_LEFT, colWidth - 25, 1); // Vorname
+
+	LoadString(AfxGetInstanceHandle(), IDS_STRING_KEYTYPE, pc_str, STR_LAENGE_STRING_TABLE);
+	m_listview.InsertColumn(2, pc_str, LVCFMT_LEFT, colWidth - 15, 2); // Schlüsseltyp
+
+	LoadString(AfxGetInstanceHandle(), IDS_STRING_KEY_IDENTIFIER, pc_str, STR_LAENGE_STRING_TABLE);
+	m_listview.InsertColumn(3, pc_str, LVCFMT_LEFT, colWidth, 3); // Schlüsselkennung
+
+	LoadString(AfxGetInstanceHandle(), IDS_STRING_CREATION_DATW, pc_str, STR_LAENGE_STRING_TABLE);
+	m_listview.InsertColumn(4, pc_str, LVCFMT_LEFT, colWidth + 15, 4); // Erstellungsdatum
+
+	LoadString(AfxGetInstanceHandle(), IDS_STRING_KEY_ID, pc_str, STR_LAENGE_STRING_TABLE);
+	m_listview.InsertColumn(5, pc_str, LVCFMT_LEFT, colWidth - 20, 5); // Interne ID-Nr.
+
+	sortBy = BY_NAME;
+					  
+	m_CheckRSA.SetCheck(1);
+	m_CheckDSA.SetCheck(1);
+	m_CheckEC.SetCheck(1);
+	nKeylistType = ASYM_KEY;
+	InitAsymKeyListBox(nKeylistType);
+
+	m_RemoveItem.EnableWindow(FALSE);
+	m_secret_param_button.EnableWindow(FALSE);
+	m_pub_param_button.EnableWindow(FALSE);
+	m_show_cert_button.EnableWindow(FALSE);
+	m_export_cert_button.EnableWindow(FALSE);
+
+	if (UserKeyId.GetLength()) {
+		int row = FindRow(UserKeyId);
+		UpdateRowSel(row);
+	}
+
+	return TRUE;
+}
+
+void CDlgKeyAsym::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgKeyAsym)
 	DDX_Control(pDX, IDC_BUTTON3, m_RemoveItem);
 	DDX_Control(pDX, IDC_CHECK3, m_CheckEC);
 	DDX_Control(pDX, IDC_CHECK2, m_CheckDSA);
@@ -87,94 +125,9 @@ void CDlgKeyAsym::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST3, m_listview);
 	DDX_Control(pDX, IDC_BUTTON2, m_secret_param_button);
 	DDX_Control(pDX, IDC_BUTTON1, m_pub_param_button);
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgKeyAsym, CDialog)
-	//{{AFX_MSG_MAP(CDlgKeyAsym)
-	ON_BN_CLICKED(IDC_BUTTON1, OnShowPubParamButton)
-	ON_BN_CLICKED(IDC_BUTTON2, OnShowAllParamButton)
-	ON_BN_CLICKED(IDC_BUTTON3, OnDeleteEntryButton)
-	ON_NOTIFY(NM_CLICK, IDC_LIST3, OnClickList3)
-	ON_BN_CLICKED(IDC_BUTTON4, OnButtonShowCert)
-	ON_BN_CLICKED(IDC_BUTTON5, OnButtonExportCert)
-	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST3, OnColumnclickList3)
-	ON_NOTIFY(HDN_ITEMCLICK, IDC_LIST3, OnItemclickList3)
-	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST3, OnKeydownList3)
-	ON_BN_CLICKED(IDC_CHECK1, OnCheckRsaKey)
-	ON_BN_CLICKED(IDC_CHECK2, OnCheckDsaKey)
-	ON_BN_CLICKED(IDC_CHECK3, OnCheckEcKey)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgKeyAsym 
-
-
-BOOL CDlgKeyAsym::OnInitDialog() 
-{
-	CDialog::OnInitDialog();
-
-	// m_listview in Report-Mode initialisieren
-
-	int colWidth = 100;  // Spaltenbreite in Pixel
-
-	// Other Functions are now obsolete (see marker XXXX OBSOLETE XXXX)
-	m_listview.SetExtendedStyle( LVS_EX_FULLROWSELECT );
-
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_NAME,pc_str,STR_LAENGE_STRING_TABLE);
-	m_listview.InsertColumn( 0, pc_str, LVCFMT_LEFT, colWidth-15 , 0); // Name
-
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_PRENAME,pc_str,STR_LAENGE_STRING_TABLE);
-	m_listview.InsertColumn( 1, pc_str, LVCFMT_LEFT, colWidth-25 , 1); // Vorname
-
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_KEYTYPE,pc_str,STR_LAENGE_STRING_TABLE);
-	m_listview.InsertColumn( 2, pc_str, LVCFMT_LEFT, colWidth-15 , 2); // Schlüsseltyp
-
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_KEY_IDENTIFIER,pc_str,STR_LAENGE_STRING_TABLE);
-	m_listview.InsertColumn( 3, pc_str, LVCFMT_LEFT, colWidth , 3); // Schlüsselkennung
-	
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_CREATION_DATW,pc_str,STR_LAENGE_STRING_TABLE);
-	m_listview.InsertColumn( 4, pc_str, LVCFMT_LEFT, colWidth+15 , 4); // Erstellungsdatum
-
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_KEY_ID,pc_str,STR_LAENGE_STRING_TABLE);
-	m_listview.InsertColumn( 5, pc_str, LVCFMT_LEFT, colWidth-20 , 5); // Interne ID-Nr.
-
-
-	sortBy = BY_NAME; // default Einstellung: sortiere Liste nach Namen
-	
-	// Initialisiere die Schlüsselliste mit allen verfügbaren asymmetrischen Schlüsseln
-	m_CheckRSA.SetCheck(1);
-	m_CheckDSA.SetCheck(1);
-	m_CheckEC.SetCheck(1);
-	nKeylistType = ASYM_KEY;
-	InitAsymKeyListBox(nKeylistType);
-	
-	m_RemoveItem.EnableWindow(FALSE);
-	m_secret_param_button.EnableWindow(FALSE); // Button einblenden
-	m_pub_param_button.EnableWindow(FALSE); // Button einblenden
-	m_show_cert_button.EnableWindow(FALSE); // Button ausblenden
-	m_export_cert_button.EnableWindow(FALSE); // Button ausblenden
-
-	if ( UserKeyId.GetLength() )
-	{
-		int row = FindRow( UserKeyId );
-		UpdateRowSel(row);
-	}
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////
-// Öffentliche Schlüsselparameter anzeigen für
-// - EC-Schlüssel
-// - RSA-Schlüssel
-
-void CDlgKeyAsym::OnShowPubParamButton() 
-{
+void CDlgKeyAsym::OnShowPubParamButton() {
 #ifndef _UNSTABLE
 	if ( KeyType.Find(EC_KEYFILE_IDSTRING) > -1 ) 
 	{
@@ -364,8 +317,7 @@ void CDlgKeyAsym::OnShowPubParamButton()
 #endif
 }
 
-void CDlgKeyAsym::OnShowAllParamButton() 
-{
+void CDlgKeyAsym::OnShowAllParamButton() {
 #ifndef _UNSTABLE
 	CString passwd;
 
@@ -451,8 +403,7 @@ void CDlgKeyAsym::OnShowAllParamButton()
 #endif
 }
 
-void CDlgKeyAsym::OnDeleteEntryButton() 
-{
+void CDlgKeyAsym::OnDeleteEntryButton() {
 #ifndef _UNSTABLE
 	CKeyFile DataFile;
 	int ret;
@@ -536,7 +487,6 @@ void CDlgKeyAsym::OnDeleteEntryButton()
 #endif
 }
 
-
 void CDlgKeyAsym::OnButtonShowCert() 
 {
 #ifndef _UNSTABLE
@@ -613,8 +563,7 @@ void CDlgKeyAsym::OnButtonShowCert()
 
 // 2001-10 Martin Bartosch; Cynops GmbH
 // added PKCS#12 export
-void CDlgKeyAsym::OnButtonExportCert() 
-{
+void CDlgKeyAsym::OnButtonExportCert() {
 #ifndef _UNSTABLE
 	CKeyFile DataFile;
 	CString passwd;
@@ -720,8 +669,204 @@ void CDlgKeyAsym::OnButtonExportCert()
 #endif
 }
 
-void CDlgKeyAsym::InitAsymKeyListBox(unsigned nLocalKeylistType)
-{
+void CDlgKeyAsym::OnCheckRsaKey() {
+	int status = m_CheckRSA.GetCheck(); // status==1: checked ; status==0: unchecked
+	if (status == 0)
+	{
+		nKeylistType = nKeylistType - (nKeylistType & RSA_KEY); // remove RSA keys
+		if (KeyType.Find(RSA_KEYFILE_IDSTRING) > -1)
+		{
+			// RSA Schlüssel werden gleich aus der Liste in m_listview entfernt
+			UserKeyId = "";
+		}
+	}
+	if ((status == 1) && ((nKeylistType & RSA_KEY) == 0))
+	{
+		// es sind keine RSA Schlüsselbezeichner in sortedAsymKeyList vorhanden,
+		// also hinzufügen
+		nKeylistType = nKeylistType + RSA_KEY; // add RSA keys
+	}
+
+	InitAsymKeyListBox(nKeylistType); // Schlüsselbezeichner-Liste neu initialisieren
+
+	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
+	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
+	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
+
+	UpdateRowSel(FindRow(UserKeyId)); // Zeile die UserKeyId enthält unterlegen, falls vorhanden
+}
+
+void CDlgKeyAsym::OnCheckDsaKey() {
+	int status = m_CheckDSA.GetCheck(); // status==1: checked ; status==0: unchecked
+	if (status == 0)
+	{
+		nKeylistType = nKeylistType - (nKeylistType & DSA_KEY); // remove DSA keys
+		if (KeyType.Find(DSA_KEYFILE_IDSTRING) > -1)
+		{
+			// DSA Schlüssel werden gleich aus der Liste in m_listview entfernt
+			UserKeyId = "";
+		}
+	}
+	if ((status == 1) && ((nKeylistType & DSA_KEY) == 0))
+	{
+		// es sind keine DSA Schlüsselbezeichner in sortedAsymKeyList vorhanden,
+		// also hinzufügen
+		nKeylistType = nKeylistType + DSA_KEY; // add DSA keys
+	}
+
+	InitAsymKeyListBox(nKeylistType); // Schlüsselbezeichner-Liste neu initialisieren
+
+	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
+	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
+	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
+
+	UpdateRowSel(FindRow(UserKeyId)); // Zeile die UserKeyId enthält unterlegen, falls vorhanden
+}
+
+void CDlgKeyAsym::OnCheckEcKey() {
+	int status = m_CheckEC.GetCheck(); // status==1: checked ; status==0: unchecked
+	if (status == 0)
+	{
+		nKeylistType = nKeylistType - (nKeylistType & EC_KEY); // remove EC keys
+		if (KeyType.Find(EC_KEYFILE_IDSTRING) > -1)
+		{
+			// EC Schlüssel werden gleich aus der Liste in m_listview entfernt
+			UserKeyId = "";
+		}
+	}
+	if ((status == 1) && ((nKeylistType & EC_KEY) == 0))
+	{
+		// es sind keine EC Schlüsselbezeichner in sortedAsymKeyList vorhanden,
+		// also hinzufügen
+		nKeylistType = nKeylistType + EC_KEY; // add EC keys
+	}
+
+	InitAsymKeyListBox(nKeylistType); // Schlüsselbezeichner-Liste neu initialisieren
+
+	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
+	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
+	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
+
+	UpdateRowSel(FindRow(UserKeyId)); // Zeile die UserKeyId enthält unterlegen, falls vorhanden
+}
+
+void CDlgKeyAsym::OnClickList3(NMHDR* pNMHDR, LRESULT* pResult) {
+	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
+
+	HD_NOTIFY *phdn = (HD_NOTIFY *)pNMHDR;
+	int row = phdn->iItem; // int, gibt an in welcher Zeile in IDC_LIST3 das Item angeklickt wurde
+
+	if (row == -1)
+	{
+		// Der linksklick erfolgte nicht in (gültigen Zeile und erste Spalte)
+		/*
+		m_secret_param_button.EnableWindow(TRUE); // Button einblenden
+		m_pub_param_button.EnableWindow(TRUE); // Button einblenden
+		m_show_cert_button.EnableWindow(TRUE); // Button einblenden
+		*/
+
+		UserKeyId = "";
+		UpdateRowSel(-1); // letzte Selektion rückgängig machen
+		return;
+	}
+
+	UpdateRowSel(row);
+
+	*pResult = 0;
+}
+
+void CDlgKeyAsym::OnItemclickList3(NMHDR* pNMHDR, LRESULT* pResult) {
+	// Funktion wird benötigt, damit OnColumnclickList3() funktioniert
+
+	HD_NOTIFY *phdn = (HD_NOTIFY *)pNMHDR;
+	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
+
+	//phdn->iItem; // int, Specifies the index of item associated with notification.
+	//phdn->pitem; // Pointer to an HD_ITEM structure that contains information about the header item associated with the notification message.
+
+	*pResult = 0;
+}
+
+void CDlgKeyAsym::OnColumnclickList3(NMHDR* pNMHDR, LRESULT* pResult) {
+	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
+
+	// Diese Funktion wird aufgerufen, falls ein Linksklick auf einen der Spaltenheader erfolgt
+	// Zur Zeit ist hier nichts implementiert
+	// Vielleicht kommt später eine Sortierfunktion für die Zeilen hinzu.
+
+	/*
+	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
+	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
+	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
+	*/
+
+	// pNMListView->iSubItem; // zeigt an welche Spalte angeclickt wurde
+
+	if (pNMListView->iSubItem == 0) sortBy = BY_NAME;
+	else if (pNMListView->iSubItem == 1) sortBy = BY_FIRSTNAME;
+	else if (pNMListView->iSubItem == 2) sortBy = BY_KEYTYPE;
+	else if (pNMListView->iSubItem == 3) sortBy = BY_PERS_KEYID;
+	else if (pNMListView->iSubItem == 4) sortBy = BY_CREATTIME;
+	else if (pNMListView->iSubItem == 5) sortBy = BY_CREATTIME;
+
+	//CAvailabAsymmKeys asymmKeys;
+	//int ret = asymmKeys.GetKeyList( sortedAsymKeyList, sortBy);
+	//InitAsymKeyListBox(nKeylistType); // m_listview mit neu sortierten Werten initialisieren
+	//m_listview.EnsureVisible( m_lastSelectedRow, FALSE ); // Die zuletzt anwählte Zeile soll sichtbar sein
+
+	/* Verfügbare Werte für sortBy für CAvailabAsymmKeys::GetKeyList()
+	BY_NAME
+	BY_FIRSTNAME
+	BY_KEYTYPE
+	BY_CREATTIME
+	BY_PERS_KEYID
+	*/
+
+	UserKeyId = "";
+	UpdateRowSel(-1); // letzte selektion rückgängig machen
+
+	*pResult = 0;
+}
+
+void CDlgKeyAsym::OnKeydownList3(NMHDR* pNMHDR, LRESULT* pResult) {
+	LV_KEYDOWN* pLVKeyDow = (LV_KEYDOWN*)pNMHDR;
+	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
+
+	// Manuelle Behandlung, falls der Benutzer in m_listview Tsten drückt
+
+	int keycode = pLVKeyDow->wVKey; // welche Taste wurde gedrückt?
+	int selRow;
+
+	if ((keycode == VK_UP) && (m_lastSelectedRow > 0))
+	{
+		// UP-Arrow key pressed
+		selRow = GetSpecifRow(LVIS_FOCUSED); // Welche Zeile hat Focus
+		UpdateRowSel(selRow - 1);
+	}
+	else if ((keycode == VK_DOWN) && (m_lastSelectedRow < m_listview.GetItemCount() - 1))
+	{
+		// DOWN-Arrow key pressed
+		selRow = GetSpecifRow(LVIS_FOCUSED); // Welche Zeile hat Focus
+		UpdateRowSel(selRow + 1);
+	}
+	else if ((keycode == VK_RIGHT) || (keycode == VK_LEFT) || (keycode == VK_SPACE))
+	{
+		// RIGHT- OR LEFT-Arrow or SPACEBAR pressed
+		selRow = GetSpecifRow(LVIS_FOCUSED); // Welche Zeile hat Focus
+		UpdateRowSel(selRow); // Select row
+	}
+	else
+	{
+		// andere Taste gedrückt
+		UserKeyId = "";
+		UpdateRowSel(-1); // letzte selektion rückgängig machen
+	}
+
+	*pResult = 0;
+}
+
+void CDlgKeyAsym::InitAsymKeyListBox(unsigned nLocalKeylistType) {
 	// ermittele die zur Verfügung stehenden Schlüssel(-bezeichner) aus der Liste sortedAsymKeyList
 	// und füge Sie in m_listview ein.
 	// nLocalKeyType gibt an, welche Schlüsselbezeichner angezeigt werden:
@@ -765,10 +910,8 @@ void CDlgKeyAsym::InitAsymKeyListBox(unsigned nLocalKeylistType)
 	}
 } 
 
-
 // XXXX OBSOLETE XXXX
-void CDlgKeyAsym::UpdateRowSel(int row) 
-{
+void CDlgKeyAsym::UpdateRowSel(int row) {
 #ifndef _UNSTABLE
 	int i;
 	CString Text;
@@ -849,138 +992,17 @@ void CDlgKeyAsym::UpdateRowSel(int row)
 #endif
 }
 
-void CDlgKeyAsym::OnClickList3(NMHDR* pNMHDR, LRESULT* pResult) 
-{
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-	
-	HD_NOTIFY *phdn = (HD_NOTIFY *) pNMHDR;
-	int row = phdn->iItem; // int, gibt an in welcher Zeile in IDC_LIST3 das Item angeklickt wurde
-
-	if (row == -1)
-	{
-		// Der linksklick erfolgte nicht in (gültigen Zeile und erste Spalte)
-		/*
-		m_secret_param_button.EnableWindow(TRUE); // Button einblenden
-		m_pub_param_button.EnableWindow(TRUE); // Button einblenden
-		m_show_cert_button.EnableWindow(TRUE); // Button einblenden
-		*/
-	
-		UserKeyId = "";
-		UpdateRowSel(-1); // letzte Selektion rückgängig machen
-		return;
-	}
-
-	UpdateRowSel(row) ;
-
-	*pResult = 0;
-}
-
-void CDlgKeyAsym::OnItemclickList3(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	 // Funktion wird benötigt, damit OnColumnclickList3() funktioniert
-
-	HD_NOTIFY *phdn = (HD_NOTIFY *) pNMHDR;
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-
-	//phdn->iItem; // int, Specifies the index of item associated with notification.
-	//phdn->pitem; // Pointer to an HD_ITEM structure that contains information about the header item associated with the notification message.
-
-	*pResult = 0;
-}
-
-void CDlgKeyAsym::OnColumnclickList3(NMHDR* pNMHDR, LRESULT* pResult) 
-{
-	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-
-	// Diese Funktion wird aufgerufen, falls ein Linksklick auf einen der Spaltenheader erfolgt
-	// Zur Zeit ist hier nichts implementiert
-	// Vielleicht kommt später eine Sortierfunktion für die Zeilen hinzu.
-
-	/*
-	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
-	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
-	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
-	*/
-
-	// pNMListView->iSubItem; // zeigt an welche Spalte angeclickt wurde
-
-	if (pNMListView->iSubItem == 0) sortBy = BY_NAME;
-	else if (pNMListView->iSubItem == 1) sortBy = BY_FIRSTNAME;
-	else if (pNMListView->iSubItem == 2) sortBy = BY_KEYTYPE;
-	else if (pNMListView->iSubItem == 3) sortBy = BY_PERS_KEYID;
-	else if (pNMListView->iSubItem == 4) sortBy = BY_CREATTIME;
-	else if (pNMListView->iSubItem == 5) sortBy = BY_CREATTIME;
-
-	//CAvailabAsymmKeys asymmKeys;
-	//int ret = asymmKeys.GetKeyList( sortedAsymKeyList, sortBy);
-	//InitAsymKeyListBox(nKeylistType); // m_listview mit neu sortierten Werten initialisieren
-	//m_listview.EnsureVisible( m_lastSelectedRow, FALSE ); // Die zuletzt anwählte Zeile soll sichtbar sein
-
-	/* Verfügbare Werte für sortBy für CAvailabAsymmKeys::GetKeyList()
-		BY_NAME 
-		BY_FIRSTNAME 
-		BY_KEYTYPE 
-		BY_CREATTIME 
-		BY_PERS_KEYID 
-	*/
-	
-	UserKeyId = "";
-	UpdateRowSel(-1); // letzte selektion rückgängig machen
-
-	*pResult = 0;
-}
-
-void CDlgKeyAsym::OnKeydownList3(NMHDR* pNMHDR, LRESULT* pResult) // In m_listview Taste gedrückt
-{
-	LV_KEYDOWN* pLVKeyDow = (LV_KEYDOWN*)pNMHDR;
-	// TODO: Code für die Behandlungsroutine der Steuerelement-Benachrichtigung hier einfügen
-
-	// Manuelle Behandlung, falls der Benutzer in m_listview Tsten drückt
-
-	int keycode = pLVKeyDow->wVKey; // welche Taste wurde gedrückt?
-	int selRow;
-
-	if ( (keycode == VK_UP) && (m_lastSelectedRow > 0) )
-	{
-		// UP-Arrow key pressed
-		selRow = GetSpecifRow( LVIS_FOCUSED ); // Welche Zeile hat Focus
-		UpdateRowSel(selRow-1);
-	}
-	else if ( (keycode == VK_DOWN) && (m_lastSelectedRow < m_listview.GetItemCount()-1) )
-	{
-		// DOWN-Arrow key pressed
-		selRow = GetSpecifRow( LVIS_FOCUSED ); // Welche Zeile hat Focus
-		UpdateRowSel(selRow+1);
-	}
-	else if ( (keycode == VK_RIGHT) || (keycode == VK_LEFT) || (keycode == VK_SPACE) )
-	{
-		// RIGHT- OR LEFT-Arrow or SPACEBAR pressed
-		selRow = GetSpecifRow( LVIS_FOCUSED ); // Welche Zeile hat Focus
-		UpdateRowSel(selRow); // Select row
-	}
-	else
-	{
-		// andere Taste gedrückt
-		UserKeyId = "";
-		UpdateRowSel(-1); // letzte selektion rückgängig machen
-	}
-	
-	*pResult = 0;
-}
-
-int CDlgKeyAsym::GetSpecifRow(UINT mask)
-{
-// liefert die erste Zeile von m_lisview in der
-// das Item in der ersten Spalte den Status mask hat
+int CDlgKeyAsym::GetSpecifRow(UINT mask) {
+	// liefert die erste Zeile von m_lisview in der
+	// das Item in der ersten Spalte den Status mask hat
 	int i;
 	UINT itemState;
 
 	// Überprüfe welches Item der Maske "mask" entspricht
-	for (i=0; i < m_listview.GetItemCount(); i++)
+	for (i = 0; i < m_listview.GetItemCount(); i++)
 	{
-		itemState = m_listview.GetItemState( i, mask);
-		if ( (itemState & mask) == mask )
+		itemState = m_listview.GetItemState(i, mask);
+		if ((itemState & mask) == mask)
 		{
 			// das i-te item entspricht mask
 			return i; // gefunden
@@ -990,8 +1012,7 @@ int CDlgKeyAsym::GetSpecifRow(UINT mask)
 	return -1;
 }
 
-int CDlgKeyAsym::FindRow( CString pattern)
-{
+int CDlgKeyAsym::FindRow(CString pattern) {
 	int i;
 	bool match;
 
@@ -1009,136 +1030,62 @@ int CDlgKeyAsym::FindRow( CString pattern)
 	int ret = KeyfileName.ExtractData(pattern, &utcStr, &creatime, &name, &firstname, &keyType, &keyInfo);
 	if (ret != 0) return -1;
 
-	for (i=0; i <= m_listview.GetItemCount(); i++)
+	for (i = 0; i <= m_listview.GetItemCount(); i++)
 	{
 		// i durchläuft die Zeilen/Rows/Items
 		match = true;
 
-		Text = m_listview.GetItemText( i, 0 ); // erste Spalte: vergleiche Namen
-		if ( Text != (CString) name ) match = false;
+		Text = m_listview.GetItemText(i, 0); // erste Spalte: vergleiche Namen
+		if (Text != (CString)name) match = false;
 
-		Text = m_listview.GetItemText( i, 1 ); // 2.te Spalte: vergleiche Vornamen
-		if ( Text != (CString) firstname ) match = false;
+		Text = m_listview.GetItemText(i, 1); // 2.te Spalte: vergleiche Vornamen
+		if (Text != (CString)firstname) match = false;
 
-		Text = m_listview.GetItemText( i, 2 ); // 3.te Spalte: vergleiche Schlüsseltyp
-		if ( Text != (CString) keyType ) match = false;
+		Text = m_listview.GetItemText(i, 2); // 3.te Spalte: vergleiche Schlüsseltyp
+		if (Text != (CString)keyType) match = false;
 
-		Text = m_listview.GetItemText( i, 3 ); // 4.te Spalte: vergleiche Schlüsselkennung
-		if ( Text != (CString) keyInfo ) match = false;
+		Text = m_listview.GetItemText(i, 3); // 4.te Spalte: vergleiche Schlüsselkennung
+		if (Text != (CString)keyInfo) match = false;
 
-		Text = m_listview.GetItemText( i, 4 ); // 5.te Spalte: vergleiche Erstellungsdatum
-		if ( Text != (CString) creatime ) match = false;
+		Text = m_listview.GetItemText(i, 4); // 5.te Spalte: vergleiche Erstellungsdatum
+		if (Text != (CString)creatime) match = false;
 
-		Text = m_listview.GetItemText( i, 5 ); // 6.te Spalte: vergleiche "UTC-Zeit String"
-		if ( Text != (CString) utcStr ) match = false;
+		Text = m_listview.GetItemText(i, 5); // 6.te Spalte: vergleiche "UTC-Zeit String"
+		if (Text != (CString)utcStr) match = false;
 
 		if (match)
 		{
-			if (utcStr != NULL){ delete utcStr; utcStr = NULL; }
-			if (creatime != NULL){ delete creatime;creatime = NULL; }
-			if (name != NULL){ delete name;name = NULL; }
-			if (firstname != NULL){ delete firstname;firstname = NULL; }
-			if (keyType != NULL){ delete keyType;keyType = NULL; }
-			if (keyInfo != NULL){ delete keyInfo;keyInfo = NULL; }
+			if (utcStr != NULL) { delete utcStr; utcStr = NULL; }
+			if (creatime != NULL) { delete creatime; creatime = NULL; }
+			if (name != NULL) { delete name; name = NULL; }
+			if (firstname != NULL) { delete firstname; firstname = NULL; }
+			if (keyType != NULL) { delete keyType; keyType = NULL; }
+			if (keyInfo != NULL) { delete keyInfo; keyInfo = NULL; }
 
 			return i; // keyId is in row i
 		}
 	}
-	if (utcStr != NULL){ delete utcStr; utcStr = NULL; }
-	if (creatime != NULL){ delete creatime;creatime = NULL; }
-	if (name != NULL){ delete name;name = NULL; }
-	if (firstname != NULL){ delete firstname;firstname = NULL; }
-	if (keyType != NULL){ delete keyType;keyType = NULL; }
-	if (keyInfo != NULL){ delete keyInfo;keyInfo = NULL; }
+	if (utcStr != NULL) { delete utcStr; utcStr = NULL; }
+	if (creatime != NULL) { delete creatime; creatime = NULL; }
+	if (name != NULL) { delete name; name = NULL; }
+	if (firstname != NULL) { delete firstname; firstname = NULL; }
+	if (keyType != NULL) { delete keyType; keyType = NULL; }
+	if (keyInfo != NULL) { delete keyInfo; keyInfo = NULL; }
 #endif
 	return -1; // No match found
 }
 
-void CDlgKeyAsym::OnCheckDsaKey() 
-{
-	int status = m_CheckDSA.GetCheck(); // status==1: checked ; status==0: unchecked
-	if (status == 0)
-	{
-		nKeylistType = nKeylistType - (nKeylistType & DSA_KEY); // remove DSA keys
-		if (KeyType.Find(DSA_KEYFILE_IDSTRING) > -1)
-		{
-			// DSA Schlüssel werden gleich aus der Liste in m_listview entfernt
-			UserKeyId = "";
-		}
-	}
-	if ((status == 1) && ((nKeylistType & DSA_KEY) == 0))
-	{
-		// es sind keine DSA Schlüsselbezeichner in sortedAsymKeyList vorhanden,
-		// also hinzufügen
-		nKeylistType = nKeylistType + DSA_KEY; // add DSA keys
-	}
-	
-	InitAsymKeyListBox(nKeylistType); // Schlüsselbezeichner-Liste neu initialisieren
-
-	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
-	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
-	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
-
-	UpdateRowSel( FindRow(UserKeyId) ); // Zeile die UserKeyId enthält unterlegen, falls vorhanden
-}
-
-void CDlgKeyAsym::OnCheckEcKey() 
-{
-	int status = m_CheckEC.GetCheck(); // status==1: checked ; status==0: unchecked
-	if (status == 0)
-	{
-		nKeylistType = nKeylistType - (nKeylistType & EC_KEY); // remove EC keys
-		if (KeyType.Find(EC_KEYFILE_IDSTRING) > -1)
-		{
-			// EC Schlüssel werden gleich aus der Liste in m_listview entfernt
-			UserKeyId = "";
-		}
-	}
-	if ((status == 1) && ((nKeylistType & EC_KEY) == 0))
-	{
-		// es sind keine EC Schlüsselbezeichner in sortedAsymKeyList vorhanden,
-		// also hinzufügen
-		nKeylistType = nKeylistType + EC_KEY; // add EC keys
-	}
-	
-	InitAsymKeyListBox(nKeylistType); // Schlüsselbezeichner-Liste neu initialisieren
-
-	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
-	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
-	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
-
-	UpdateRowSel( FindRow(UserKeyId) ); // Zeile die UserKeyId enthält unterlegen, falls vorhanden
-}
-
-void CDlgKeyAsym::OnCheckRsaKey() 
-{
-	int status = m_CheckRSA.GetCheck(); // status==1: checked ; status==0: unchecked
-	if (status == 0)
-	{
-		nKeylistType = nKeylistType - (nKeylistType & RSA_KEY); // remove RSA keys
-		if (KeyType.Find(RSA_KEYFILE_IDSTRING) > -1)
-		{
-			// RSA Schlüssel werden gleich aus der Liste in m_listview entfernt
-			UserKeyId = "";
-		}
-	}
-	if ((status == 1) && ((nKeylistType & RSA_KEY) == 0))
-	{
-		// es sind keine RSA Schlüsselbezeichner in sortedAsymKeyList vorhanden,
-		// also hinzufügen
-		nKeylistType = nKeylistType + RSA_KEY; // add RSA keys
-	}
-	
-	InitAsymKeyListBox(nKeylistType); // Schlüsselbezeichner-Liste neu initialisieren
-
-	m_secret_param_button.EnableWindow(TRUE); // Button einblenden
-	m_pub_param_button.EnableWindow(TRUE); // Button einblenden
-	m_show_cert_button.EnableWindow(TRUE); // Button einblenden
-
-	UpdateRowSel( FindRow(UserKeyId) ); // Zeile die UserKeyId enthält unterlegen, falls vorhanden
-}
-
-bool CDlgKeyAsym::AreThereRSAKeys()
-{
-    return (KeyType.Find(RSA_KEYFILE_IDSTRING) > -1);
-}
+BEGIN_MESSAGE_MAP(CDlgKeyAsym, CDialog)
+	ON_BN_CLICKED(IDC_BUTTON1, OnShowPubParamButton)
+	ON_BN_CLICKED(IDC_BUTTON2, OnShowAllParamButton)
+	ON_BN_CLICKED(IDC_BUTTON3, OnDeleteEntryButton)
+	ON_NOTIFY(NM_CLICK, IDC_LIST3, OnClickList3)
+	ON_BN_CLICKED(IDC_BUTTON4, OnButtonShowCert)
+	ON_BN_CLICKED(IDC_BUTTON5, OnButtonExportCert)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST3, OnColumnclickList3)
+	ON_NOTIFY(HDN_ITEMCLICK, IDC_LIST3, OnItemclickList3)
+	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST3, OnKeydownList3)
+	ON_BN_CLICKED(IDC_CHECK1, OnCheckRsaKey)
+	ON_BN_CLICKED(IDC_CHECK2, OnCheckDsaKey)
+	ON_BN_CLICKED(IDC_CHECK3, OnCheckEcKey)
+END_MESSAGE_MAP()
