@@ -27,6 +27,7 @@ This document contains the most important TODOs for the project.
 
 ## Other
 
+- implement new versioning scheme (i.e. 1.5.x with information from git repository)
 - rename 'script' folder into 'ctbook' (make sure to handle all side effects)
 
 ## Known Crashes
