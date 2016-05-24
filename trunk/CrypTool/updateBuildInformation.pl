@@ -3,12 +3,12 @@
 #
 # This script is called as pre-build and as post-build 
 # task from within Visual Studio. It updates a couple of 
-# static variables in "CrypToolApp.cpp" and some of the 
-# resources in "CrypTool.rc" if invoked with the "PRE" 
-# parameter, and it reverts those changes when invoked 
-# after the build with the "POST" parameter.
+# resource strings in "CrypTool.rc" to reflect CrypTool 
+# version information if invoked with the "PRE" parameter, 
+# and it reverts those changes when invoked with the "POST" 
+# parameter.
 #
-# flomar, 03/04/2012
+# flomar, 2016/05/24
 #
 
 use strict;
@@ -27,10 +27,7 @@ my $CrypToolVersionAddition = "Beta 6c";
 
 my $mode = undef;
 
-my $fileCrypToolApp = "CrypToolApp.cpp";
 my $fileCrypToolRC = "CrypTool.rc";
-
-my $fileCrypToolApp_BACKUP = "CrypToolApp-BACKUP.cpp";
 my $fileCrypToolRC_BACKUP = "CrypTool-BACKUP.rc";
 
 # some error checking
@@ -53,9 +50,10 @@ else {
 
 # mode PRE: we update the files
 if($mode eq "PRE") {
-
 	print "Updating CrypTool build information...\n";
-	
+	# determine the build time (as in: "now")
+	my ($sec,$min,$hour,$day,$month,$yr19,@rest) = localtime(time);
+	my $buildTime = (1900+$yr19) . "-" . ($month+1) . "-" . ($day);
 	# check if all necessary parameters are defined
 	if(	not defined $CrypToolVersionMajor or 
 		not defined $CrypToolVersionMinor or
@@ -63,7 +61,6 @@ if($mode eq "PRE") {
 		print "WARNING: CrypTool version invalid";
 		exit;
 	}
-	
 	# build the CrypTool version (used throughout the CrypTool application)
 	my $CrypToolVersion = $CrypToolVersionMajor . "." . $CrypToolVersionMinor . "." . $CrypToolVersionRevision;
 	my $CrypToolVersionFull = $CrypToolVersion;
@@ -71,46 +68,14 @@ if($mode eq "PRE") {
 	if(defined $CrypToolVersionAddition) {
 		$CrypToolVersionFull .= " " . $CrypToolVersionAddition;
 	}
-	
-	# copy the original files
-	system("copy $fileCrypToolApp $fileCrypToolApp_BACKUP");
+	# make a copy of the resource file
 	system("copy $fileCrypToolRC $fileCrypToolRC_BACKUP");
-
-	my $buildTime = undef;
-	
-	# determine the current time
-	my ($sec,$min,$hour,$day,$month,$yr19,@rest) = localtime(time);
-	$buildTime = (1900+$yr19) . "-" . ($month+1) . "-" . ($day);
-
-	# open the file (fileCrypToolApp)
-	my @lineArrayFileCrypToolApp;
-	open(FILE, "<$fileCrypToolApp") or die ("Opening $fileCrypToolApp: $!\n");
-	@lineArrayFileCrypToolApp = <FILE>;
-	close(FILE);
-
-	# update the file content (with build time)
-	foreach my $line(@lineArrayFileCrypToolApp) {
-		if($line =~ m{ \#define \s+ CRYPTOOL_BUILD_TIME }xms) {
-			if(defined $buildTime) {
-				$line = "#define CRYPTOOL_BUILD_TIME \"$buildTime\"\n";
-			}
-		}
-	}
-
-	# re-write the file
-	open(FILE, ">$fileCrypToolApp") or die ("Opening $fileCrypToolApp $!\n");
-	foreach my $line(@lineArrayFileCrypToolApp) {
-	  print FILE $line;
-	}
-	close(FILE);
-	
-	# open the file (fileCrypToolRC)
+	# open the resource file
 	my @lineArrayFileCrypToolRC;
 	open(FILE, "<$fileCrypToolRC") or die ("Opening $fileCrypToolRC: $!\n");
 	@lineArrayFileCrypToolRC = <FILE>;
 	close(FILE);
-	
-	# update the file content (with build time and current SVN revision)
+	# update the resource file content
 	foreach my $line(@lineArrayFileCrypToolRC) {
 		# inserting i.e. "CrypTool 1.4.31 Beta 5" (full version)
 		if($line =~ m{ \[CRYPTOOL_VERSION_FULL\] }xms) {
@@ -125,8 +90,7 @@ if($mode eq "PRE") {
 			$line = "VALUE \"ProductVersion\", \"$CrypToolVersion\"\n";
 		}
 	}
-
-	# re-write the file
+	# re-write the resource file
 	open(FILE, ">$fileCrypToolRC") or die ("Opening $fileCrypToolRC $!\n");
 	foreach my $line(@lineArrayFileCrypToolRC) {
 	  print FILE $line;
@@ -137,10 +101,8 @@ if($mode eq "PRE") {
 # mode POST: restore initial state of the file
 if($mode eq "POST") {
 	print "Reverting CrypTool build information changes...\n";
-	# copy from backup files
-	system("copy $fileCrypToolApp_BACKUP $fileCrypToolApp");
+	# copy from resource file backup
 	system("copy $fileCrypToolRC_BACKUP $fileCrypToolRC");
-	# remove backup files
-	system("del $fileCrypToolApp_BACKUP");
+	# remove resource file backup
 	system("del $fileCrypToolRC_BACKUP");
 }
