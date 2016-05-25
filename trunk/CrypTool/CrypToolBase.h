@@ -320,8 +320,11 @@ namespace CrypTool {
 				OpenSSL::X509 *caCertificate;
 				OpenSSL::RSA *caPrivateKey;
 			public:
-				// TODO/FIXME
-				bool createCertificateRSA(const CString &_firstName, const CString &_lastName, const CString &_identifier, const CString &_password, const int _bits);
+				// this function tries to create a certificate with the values specified by the user; the 
+				// certificate type is one of RSA, DSA, EC, and the the certificate parameters string contains 
+				// either the desired key length (RSA and DSA) or the desired elliptic curve (EC); all other 
+				// parameters (first name, last name, remarks, password) are identical for all types
+				bool createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password);
 			};
 
 		}
