@@ -39,8 +39,10 @@ namespace OpenSSL {
 	#include "OpenSSL/md5.h"
 	#include "OpenSSL/ripemd.h"
 	#include "OpenSSL/sha.h"
-	// symmetric encryption algorithms
+	// symmetric cryptography
 	#include "OpenSSL/evp.h"
+	// asymmetric cryptography
+	#include <openssl/x509v3.h>
 }
 
 // this struct encapsulates an octet string for compatibility with legacy code
