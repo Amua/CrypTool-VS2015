@@ -391,8 +391,10 @@ int copy_keystore_path( const char *path_from, const char *path_to )
 }
 
 
-BOOL CCrypToolApp::InitInstance()
-{
+BOOL CCrypToolApp::InitInstance() {
+	// the first thing we want to do is initialize the CrypTool certificate store with a hard-coded password
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().initialize("CrypToolCA");
+
 //	_tsetlocale(LC_ALL, _T(""));
 
 	char buffer[1024], *p;
@@ -987,8 +989,10 @@ void CCrypToolApp::OnOpttext()
 	TextOptions.DoModal();
 }
 
-int CCrypToolApp::ExitInstance()
-{
+int CCrypToolApp::ExitInstance() {
+	// the first thing we want to do is deinitialize the CrypTool certificate store
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().deinitialize();
+
 	if(CaPseDatei) free(CaPseDatei);
 	if(CaPseVerzeichnis) free(CaPseVerzeichnis);
 	if(Pfad) free((char*)Pfad);

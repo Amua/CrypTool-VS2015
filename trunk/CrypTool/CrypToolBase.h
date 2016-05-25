@@ -34,6 +34,10 @@ limitations under the License.
 #include <set>
 
 namespace OpenSSL {
+	// generic headers
+	#include <openssl/bio.h>
+	#include <openssl/pem.h>
+	#include <openssl/err.h>
 	// hash algorithms
 	#include "OpenSSL/md4.h"
 	#include "OpenSSL/md5.h"
@@ -125,6 +129,9 @@ namespace CrypTool {
 		// the byte length
 		size_t byteLength;
 	};
+
+	// this function returns the path in which CrypTool is executed
+	CString getCrypToolPath();
 
 	// this namespace encapsulates a variety of utilitiy functions
 	namespace Utilities {
@@ -287,6 +294,35 @@ namespace CrypTool {
 			};
 
 			// TODO/FIXME: implement "AsymmetricOperation" class (see symmetric counterpart above)
+
+			// TODO/FIXME
+			enum CertificateType {
+				CERTIFICATE_TYPE_NULL,
+				CERTIFICATE_TYPE_RSA,
+				CERTIFICATE_TYPE_DSA,
+				CERTIFICATE_TYPE_EC
+			};
+
+			// TODO/FIXME
+			class CertificateStore {
+			protected:
+				CertificateStore();
+				virtual ~CertificateStore();
+			public:
+				static CertificateStore &instance();
+			public:
+				void initialize(const CString &_caPassword);
+				void deinitialize();
+			private:
+				const CString fileNameCaCertificate;
+				const CString fileNameCaKey;
+			private:
+				OpenSSL::X509 *caCertificate;
+				OpenSSL::RSA *caPrivateKey;
+			public:
+				// TODO/FIXME
+				bool createCertificateRSA(const CString &_firstName, const CString &_lastName, const CString &_identifier, const CString &_password, const int _bits);
+			};
 
 		}
 
