@@ -28,6 +28,7 @@ This document contains the most important TODOs for the project.
 ## Other
 
 - ~~implement new versioning scheme (i.e. 1.5.x with information from git repository)~~
+- clean up the 'setup/template' folder (VS9.0, Secude, etc.) and make sure it's copied into the build folder at build time as a whole, not just the contained DLLs
 - rename 'script' folder into 'ctbook' (make sure to handle all side effects)
 
 ## Known Crashes
