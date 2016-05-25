@@ -784,8 +784,9 @@ namespace CrypTool {
 		namespace Asymmetric {
 
 			CertificateStore::CertificateStore() :
+				pathToCertificateStore(getCrypToolPath() + "\\ca"),
 				fileNameCaCertificate(getCrypToolPath() + "\\ca\\CrypToolCA.crt"),
-				fileNameCaKey(getCrypToolPath() + "\\ca\\CrypToolCA.key"),
+				fileNameCaPrivateKey(getCrypToolPath() + "\\ca\\CrypToolCA.key"),
 				caCertificate(0),
 				caPrivateKey(0) {
 				
@@ -806,28 +807,19 @@ namespace CrypTool {
 				// all available OpenSSL algorithms, otherwise the initialization 
 				// of the CrypTool certificate store will fail
 				OpenSSL_add_all_algorithms();
-				// read certificate and private key into temporary byte strings
-				ByteString byteStringCertificate;
-				ByteString byteStringPrivateKey;
-				if (byteStringCertificate.readFromFile(fileNameCaCertificate) && byteStringPrivateKey.readFromFile(fileNameCaKey)) {
-					// read certificate
-					BIO *bioCertificate = BIO_new(BIO_s_mem());
-					BIO_puts(bioCertificate, (const char*)(byteStringCertificate.getByteDataConst()));
+				// try to read the CA's certificate and private key
+				BIO *bioCertificate = BIO_new(BIO_s_file());
+				BIO *bioPrivateKey = BIO_new(BIO_s_file());
+				if (BIO_read_filename(bioCertificate, (LPCTSTR)(fileNameCaCertificate)) && BIO_read_filename(bioPrivateKey, (LPCTSTR)(fileNameCaPrivateKey))) {
 					caCertificate = PEM_read_bio_X509(bioCertificate, 0, 0, 0);
-					BIO_free(bioCertificate);
-					// read private key
-					BIO *bioPrivateKey = BIO_new(BIO_s_mem());
-					BIO_puts(bioPrivateKey, (const char*)(byteStringPrivateKey.getByteDataConst()));
 					caPrivateKey = PEM_read_bio_RSAPrivateKey(bioPrivateKey, 0, 0, (void*)(LPCTSTR)(_caPassword));
-					BIO_free(bioPrivateKey);
-					// if both certificate and private key are valid, we can return
-					if (caCertificate && caPrivateKey) {
-						return;
-					}
 				}
-				// if we reach this point, something went wrong initializing the certificate store
-				AfxMessageBox("CRYPTOOL_BASE: cannot initialize CrypTool certificate store");
-				return;
+				BIO_free(bioCertificate);
+				BIO_free(bioPrivateKey);
+				// if the CA's certificate and private key are still null, something went wrong
+				if (!caCertificate || !caPrivateKey) {
+					AfxMessageBox("CRYPTOOL_BASE: cannot initialize CrypTool certificate store");
+				}
 			}
 
 			void CertificateStore::deinitialize() {
@@ -837,12 +829,25 @@ namespace CrypTool {
 				RSA_free(caPrivateKey);
 			}
 
+			CString CertificateStore::generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_firstName, const CString &_lastName) const {
+				CString fileNameBase;
+				fileNameBase.Format(pathToCertificateStore + "\\" + "[UserCertificate][%d][%s][%s]", _serial, _firstName, _lastName);
+				return fileNameBase;
+			}
+
 			bool CertificateStore::createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password) {
 				using namespace OpenSSL;
 				// both the CA certificate and the CA private key need to be valid
 				if (!caCertificate || !caPrivateKey) {
 					return false;
 				}
+				// create the certificate serial number: for convenience, we simply use the number 
+				// of seconds passed since the unix epoch (1970/01/01), and we insert a one second 
+				// delay at the end of this function to prevent duplicate serial numbers
+				const long serial = time(0);
+				// create file names for the certificate and the private key
+				const CString fileNameUserCertificate = generateFileNameBaseForUserCertificateAndPrivateKey(serial, _firstName, _lastName) + ".crt";
+				const CString fileNameUserPrivateKey = generateFileNameBaseForUserCertificateAndPrivateKey(serial, _firstName, _lastName) + ".key";
 				// the internal result variable
 				bool result = false;
 				// RSA-based certificate
@@ -851,39 +856,49 @@ namespace CrypTool {
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
 					X509 *certificate = X509_new();
-					RSA *key = RSA_new();
+					EVP_PKEY *privateKey = EVP_PKEY_new();
+					RSA *rsa = RSA_new();
 					BIGNUM *exponent = BN_new();
 					EVP_PKEY *signingKey = EVP_PKEY_new();
 					// create RSA key
 					if (BN_set_word(exponent, RSA_F4)) {
-						if (RSA_generate_key_ex(key, keyLength, exponent, 0)) {
+						if (RSA_generate_key_ex(rsa, keyLength, exponent, 0)) {
+							// set RSA private key
+							EVP_PKEY_assign_RSA(privateKey, rsa);
+							// set RSA public key
+							X509_set_pubkey(certificate, privateKey);
 							// initialize certificate data
-							X509_set_version(certificate, 3);
-							ASN1_INTEGER_set(X509_get_serialNumber(certificate), 9999); // TODO/FIXME: serial
+							X509_set_version(certificate, 2);
+							ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
 							X509_gmtime_adj(X509_get_notBefore(certificate), 0);
 							X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
 							// initialize user-specific data
+							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("DE"), -1, -1, 0);
+							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("CrypTool Team"), -1, -1, 0);
+							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName + " " + _lastName), -1, -1, 0);
 							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "FN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName), -1, -1, 0);
 							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "LN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_lastName), -1, -1, 0);
 							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "RM", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_remarks), -1, -1, 0);
 							// set issuer name to the CrypTool CA
 							X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
-							// extract private key of the CrypTool CA
-							EVP_PKEY_assign_RSA(signingKey, caPrivateKey);
 							// sign certificate with the private key of the CrypTool CA
+							EVP_PKEY_assign_RSA(signingKey, caPrivateKey);
 							X509_sign(certificate, signingKey, EVP_sha1());
-
-							// TODO/FIXME: write certificate (BIO/FILE-BASED)
-
-							// TODO/FIXME: write private key (BIO/FILE-BASED)
-
-							// indicate success
-							result = true;
+							// write user's certificate and private key
+							BIO *bioCertificate = BIO_new(BIO_s_file());
+							BIO *bioPrivateKey = BIO_new(BIO_s_file());
+							if (BIO_write_filename(bioCertificate, (void*)(LPCTSTR)(fileNameUserCertificate)) && BIO_write_filename(bioPrivateKey, (void*)(LPCTSTR)(fileNameUserPrivateKey))) {
+								if (PEM_write_bio_X509(bioCertificate, certificate) && PEM_write_bio_RSAPrivateKey(bioPrivateKey, rsa, EVP_aes_256_cbc(), 0, 0, 0, (void*)(LPCTSTR)(_password))) {
+									result = true;
+								}
+							}
+							BIO_free(bioCertificate);
+							BIO_free(bioPrivateKey);
 						}
 					}
 					// free memory
 					X509_free(certificate);
-					RSA_free(key);
+					EVP_PKEY_free(privateKey);
 					BN_free(exponent);
 					EVP_PKEY_free(signingKey);
 				}
@@ -900,6 +915,8 @@ namespace CrypTool {
 					AfxMessageBox("CRYPTOOL_BASE: user certificate creation failed");
 					return false;
 				}
+				// we add this delay so we don't get duplicate certificate serial numbers
+				Sleep(1000);
 				// if we reach this point, everything went well
 				return true;
 			}
