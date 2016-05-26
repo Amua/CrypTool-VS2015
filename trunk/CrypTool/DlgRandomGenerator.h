@@ -18,14 +18,9 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGGENRANDOMDATA_H__87703501_3308_11D5_92F3_00B0D0161C45__INCLUDED_)
-#define AFX_DLGGENRANDOMDATA_H__87703501_3308_11D5_92F3_00B0D0161C45__INCLUDED_
+#ifndef _DLGRANDOMGENERATOR_H_
+#define _DLGRANDOMGENERATOR_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgGenRandomData.h : Header-Datei
-//
 #include "HexEdit.h"
 #include "IntegerArithmetic.h"
 #include "DlgX2ModNRandomParamater.h"
@@ -34,86 +29,51 @@
 #include "DlgShowProgress.h"
 #include "afxwin.h"
 
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgRandomGenerator 
-
-typedef struct
-{
+// internal struct for random generator parameters
+struct RandomGeneratorParameters {
 	int		m_SelGenerator;
 	long	m_DataSize;
 	CString m_seed;
 	int     m_PrintInternalStates;
-
 	// X^2 (mod N) Generator
 	CX2ModNGenerator rnd_x2modN;
 	CDlgX2ModNRandomParamater DRPXN;
-
 	// LCG Generator
 	LinearCongruenceGenerator DLCG;
 	CDlgLCGRandomParameter DRP_LCG;
-
 	// EICG Generator
 	InverseCongruenceGenerator DICG;
 	CDlgICGRandomParamater DRP_ICG;
+	// construction
+	RandomGeneratorParameters() : m_SelGenerator(0), m_DataSize(0), m_seed(""), m_PrintInternalStates(0) { }
+};
 
-} RandPar;
+// this function will generate random data in its own thread
+UINT GenRandomDataThread(PVOID pParam);
 
-class CDlgRandomGenerator : public CDialog
-{
-// Konstruktion
-public:
-
-
-// ============================================
-	//char outfile[128];
-
-	CDlgRandomGenerator(CWnd* pParent = NULL);   // Standardkonstruktor
-	
-
-	//friend UINT GenRandomDataThread( PVOID pParam ); // Thread-Version
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgRandomGenerator)
+class CDlgRandomGenerator : public CDialog {
 	enum { IDD = IDD_RANDOM_GENERATOR };
-	CButton	m_CtrlSecudeGenerator;
-	CHexEdit	m_seed_ctrl;
-	int		m_SelGenerator;
-	CString m_seed;
-	long	m_DataSize;
-	int     m_PrintInternalStates;
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgRandomGenerator)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgRandomGenerator(CWnd* pParent = NULL);
+	virtual ~CDlgRandomGenerator();
 protected:
-	RandPar* m_pPara;
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgRandomGenerator)
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
 	afx_msg void OnSelGenParam();
 	afx_msg void OnGenRandomData();
 	virtual void OnCancel();
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-
-public:
-	afx_msg void OnBnClickedRadio1();
+protected:
 	CButton m_ctrlSetInternalStates;
-	afx_msg void OnBnClickedRadio2();
-	afx_msg void OnBnClickedRadio3();
-	afx_msg void OnBnClickedRadio4();
+	CHexEdit m_seed_ctrl;
+	int m_SelGenerator;
+	CString m_seed;
+	long m_DataSize;
+	int m_PrintInternalStates;
+protected:
+	RandomGeneratorParameters m_randomGeneratorParameters;
+
+	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGGENRANDOMDATA_H__87703501_3308_11D5_92F3_00B0D0161C45__INCLUDED_
+#endif
