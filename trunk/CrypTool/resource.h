@@ -1812,6 +1812,20 @@
 #define IDC_RADIO_HASH_FUNCTION_SHA256  2133
 #define IDC_RADIO_HASH_FUNCTION_SHA512  2134
 #define IDC_RADIO_HASH_FUNCTION_RIPEMD160 2135
+#define IDC_RADIO_RSA                   2136
+#define IDC_RADIO_DSA                   2137
+#define IDC_RADIO_EC                    2138
+#define IDC_COMBO_RSA                   2139
+#define IDC_COMBO_DSA                   2140
+#define IDC_COMBO_EC                    2141
+#define IDC_EDIT_FIRST_NAME             2142
+#define IDC_EDIT_LAST_NAME              2143
+#define IDC_EDIT_REMARKS                2144
+#define IDC_EDIT_PASSWORD_1             2145
+#define IDC_EDIT_PASSWORD_2             2146
+#define IDC_BUTTON_CLOSE                2147
+#define IDC_BUTTON_CREATE               2148
+#define IDC_BUTTON_IMPORT               2149
 #define IDC_START_RADIO                 11008
 #define IDC_EINFUEHRUNG_RADIO           11009
 #define IDC_PASSWORT_RADIO              11010
@@ -3469,7 +3483,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        886
 #define _APS_NEXT_COMMAND_VALUE         33398
-#define _APS_NEXT_CONTROL_VALUE         2129
+#define _APS_NEXT_CONTROL_VALUE         2150
 #define _APS_NEXT_SYMED_VALUE           114
 #endif
 #endif
