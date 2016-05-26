@@ -784,9 +784,9 @@ namespace CrypTool {
 		namespace Asymmetric {
 
 			CertificateStore::CertificateStore() :
-				pathToCertificateStore(getCrypToolPath() + "\\ca"),
-				fileNameCaCertificate(getCrypToolPath() + "\\ca\\CrypToolCA.crt"),
-				fileNameCaPrivateKey(getCrypToolPath() + "\\ca\\CrypToolCA.key"),
+				pathToCertificateStore(getCrypToolPath() + "\\certificates"),
+				fileNameCaCertificate(getCrypToolPath() + "\\certificates\\ca\\CrypToolCA.crt"),
+				fileNameCaPrivateKey(getCrypToolPath() + "\\certificates\\ca\\CrypToolCA.key"),
 				caCertificate(0),
 				caPrivateKey(0) {
 				
@@ -829,9 +829,9 @@ namespace CrypTool {
 				RSA_free(caPrivateKey);
 			}
 
-			CString CertificateStore::generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_firstName, const CString &_lastName) const {
+			CString CertificateStore::generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const {
 				CString fileNameBase;
-				fileNameBase.Format(pathToCertificateStore + "\\" + "[UserCertificate][%d][%s][%s]", _serial, _firstName, _lastName);
+				fileNameBase.Format(pathToCertificateStore + "\\" + "[%d]%s", _serial, _commonName);
 				return fileNameBase;
 			}
 
@@ -846,6 +846,7 @@ namespace CrypTool {
 				EVP_PKEY_set1_RSA(signingKey, caPrivateKey);
 				// allocate memory
 				X509 *certificate = X509_new();
+				EVP_PKEY *pkey = EVP_PKEY_new();
 				// create the certificate serial number: for convenience, we simply use the number 
 				// of seconds passed since the unix epoch (1970/01/01), and we insert a one second 
 				// delay at the end of this function to prevent duplicate serial numbers
@@ -855,20 +856,23 @@ namespace CrypTool {
 				ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
 				X509_gmtime_adj(X509_get_notBefore(certificate), 0);
 				X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
-				// initialize user-specific data
-				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("DE"), -1, -1, 0);
-				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "S", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("Hessen"), -1, -1, 0);
-				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("CrypTool Team"), -1, -1, 0);
-				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("[" + _firstName + "][" + _lastName + "]"), -1, -1, 0);
-			// TODO/FIXME: these need to be specified as extensions
-			X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "FN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName), -1, -1, 0);
-			X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "LN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_lastName), -1, -1, 0);
-			X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "RM", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_remarks), -1, -1, 0);
-				// set issuer name to the CrypTool CA
+				// set issuer name
 				X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
+				// set certificate data (C, S, L, O, CN)
+				const CString certificateDataC = "DE";
+				const CString certificateDataS = "Hessen";
+				const CString certificateDataL = "Frankfurt";
+				const CString certificateDataO = "CrypTool Team";
+				const CString certificateDataCN = "[" + _firstName + "][" + _lastName + "][" + _remarks + "]";
+				// assign certificate data (C, S, L, O, CN)
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataC), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "S", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataS), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "L", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataL), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataO), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataCN), -1, -1, 0);
 				// create file names for the certificate and the private key
-				const CString fileNameUserCertificate = generateFileNameBaseForUserCertificateAndPrivateKey(serial, _firstName, _lastName) + ".crt";
-				const CString fileNameUserPrivateKey = generateFileNameBaseForUserCertificateAndPrivateKey(serial, _firstName, _lastName) + ".key";
+				const CString fileNameUserCertificate = generateFileNameBaseForUserCertificateAndPrivateKey(serial, certificateDataCN) + ".crt";
+				const CString fileNameUserPrivateKey = generateFileNameBaseForUserCertificateAndPrivateKey(serial, certificateDataCN) + ".key";
 				// the internal result variable
 				bool result = false;
 				// RSA-based certificate
@@ -876,16 +880,15 @@ namespace CrypTool {
 					// determine the specified key length
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
-					EVP_PKEY *privateKey = EVP_PKEY_new();
 					RSA *rsa = RSA_new();
 					BIGNUM *exponent = BN_new();
 					// generate RSA key
 					if (BN_set_word(exponent, RSA_F4)) {
 						if (RSA_generate_key_ex(rsa, keyLength, exponent, 0)) {
 							// set RSA private key
-							EVP_PKEY_assign_RSA(privateKey, rsa);
+							EVP_PKEY_set1_RSA(pkey, rsa);
 							// set RSA public key
-							X509_set_pubkey(certificate, privateKey);
+							X509_set_pubkey(certificate, pkey);
 							// sign certificate with the private key of the CrypTool CA
 							X509_sign(certificate, signingKey, EVP_sha1());
 							// write user's certificate and private key
@@ -901,7 +904,7 @@ namespace CrypTool {
 						}
 					}
 					// free memory
-					EVP_PKEY_free(privateKey);
+					RSA_free(rsa);
 					BN_free(exponent);
 				}
 				// DSA-based certificate
@@ -909,16 +912,15 @@ namespace CrypTool {
 					// determine the specified key length
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
-					EVP_PKEY *privateKey = EVP_PKEY_new();
 					DSA *dsa = DSA_new();
 					// generate DSA parameters
 					if (DSA_generate_parameters_ex(dsa, keyLength, NULL, 0, NULL, NULL, NULL)) {
 						// generate DSA key
 						if (DSA_generate_key(dsa)) {
 							// set DSA private key
-							EVP_PKEY_assign_DSA(privateKey, dsa);
+							EVP_PKEY_set1_DSA(pkey, dsa);
 							// set DSA public key
-							X509_set_pubkey(certificate, privateKey);
+							X509_set_pubkey(certificate, pkey);
 							// sign certificate with the private key of the CrypTool CA
 							X509_sign(certificate, signingKey, EVP_sha1());
 							// write user's certificate and private key
@@ -934,22 +936,20 @@ namespace CrypTool {
 						}
 					}
 					// free memory
-					EVP_PKEY_free(privateKey);
+					DSA_free(dsa);
 				}
 				// EC-based certificate
 				if (_certificateType == CERTIFICATE_TYPE_EC) {
 					// determine the specified curve name
 					const CString curveName = _certificateParameters;
-					// allocate memory
-					EVP_PKEY *privateKey = EVP_PKEY_new();
 					// generate EC key
 					EC_KEY *ec = EC_KEY_new_by_curve_name(OBJ_txt2nid(curveName));
 					if (ec) {
 						if (EC_KEY_generate_key(ec)) {
 							// set EC private key
-							EVP_PKEY_assign_EC_KEY(privateKey, ec);
+							EVP_PKEY_set1_EC_KEY(pkey, ec);
 							// set EC public key
-							X509_set_pubkey(certificate, privateKey);
+							X509_set_pubkey(certificate, pkey);
 							// sign certificate with the private key of the CrypTool CA
 							X509_sign(certificate, signingKey, EVP_sha1());
 							// write user's certificate and private key
@@ -965,11 +965,12 @@ namespace CrypTool {
 						}
 					}
 					// free memory
-					EVP_PKEY_free(privateKey);
+					EC_KEY_free(ec);
 				}
 				// free memory
 				EVP_PKEY_free(signingKey);
 				X509_free(certificate);
+				EVP_PKEY_free(pkey);
 				// dump an error message before returning false
 				if (!result) {
 					AfxMessageBox("CRYPTOOL_BASE: user certificate creation failed");

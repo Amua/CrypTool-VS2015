@@ -322,8 +322,8 @@ namespace CrypTool {
 				OpenSSL::RSA *caPrivateKey;
 			private:
 				// this function generates a file name base for user certificates and private keys 
-				// depending on the certificate serial number and the specified first and last name
-				CString generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_firstName, const CString &_lastName) const;
+				// depending on the certificate serial number and the specified common name string
+				CString generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const;
 			public:
 				// this function tries to create a certificate with the values specified by the user; the 
 				// certificate type is one of RSA, DSA, EC, and the the certificate parameters string contains 
