@@ -982,6 +982,16 @@ namespace CrypTool {
 				return true;
 			}
 
+			std::vector<CertificateStore::CertificateEntry> CertificateStore::getVectorCertificateEntries(const bool _rsa, const bool _dsa, const bool _ec) const {
+				std::vector<CertificateEntry> vectorCertificateEntries;
+				// at least one of the flags needs to be true for the result vector to contain anything
+				if (_rsa || _dsa || _ec) {
+					// TODO/FIXME: go through all certificates, find those we're interested in, 
+					// create a CertificateEntry structure, and then add it to the vector
+				}
+				return vectorCertificateEntries;
+			}
+
 		}
 
 	}

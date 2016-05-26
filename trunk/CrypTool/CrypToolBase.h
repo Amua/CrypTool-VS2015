@@ -330,6 +330,22 @@ namespace CrypTool {
 				// either the desired key length (RSA and DSA) or the desired elliptic curve (EC); all other 
 				// parameters (first name, last name, remarks, password) are identical for all types
 				bool createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password);
+			public:
+				// this struct is provided for convenience: it makes certificates available to the outside 
+				// for display purposes, therefore we hide most of the internal information
+				struct CertificateEntry {
+					CString firstName;
+					CString lastName;
+					CString remarks;
+					CString type;
+					CString serial;
+					CString creation;
+				};
+				// this function returns a vector of certificate list entries; the parameters specify 
+				// which certificates are transferred into the vector; if all flags are false, the 
+				// resulting vector is naturally empty
+				std::vector<CertificateEntry> getVectorCertificateEntries(const bool _rsa, const bool _dsa, const bool _ec) const;
+
 			};
 
 		}
