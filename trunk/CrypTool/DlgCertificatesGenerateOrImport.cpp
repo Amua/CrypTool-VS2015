@@ -32,22 +32,37 @@ CDlgCertificatesGenerateOrImport::~CDlgCertificatesGenerateOrImport() {
 
 }
 
-void CDlgCertificatesGenerateOrImport::OnBnClickedButtonCreate() {
+void CDlgCertificatesGenerateOrImport::clickedButtonRadioRSA() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesGenerateOrImport::clickedButtonRadioDSA() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesGenerateOrImport::clickedButtonRadioEC() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesGenerateOrImport::clickedButtonCreate() {
 	AfxMessageBox("CRYPTOOL_BASE: implement me");
 }
 
 
-void CDlgCertificatesGenerateOrImport::OnBnClickedButtonImport() {
+void CDlgCertificatesGenerateOrImport::clickedButtonImport() {
 	AfxMessageBox("CRYPTOOL_BASE: implement me");
 }
 
 
-void CDlgCertificatesGenerateOrImport::OnBnClickedButtonClose() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+void CDlgCertificatesGenerateOrImport::clickedButtonClose() {
+	EndDialog(IDOK);
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificatesGenerateOrImport, CDialog)
-	ON_BN_CLICKED(IDC_BUTTON_CREATE, &CDlgCertificatesGenerateOrImport::OnBnClickedButtonCreate)
-	ON_BN_CLICKED(IDC_BUTTON_IMPORT, &CDlgCertificatesGenerateOrImport::OnBnClickedButtonImport)
-	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CDlgCertificatesGenerateOrImport::OnBnClickedButtonClose)
+	ON_BN_CLICKED(IDC_RADIO_RSA, &CDlgCertificatesGenerateOrImport::clickedButtonRadioRSA)
+	ON_BN_CLICKED(IDC_RADIO_DSA, &CDlgCertificatesGenerateOrImport::clickedButtonRadioDSA)
+	ON_BN_CLICKED(IDC_RADIO_EC, &CDlgCertificatesGenerateOrImport::clickedButtonRadioEC)
+	ON_BN_CLICKED(IDC_BUTTON_CREATE, &CDlgCertificatesGenerateOrImport::clickedButtonCreate)
+	ON_BN_CLICKED(IDC_BUTTON_IMPORT, &CDlgCertificatesGenerateOrImport::clickedButtonImport)
+	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CDlgCertificatesGenerateOrImport::clickedButtonClose)
 END_MESSAGE_MAP()

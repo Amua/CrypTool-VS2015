@@ -32,25 +32,45 @@ CDlgCertificatesDisplayOrExport::~CDlgCertificatesDisplayOrExport() {
 
 }
 
-void CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowPublicParameters() {
+void CDlgCertificatesDisplayOrExport::clickedButtonShowPublicParameters() {
 	AfxMessageBox("CRYPTOOL_BASE: implement me");
 }
 
-void CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowAllParameters() {
+void CDlgCertificatesDisplayOrExport::clickedButtonShowAllParameters() {
 	AfxMessageBox("CRYPTOOL_BASE: implement me");
 }
 
-void CDlgCertificatesDisplayOrExport::OnBnClickedButtonDelete() {
+void CDlgCertificatesDisplayOrExport::clickedButtonDelete() {
 	AfxMessageBox("CRYPTOOL_BASE: implement me");
 }
 
-void CDlgCertificatesDisplayOrExport::OnBnClickedButtonExport() {
+void CDlgCertificatesDisplayOrExport::clickedButtonExport() {
 	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesDisplayOrExport::clickedButtonCheckRSA() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesDisplayOrExport::clickedButtonCheckDSA() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesDisplayOrExport::clickedButtonCheckEC() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesDisplayOrExport::clickedButtonClose() {
+	EndDialog(IDOK);
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificatesDisplayOrExport, CDialog)
-	ON_BN_CLICKED(IDC_BUTTON_SHOW_PUBLIC_PARAMETERS, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowPublicParameters)
-	ON_BN_CLICKED(IDC_BUTTON_SHOW_ALL_PARAMETERS, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowAllParameters)
-	ON_BN_CLICKED(IDC_BUTTON_DELETE, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonDelete)
-	ON_BN_CLICKED(IDC_BUTTON_EXPORT, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonExport)
+	ON_BN_CLICKED(IDC_BUTTON_SHOW_PUBLIC_PARAMETERS, &CDlgCertificatesDisplayOrExport::clickedButtonShowPublicParameters)
+	ON_BN_CLICKED(IDC_BUTTON_SHOW_ALL_PARAMETERS, &CDlgCertificatesDisplayOrExport::clickedButtonShowAllParameters)
+	ON_BN_CLICKED(IDC_BUTTON_DELETE, &CDlgCertificatesDisplayOrExport::clickedButtonDelete)
+	ON_BN_CLICKED(IDC_BUTTON_EXPORT, &CDlgCertificatesDisplayOrExport::clickedButtonExport)
+	ON_BN_CLICKED(IDC_CHECK_RSA, &CDlgCertificatesDisplayOrExport::clickedButtonCheckRSA)
+	ON_BN_CLICKED(IDC_CHECK_DSA, &CDlgCertificatesDisplayOrExport::clickedButtonCheckDSA)
+	ON_BN_CLICKED(IDC_CHECK_EC, &CDlgCertificatesDisplayOrExport::clickedButtonCheckEC)
+	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CDlgCertificatesDisplayOrExport::clickedButtonClose)
 END_MESSAGE_MAP()

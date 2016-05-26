@@ -27,10 +27,14 @@ public:
 	CDlgCertificatesDisplayOrExport(CWnd *_parent = 0);
 	virtual ~CDlgCertificatesDisplayOrExport();
 protected:
-	afx_msg void OnBnClickedButtonShowPublicParameters();
-	afx_msg void OnBnClickedButtonShowAllParameters();
-	afx_msg void OnBnClickedButtonDelete();
-	afx_msg void OnBnClickedButtonExport();
+	afx_msg void clickedButtonShowPublicParameters();
+	afx_msg void clickedButtonShowAllParameters();
+	afx_msg void clickedButtonDelete();
+	afx_msg void clickedButtonExport();
+	afx_msg void clickedButtonCheckRSA();
+	afx_msg void clickedButtonCheckDSA();
+	afx_msg void clickedButtonCheckEC();
+	afx_msg void clickedButtonClose();
 
 	DECLARE_MESSAGE_MAP()
 };

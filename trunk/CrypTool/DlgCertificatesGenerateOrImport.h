@@ -27,9 +27,12 @@ public:
 	CDlgCertificatesGenerateOrImport(CWnd *_parent = 0);
 	virtual ~CDlgCertificatesGenerateOrImport();
 protected:
-	afx_msg void OnBnClickedButtonCreate();
-	afx_msg void OnBnClickedButtonImport();
-	afx_msg void OnBnClickedButtonClose();
+	afx_msg void clickedButtonRadioRSA();
+	afx_msg void clickedButtonRadioDSA();
+	afx_msg void clickedButtonRadioEC();
+	afx_msg void clickedButtonCreate();
+	afx_msg void clickedButtonImport();
+	afx_msg void clickedButtonClose();
 
 	DECLARE_MESSAGE_MAP()
 };
