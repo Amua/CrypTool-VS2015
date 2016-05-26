@@ -1826,6 +1826,14 @@
 #define IDC_BUTTON_CLOSE                2147
 #define IDC_BUTTON_CREATE               2148
 #define IDC_BUTTON_IMPORT               2149
+#define IDC_LIST_CERTIFICATES           2150
+#define IDC_BUTTON_SHOW_PUBLIC_PARAMETERS 2151
+#define IDC_BUTTON_SHOW_ALL_PARAMETERS  2152
+#define IDC_BUTTON_DELETE               2153
+#define IDC_BUTTON_EXPORT               2154
+#define IDC_CHECK_RSA                   2155
+#define IDC_CHECK_DSA                   2156
+#define IDC_CHECK_EC                    2157
 #define IDC_START_RADIO                 11008
 #define IDC_EINFUEHRUNG_RADIO           11009
 #define IDC_PASSWORT_RADIO              11010
@@ -3481,9 +3489,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        886
+#define _APS_NEXT_RESOURCE_VALUE        887
 #define _APS_NEXT_COMMAND_VALUE         33398
-#define _APS_NEXT_CONTROL_VALUE         2150
+#define _APS_NEXT_CONTROL_VALUE         2158
 #define _APS_NEXT_SYMED_VALUE           114
 #endif
 #endif
