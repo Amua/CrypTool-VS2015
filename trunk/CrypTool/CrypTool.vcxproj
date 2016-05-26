@@ -2958,7 +2958,6 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClCompile Include="DlgPrimeTest.cpp" />
     <ClCompile Include="DlgProgressFactorisation.cpp" />
     <ClCompile Include="DlgRandomGenerator.cpp" />
-    <ClCompile Include="DlgRandomParameterSECUDE.cpp" />
     <ClCompile Include="DlgRot13Caesar.cpp" />
     <ClCompile Include="DlgRSADecryption.cpp" />
     <ClCompile Include="DlgRSADemo.cpp" />
@@ -3252,7 +3251,6 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClInclude Include="DlgPrimeTest.h" />
     <ClInclude Include="DlgProgressFactorisation.h" />
     <ClInclude Include="DlgRandomGenerator.h" />
-    <ClInclude Include="DlgRandomParameterSECUDE.h" />
     <ClInclude Include="DlgRot13Caesar.h" />
     <ClInclude Include="DlgRSADecryption.h" />
     <ClInclude Include="DlgRSADemo.h" />

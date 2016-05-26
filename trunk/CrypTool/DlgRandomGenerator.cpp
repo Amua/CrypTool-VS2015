@@ -31,7 +31,6 @@ using namespace std;
 #endif
 #include "FileTools.h"
 #include "DlgRandomGenerator.h"
-#include "DlgRandomParameterSECUDE.h"
 #include "Cryptography.h"
 #include "CryptDoc.h"
 #include "DlgPrimesGeneratorDemo.h"
@@ -294,8 +293,7 @@ void CDlgRandomGenerator::OnSelGenParam()
 
 	switch (m_SelGenerator) {
 	case 0: {
-				CDlgRandomParameterSECUDE DPRS;
-				DPRS.DoModal();
+		AfxMessageBox("CRYPTOOL_BASE: SECUDE NO LONGER HERE");
 			}
 			break;
 	case 1: {
