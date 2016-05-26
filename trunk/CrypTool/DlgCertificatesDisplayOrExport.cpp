@@ -37,7 +37,34 @@ CDlgCertificatesDisplayOrExport::~CDlgCertificatesDisplayOrExport() {
 
 BOOL CDlgCertificatesDisplayOrExport::OnInitDialog() {
 	CDialog::OnInitDialog();
-	// TODO/FIXME
+	// initialize list of certificates
+	m_listCertificates.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+	// add header for first name
+	CString headerFirstName;
+	headerFirstName.Format("%s", "FIRST NAME");
+	m_listCertificates.InsertColumn(0, headerFirstName, LVCFMT_LEFT, 100, 0);
+	// add header for last name
+	CString headerLastName;
+	headerLastName.Format("%s", "LAST NAME");
+	m_listCertificates.InsertColumn(1, headerLastName, LVCFMT_LEFT, 100, 1);
+	// add header for remarks
+	CString headerRemarks;
+	headerRemarks.Format("%s", "REMARKS");
+	m_listCertificates.InsertColumn(2, headerRemarks, LVCFMT_LEFT, 100, 2);
+	// add header for type
+	CString headerType;
+	headerType.Format("%s", "TYPE");
+	m_listCertificates.InsertColumn(3, headerType, LVCFMT_LEFT, 65, 3);
+	// add header for serial number
+	CString headerSerialNumber;
+	headerSerialNumber.Format("%s", "SERIAL NUMBER");
+	m_listCertificates.InsertColumn(4, headerSerialNumber, LVCFMT_LEFT, 100, 4);
+	// add header for time of creation
+	CString headerTimeOfCreation;
+	headerTimeOfCreation.Format("%s", "TIME OF CREATION");
+	m_listCertificates.InsertColumn(5, headerTimeOfCreation, LVCFMT_LEFT, 100, 5);
+	// initial update for the list of certificates
+	updateListCertificates();
 	return TRUE;
 }
 
@@ -66,19 +93,36 @@ void CDlgCertificatesDisplayOrExport::clickedButtonExport() {
 }
 
 void CDlgCertificatesDisplayOrExport::clickedButtonCheckRSA() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+	UpdateData(true);
+	updateListCertificates();
 }
 
 void CDlgCertificatesDisplayOrExport::clickedButtonCheckDSA() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+	UpdateData(true);
+	updateListCertificates();
 }
 
 void CDlgCertificatesDisplayOrExport::clickedButtonCheckEC() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+	UpdateData(true);
+	updateListCertificates();
 }
 
 void CDlgCertificatesDisplayOrExport::clickedButtonClose() {
 	EndDialog(IDOK);
+}
+
+void CDlgCertificatesDisplayOrExport::updateListCertificates() {
+	// clear the existing contents of the list
+	m_listCertificates.DeleteAllItems();
+
+	// TODO/FIXME: insert a dummy item
+	const int row = 0;
+	m_listCertificates.InsertItem(row, "first");
+	m_listCertificates.SetItemText(row, 1, "last");
+	m_listCertificates.SetItemText(row, 2, "remarks");
+	m_listCertificates.SetItemText(row, 3, "type");
+	m_listCertificates.SetItemText(row, 4, "serial");
+	m_listCertificates.SetItemText(row, 5, "time");
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificatesDisplayOrExport, CDialog)

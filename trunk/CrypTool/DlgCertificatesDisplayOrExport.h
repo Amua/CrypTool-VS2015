@@ -43,6 +43,8 @@ protected:
 	int m_checkRSA;
 	int m_checkDSA;
 	int m_checkEC;
+private:
+	void updateListCertificates();
 
 	DECLARE_MESSAGE_MAP()
 };
