@@ -1909,65 +1909,6 @@ copy ..\Release_en\CrypTool-en.chm $(TargetDir)CrypTool-en.chm</Command>
     <None Include="res\CANCEL_Y_D.bmp" />
     <None Include="res\CANCEL_Y_F.bmp" />
     <None Include="res\CANCEL_Y_U.bmp" />
-    <CustomBuild Include="..\setup\template\pse\pseca\capse.cse">
-      <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_de|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_de|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_de|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_en|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_fr|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_el|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_en|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_fr|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_el|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_en|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_fr|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_el|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_es|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_es|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_es|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_pl|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_pl|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_pl|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_rs|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_rs|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_rs|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_de|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_de|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_de|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_en|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_fr|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_el|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_en|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_fr|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_el|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_en|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_fr|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_el|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_es|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_es|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_es|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_pl|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_pl|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_pl|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release_rs|Win32'">Copying template PSE to $(OutDir)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release_rs|Win32'">xcopy /s/y "%(RootDir)%(Directory).." "$(OutDir)pse\"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_rs|Win32'">$(OutDir)pse\pseca\capse.cse;%(Outputs)</Outputs>
-    </CustomBuild>
     <None Include="res\Bitmaps\checkboxbitmap.bmp" />
     <None Include="res\Bitmaps_en\checkboxbitmap.bmp" />
     <None Include="res\Bitmaps_es\checkboxbitmap.bmp" />
