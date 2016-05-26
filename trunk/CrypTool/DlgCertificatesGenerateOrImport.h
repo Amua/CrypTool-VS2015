@@ -38,14 +38,16 @@ protected:
 	afx_msg void clickedButtonClose();
 protected:
 	int m_radioAlgorithm;
-	CString m_comboRSA;
-	CString m_comboDSA;
-	CString m_comboEC;
+	CComboBox m_comboRSA;
+	CComboBox m_comboDSA;
+	CComboBox m_comboEC;
 	CString m_editFirstName;
 	CString m_editLastName;
 	CString m_editRemarks;
 	CString m_editPassword1;
 	CString m_editPassword2;
+private:
+	void updateComboBoxes();
 
 	DECLARE_MESSAGE_MAP()
 };
