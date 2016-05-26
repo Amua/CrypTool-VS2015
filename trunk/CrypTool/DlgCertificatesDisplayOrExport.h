@@ -27,6 +27,9 @@ public:
 	CDlgCertificatesDisplayOrExport(CWnd *_parent = 0);
 	virtual ~CDlgCertificatesDisplayOrExport();
 protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange *_pDX);
+protected:
 	afx_msg void clickedButtonShowPublicParameters();
 	afx_msg void clickedButtonShowAllParameters();
 	afx_msg void clickedButtonDelete();
@@ -35,6 +38,11 @@ protected:
 	afx_msg void clickedButtonCheckDSA();
 	afx_msg void clickedButtonCheckEC();
 	afx_msg void clickedButtonClose();
+protected:
+	CListCtrl m_listCertificates;
+	int m_checkRSA;
+	int m_checkDSA;
+	int m_checkEC;
 
 	DECLARE_MESSAGE_MAP()
 };

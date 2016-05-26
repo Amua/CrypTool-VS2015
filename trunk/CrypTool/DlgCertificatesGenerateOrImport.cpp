@@ -24,12 +24,40 @@
 #include "DlgCertificatesGenerateOrImport.h"
 
 CDlgCertificatesGenerateOrImport::CDlgCertificatesGenerateOrImport(CWnd *_parent) :
-	CDialog(CDlgCertificatesGenerateOrImport::IDD, _parent) {
+	CDialog(CDlgCertificatesGenerateOrImport::IDD, _parent),
+	m_radioAlgorithm(0),
+	m_comboRSA(""),
+	m_comboDSA(""),
+	m_comboEC(""),
+	m_editFirstName(""),
+	m_editLastName(""),
+	m_editRemarks(""),
+	m_editPassword1(""),
+	m_editPassword2("") {
 
 }
 
 CDlgCertificatesGenerateOrImport::~CDlgCertificatesGenerateOrImport() {
 
+}
+
+BOOL CDlgCertificatesGenerateOrImport::OnInitDialog() {
+	CDialog::OnInitDialog();
+	// TODO/FIXME
+	return TRUE;
+}
+
+void CDlgCertificatesGenerateOrImport::DoDataExchange(CDataExchange *_pDX) {
+	CDialog::DoDataExchange(_pDX);
+	DDX_Radio(_pDX, IDC_RADIO_RSA, m_radioAlgorithm);
+	DDX_CBString(_pDX, IDC_COMBO_RSA, m_comboRSA);
+	DDX_CBString(_pDX, IDC_COMBO_DSA, m_comboDSA);
+	DDX_CBString(_pDX, IDC_COMBO_EC, m_comboEC);
+	DDX_Text(_pDX, IDC_EDIT_FIRST_NAME, m_editFirstName);
+	DDX_Text(_pDX, IDC_EDIT_LAST_NAME, m_editLastName);
+	DDX_Text(_pDX, IDC_EDIT_REMARKS, m_editRemarks);
+	DDX_Text(_pDX, IDC_EDIT_PASSWORD_1, m_editPassword1);
+	DDX_Text(_pDX, IDC_EDIT_PASSWORD_2, m_editPassword2);
 }
 
 void CDlgCertificatesGenerateOrImport::clickedButtonRadioRSA() {

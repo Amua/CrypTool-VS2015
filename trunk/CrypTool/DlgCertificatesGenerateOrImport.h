@@ -27,12 +27,25 @@ public:
 	CDlgCertificatesGenerateOrImport(CWnd *_parent = 0);
 	virtual ~CDlgCertificatesGenerateOrImport();
 protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange *_pDX);
+protected:
 	afx_msg void clickedButtonRadioRSA();
 	afx_msg void clickedButtonRadioDSA();
 	afx_msg void clickedButtonRadioEC();
 	afx_msg void clickedButtonCreate();
 	afx_msg void clickedButtonImport();
 	afx_msg void clickedButtonClose();
+protected:
+	int m_radioAlgorithm;
+	CString m_comboRSA;
+	CString m_comboDSA;
+	CString m_comboEC;
+	CString m_editFirstName;
+	CString m_editLastName;
+	CString m_editRemarks;
+	CString m_editPassword1;
+	CString m_editPassword2;
 
 	DECLARE_MESSAGE_MAP()
 };

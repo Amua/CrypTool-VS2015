@@ -24,12 +24,29 @@ limitations under the License.
 #include "DlgCertificatesDisplayOrExport.h"
 
 CDlgCertificatesDisplayOrExport::CDlgCertificatesDisplayOrExport(CWnd *_parent) :
-	CDialog(CDlgCertificatesDisplayOrExport::IDD, _parent) {
+	CDialog(CDlgCertificatesDisplayOrExport::IDD, _parent),
+	m_checkRSA(1),
+	m_checkDSA(1),
+	m_checkEC(1) {
 
 }
 
 CDlgCertificatesDisplayOrExport::~CDlgCertificatesDisplayOrExport() {
 
+}
+
+BOOL CDlgCertificatesDisplayOrExport::OnInitDialog() {
+	CDialog::OnInitDialog();
+	// TODO/FIXME
+	return TRUE;
+}
+
+void CDlgCertificatesDisplayOrExport::DoDataExchange(CDataExchange *_pDX) {
+	CDialog::DoDataExchange(_pDX);
+	DDX_Control(_pDX, IDC_LIST_CERTIFICATES, m_listCertificates);
+	DDX_Check(_pDX, IDC_CHECK_RSA, m_checkRSA);
+	DDX_Check(_pDX, IDC_CHECK_DSA, m_checkDSA);
+	DDX_Check(_pDX, IDC_CHECK_EC, m_checkEC);
 }
 
 void CDlgCertificatesDisplayOrExport::clickedButtonShowPublicParameters() {
