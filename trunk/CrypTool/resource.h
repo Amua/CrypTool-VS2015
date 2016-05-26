@@ -154,7 +154,6 @@
 #define IDD_KEY_HOMOPHONE               227
 #define IDD_EC_GENERATION               228
 #define IDD_RANDOM_GENERATOR            229
-#define IDD_RANDOMPARAMETER_SECUDE      230
 #define IDD_KEY_FROM_PASSWORD           232
 #define IDD_NGRAM_ANALYSIS              237
 #define IDD_X2MODN_RANDOMPARAMETER      238
@@ -3466,7 +3465,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        885
+#define _APS_NEXT_RESOURCE_VALUE        886
 #define _APS_NEXT_COMMAND_VALUE         33398
 #define _APS_NEXT_CONTROL_VALUE         2129
 #define _APS_NEXT_SYMED_VALUE           114
