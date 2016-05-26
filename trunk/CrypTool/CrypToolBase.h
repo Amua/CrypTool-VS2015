@@ -31,6 +31,7 @@ limitations under the License.
 #include <cstring>
 #include <limits>
 #include <vector>
+#include <map>
 #include <set>
 
 namespace OpenSSL {
@@ -321,15 +322,27 @@ namespace CrypTool {
 				OpenSSL::X509 *caCertificate;
 				OpenSSL::RSA *caPrivateKey;
 			private:
-				// this function generates a file name base for user certificates and private keys 
-				// depending on the certificate serial number and the specified common name string
-				CString generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const;
+				// this map holds all user certificates (mapped to serial numbers)
+				std::map<long, OpenSSL::X509*> mapUserCertificates;
 			public:
 				// this function tries to create a certificate with the values specified by the user; the 
 				// certificate type is one of RSA, DSA, EC, and the the certificate parameters string contains 
 				// either the desired key length (RSA and DSA) or the desired elliptic curve (EC); all other 
 				// parameters (first name, last name, remarks, password) are identical for all types
 				bool createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password);
+				// this function tries to delete a certificate with the specified serial number
+				bool deleteUserCertificate(const long _serial, const CString &_password);
+			private:
+				// this function generates a file name base for user certificates and private keys 
+				// depending on the certificate serial number and the specified common name string
+				CString generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const;
+			private:
+				// this function is called whenever the certificate store content changes, in other words: 
+				// whenever a certificate is created or deleted; it makes sure all user certificates are 
+				// always held in memory to provide quick access without expensive file operations
+				void loadUserCertificates();
+				// this function is called to unload all certificates from memory
+				void unloadUserCertificates();
 			public:
 				// this struct is provided for convenience: it makes certificates available to the outside 
 				// for display purposes, therefore we hide most of the internal information

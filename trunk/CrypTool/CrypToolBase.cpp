@@ -707,7 +707,7 @@ namespace CrypTool {
 				ULONGLONG positionCurrent = positionStart;
 				ULONGLONG bytesRead;
 				while (bytesRead = fileInput.Read(input, bufferByteLength)) {
-					ASSERT(fpUpdate(context, output, &outputLength, input, bytesRead));
+					ASSERT(fpUpdate(context, output, &outputLength, input, (int)(bytesRead)));
 					fileOutput.Write(output, outputLength);
 					positionCurrent += bytesRead;
 					if (_cancelled) {
@@ -820,6 +820,10 @@ namespace CrypTool {
 				if (!caCertificate || !caPrivateKey) {
 					AfxMessageBox("CRYPTOOL_BASE: cannot initialize CrypTool certificate store");
 				}
+				// load all user certificates after certificate store initialization
+				else {
+					loadUserCertificates();
+				}
 			}
 
 			void CertificateStore::deinitialize() {
@@ -827,12 +831,8 @@ namespace CrypTool {
 				// free previously allocated memory
 				X509_free(caCertificate);
 				RSA_free(caPrivateKey);
-			}
-
-			CString CertificateStore::generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const {
-				CString fileNameBase;
-				fileNameBase.Format(pathToCertificateStore + "\\" + "[%d]%s", _serial, _commonName);
-				return fileNameBase;
+				// unload all user certificates
+				unloadUserCertificates();
 			}
 
 			bool CertificateStore::createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password) {
@@ -850,7 +850,7 @@ namespace CrypTool {
 				// create the certificate serial number: for convenience, we simply use the number 
 				// of seconds passed since the unix epoch (1970/01/01), and we insert a one second 
 				// delay at the end of this function to prevent duplicate serial numbers
-				const long serial = time(0);
+				const long serial = (long)(time(0));
 				// initialize certificate data
 				X509_set_version(certificate, 2);
 				ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
@@ -978,16 +978,95 @@ namespace CrypTool {
 				}
 				// we add this delay so we don't get duplicate certificate serial numbers
 				Sleep(1000);
+				// re-load all user certificates after a certificate was created
+				loadUserCertificates();
 				// if we reach this point, everything went well
 				return true;
 			}
 
+			bool CertificateStore::deleteUserCertificate(const long _serial, const CString &_password) {
+				
+				// TODO/FIXME
+				AfxMessageBox("CRYPTOOL_BASE: implement certificate deletion");
+				// TODO/FIXME
+
+				// re-load all user certificates after a certificate was created
+				loadUserCertificates();
+				// if we reach this point, everything went well
+				return true;
+			}
+
+			CString CertificateStore::generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const {
+				CString fileNameBase;
+				fileNameBase.Format(pathToCertificateStore + "\\" + "[%d]%s", _serial, _commonName);
+				return fileNameBase;
+			}
+
+			void CertificateStore::loadUserCertificates() {
+				using namespace OpenSSL;
+				// first unload all user certificates
+				unloadUserCertificates();
+				// initialize some variables used for file searching
+				std::vector<CString> vectorFileNamesUserCertificates;
+				const CString patternUserCertificates = pathToCertificateStore + "\\*.crt";
+				CFileFind finderUserCertificates;
+				// find user certificate files
+				BOOL foundUserCertificate = finderUserCertificates.FindFile(patternUserCertificates);
+				while(foundUserCertificate) {
+					foundUserCertificate = finderUserCertificates.FindNextFile();
+					if (finderUserCertificates.IsDots()) continue;
+					if (finderUserCertificates.IsDirectory()) continue;
+					vectorFileNamesUserCertificates.push_back(finderUserCertificates.GetFilePath());
+				}
+				// try to acquire user certificates
+				for (size_t indexUserCertificate = 0; indexUserCertificate < vectorFileNamesUserCertificates.size(); indexUserCertificate++) {
+					BIO *bioUserCertificate = BIO_new(BIO_s_file());
+					if (BIO_read_filename(bioUserCertificate, (LPCTSTR)(vectorFileNamesUserCertificates[indexUserCertificate]))) {
+						X509 *userCertificate = X509_new();
+						userCertificate = PEM_read_bio_X509(bioUserCertificate, 0, 0, 0);
+						ASN1_INTEGER *asn1SerialNumber = X509_get_serialNumber(userCertificate);
+						if (asn1SerialNumber && asn1SerialNumber->length <= (int)(sizeof(long))) {
+							const long serialNumber = ASN1_INTEGER_get(asn1SerialNumber);
+							mapUserCertificates[serialNumber] = userCertificate;
+						}
+					}
+					BIO_free(bioUserCertificate);
+				}
+			}
+
+			void CertificateStore::unloadUserCertificates() {
+				using namespace OpenSSL;
+				for (std::map<long, X509*>::iterator iter = mapUserCertificates.begin(); iter != mapUserCertificates.end(); iter++) {
+					X509 *userCertificate = iter->second;
+					X509_free(userCertificate);
+				}
+				mapUserCertificates.clear();
+			}
+
 			std::vector<CertificateStore::CertificateEntry> CertificateStore::getVectorCertificateEntries(const bool _rsa, const bool _dsa, const bool _ec) const {
+				using namespace OpenSSL;
+				// this is the result variable
 				std::vector<CertificateEntry> vectorCertificateEntries;
 				// at least one of the flags needs to be true for the result vector to contain anything
 				if (_rsa || _dsa || _ec) {
-					// TODO/FIXME: go through all certificates, find those we're interested in, 
-					// create a CertificateEntry structure, and then add it to the vector
+					for (std::map<long, X509*>::const_iterator iter = mapUserCertificates.begin(); iter != mapUserCertificates.end(); iter++) {
+						X509 *userCertificate = iter->second;
+						EVP_PKEY *pkey = X509_get_pubkey(userCertificate);
+						const int keyType = EVP_PKEY_type(pkey->type);
+						EVP_PKEY_free(pkey);
+						if ((keyType == EVP_PKEY_RSA && _rsa) || (keyType == EVP_PKEY_DSA && _dsa) || (keyType == EVP_PKEY_EC && _ec)) {
+							CertificateEntry certificateEntry;
+
+							// TODO/FIXME: we need to extract a lot more information here...
+
+							ASN1_INTEGER *asn1SerialNumber = X509_get_serialNumber(userCertificate);
+							if (asn1SerialNumber && asn1SerialNumber->length <= (int)(sizeof(long))) {
+								const long serialNumber = ASN1_INTEGER_get(asn1SerialNumber);
+								certificateEntry.serial.Format("%d", serialNumber);
+								vectorCertificateEntries.push_back(certificateEntry);
+							}
+						}
+					}
 				}
 				return vectorCertificateEntries;
 			}
@@ -1035,7 +1114,7 @@ namespace CrypTool {
 				return false;
 			}
 			// the key length must be valid [1, byteLengthHash]
-			if (_keyLength < 1 || _keyLength > CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType)) {
+			if (_keyLength < 1 || _keyLength > (int)(CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType))) {
 				AfxMessageBox("CRYPTOOL_BASE: specified key length is not supported (PKCS5)");
 				return false;
 			}

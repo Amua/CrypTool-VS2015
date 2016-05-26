@@ -114,15 +114,17 @@ void CDlgCertificatesDisplayOrExport::clickedButtonClose() {
 void CDlgCertificatesDisplayOrExport::updateListCertificates() {
 	// clear the existing contents of the list
 	m_listCertificates.DeleteAllItems();
-
-	// TODO/FIXME: insert a dummy item
-	const int row = 0;
-	m_listCertificates.InsertItem(row, "first");
-	m_listCertificates.SetItemText(row, 1, "last");
-	m_listCertificates.SetItemText(row, 2, "remarks");
-	m_listCertificates.SetItemText(row, 3, "type");
-	m_listCertificates.SetItemText(row, 4, "serial");
-	m_listCertificates.SetItemText(row, 5, "time");
+	// acquire the desired certificates from the certificate store (RSA, DSA, EC)
+	std::vector<CrypTool::Cryptography::Asymmetric::CertificateStore::CertificateEntry> vectorCertificateEntries = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getVectorCertificateEntries(m_checkRSA == 1, m_checkDSA == 1, m_checkEC == 1);
+	for (size_t indexCertificateEntry = 0; indexCertificateEntry < vectorCertificateEntries.size(); indexCertificateEntry++) {
+		CrypTool::Cryptography::Asymmetric::CertificateStore::CertificateEntry certificateEntry = vectorCertificateEntries[indexCertificateEntry];
+		m_listCertificates.InsertItem(indexCertificateEntry, certificateEntry.firstName);
+		m_listCertificates.SetItemText(indexCertificateEntry, 1, certificateEntry.lastName);
+		m_listCertificates.SetItemText(indexCertificateEntry, 2, certificateEntry.remarks);
+		m_listCertificates.SetItemText(indexCertificateEntry, 3, certificateEntry.type);
+		m_listCertificates.SetItemText(indexCertificateEntry, 4, certificateEntry.serial);
+		m_listCertificates.SetItemText(indexCertificateEntry, 5, certificateEntry.creation);
+	}
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificatesDisplayOrExport, CDialog)
