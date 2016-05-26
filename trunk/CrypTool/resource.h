@@ -319,6 +319,8 @@
 #define IDD_RSASTEREOTYPED              791
 #define IDD_RSABLOEMERMAY               792
 #define IDD_RSAFACTORHINT               797
+#define IDD_CERTIFICATES_GENERATE_OR_IMPORT 798
+#define IDD_CERTIFICATES_DISPLAY_OR_EXPORT 799
 #define IDD_FILE_PROPERTIES             805
 #define IDD_HMAC                        806
 #define IDD_CRT_ASTRONOMY               807

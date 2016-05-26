@@ -83,6 +83,8 @@
 #include "HillEncryption.h"
 #include "DlgHillAnalysis.h"
 #include "DlgComputeMersenneNumbers.h"
+#include "DlgCertificatesGenerateOrImport.h"
+#include "DlgCertificatesDisplayOrExport.h"
 
 // #if !defined(_MSC_VER) || _MSC_VER <= 1200
 #include "RSABloemerMayDlg.h"
@@ -1015,13 +1017,13 @@ void CCrypToolApp::OnUpdateNeedSecudeTicket(CCmdUI* pCmdUI)
 }
 
 void CCrypToolApp::OnShowKeys() {
-	CDlgKeyAsym dlgKeyAsym;
-	dlgKeyAsym.DoModal();
+	CDlgCertificatesDisplayOrExport dlgCertificatesDisplayOrExport;
+	dlgCertificatesDisplayOrExport.DoModal();
 }
 
 void CCrypToolApp::OnKeyGen() {
-	CDlgKeyAsymGeneration dlgKeyAsymGeneration;
-	dlgKeyAsymGeneration.DoModal();
+	CDlgCertificatesGenerateOrImport dlgCertificatesGenerateOrImport;
+	dlgCertificatesGenerateOrImport.DoModal();
 }
 
 void CCrypToolApp::OnEinzelverfahrenTutorialPrimzahlengenerieren() 
