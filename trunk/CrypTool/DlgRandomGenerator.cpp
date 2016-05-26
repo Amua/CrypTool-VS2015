@@ -37,10 +37,13 @@ static char THIS_FILE[] = __FILE__;
 
 CDlgRandomGenerator::CDlgRandomGenerator(CWnd* pParent) :
 	CDialog(CDlgRandomGenerator::IDD, pParent),
-	m_PrintInternalStates(0) {
-	m_SelGenerator = 1;
+	m_PrintInternalStates(0),
+	m_randomGeneratorParameters(0) {
+	m_SelGenerator = 0;
 	m_seed = _T("314159");
 	m_DataSize = 2500;
+	// create random generator parameters (deleted by thread function)
+	m_randomGeneratorParameters = new RandomGeneratorParameters();
 }
 
 CDlgRandomGenerator::~CDlgRandomGenerator() {
@@ -70,7 +73,7 @@ BOOL CDlgRandomGenerator::OnInitDialog() {
 
 		l = 2047;
 		CT_READ_REGISTRY_DEFAULT(tmpStr1, "ParamX2MODN_N", STANDARD_X2MOD_N_MODUL, l);
-		m_randomGeneratorParameters.DRPXN.SetModul(CString(tmpStr1));
+		m_randomGeneratorParameters->DRPXN.SetModul(CString(tmpStr1));
 
 		l = 2047;
 		CT_READ_REGISTRY_DEFAULT(tmpStr1, "ParamLCG_P1", "23", l);
@@ -79,17 +82,17 @@ BOOL CDlgRandomGenerator::OnInitDialog() {
 		l = 2047;
 		CT_READ_REGISTRY_DEFAULT(tmpStr3, "ParamLCG_N", "100000001", l);
 		// LCG-Parameter nach Lehmer
-		m_randomGeneratorParameters.DRP_LCG.m_LinParam_a = tmpStr1;
-		m_randomGeneratorParameters.DRP_LCG.m_LinParam_b = tmpStr2;
-		m_randomGeneratorParameters.DRP_LCG.m_LinParam_N = tmpStr3;
+		m_randomGeneratorParameters->DRP_LCG.m_LinParam_a = tmpStr1;
+		m_randomGeneratorParameters->DRP_LCG.m_LinParam_b = tmpStr2;
+		m_randomGeneratorParameters->DRP_LCG.m_LinParam_N = tmpStr3;
 
 		l = 2047; CT_READ_REGISTRY_DEFAULT(tmpStr1, "ParamICG_P1", "22211", l);
 		l = 2047; CT_READ_REGISTRY_DEFAULT(tmpStr2, "ParamICG_P2", "11926380", l);
 		l = 2047; CT_READ_REGISTRY_DEFAULT(tmpStr3, "ParamICG_N", "2147483053", l);
 		// ICG-Parameter nach ???
-		m_randomGeneratorParameters.DRP_ICG.m_Param_a = tmpStr1;
-		m_randomGeneratorParameters.DRP_ICG.m_Param_b = tmpStr2;
-		m_randomGeneratorParameters.DRP_ICG.m_Param_N = tmpStr3;
+		m_randomGeneratorParameters->DRP_ICG.m_Param_a = tmpStr1;
+		m_randomGeneratorParameters->DRP_ICG.m_Param_b = tmpStr2;
+		m_randomGeneratorParameters->DRP_ICG.m_Param_N = tmpStr3;
 
 		UpdateData(false);
 		CT_CLOSE_REGISTRY();
@@ -113,20 +116,20 @@ void CDlgRandomGenerator::OnSelGenParam() {
 	UpdateData(TRUE);
 	// DRPXN
 	if (m_SelGenerator == 0) {
-		if (m_randomGeneratorParameters.DRPXN.DoModal() == IDOK) {
-			m_randomGeneratorParameters.rnd_x2modN.setModul(m_randomGeneratorParameters.DRPXN.GetModul());
+		if (m_randomGeneratorParameters->DRPXN.DoModal() == IDOK) {
+			m_randomGeneratorParameters->rnd_x2modN.setModul(m_randomGeneratorParameters->DRPXN.GetModul());
 		}
 	}
 	// DRPLCG
 	else if (m_SelGenerator == 1) {
-		if (m_randomGeneratorParameters.DRP_LCG.DoModal() == IDOK) {
-			m_randomGeneratorParameters.DLCG.SetParameter(m_randomGeneratorParameters.DRP_LCG.Get_a(), m_randomGeneratorParameters.DRP_LCG.Get_b(), m_randomGeneratorParameters.DRP_LCG.Get_N());
+		if (m_randomGeneratorParameters->DRP_LCG.DoModal() == IDOK) {
+			m_randomGeneratorParameters->DLCG.SetParameter(m_randomGeneratorParameters->DRP_LCG.Get_a(), m_randomGeneratorParameters->DRP_LCG.Get_b(), m_randomGeneratorParameters->DRP_LCG.Get_N());
 		}
 	}
 	// DRPICG
 	else if (m_SelGenerator == 2) {
-		if (m_randomGeneratorParameters.DRP_ICG.DoModal()) {
-			m_randomGeneratorParameters.DICG.SetParameter(m_randomGeneratorParameters.DRP_ICG.Get_a(), m_randomGeneratorParameters.DRP_ICG.Get_b(), m_randomGeneratorParameters.DRP_ICG.Get_N());
+		if (m_randomGeneratorParameters->DRP_ICG.DoModal()) {
+			m_randomGeneratorParameters->DICG.SetParameter(m_randomGeneratorParameters->DRP_ICG.Get_a(), m_randomGeneratorParameters->DRP_ICG.Get_b(), m_randomGeneratorParameters->DRP_ICG.Get_N());
 		}
 	}
 	UpdateData(false);
@@ -134,13 +137,13 @@ void CDlgRandomGenerator::OnSelGenParam() {
 
 void CDlgRandomGenerator::OnGenRandomData() {
 	UpdateData(TRUE);
-	m_randomGeneratorParameters.m_DataSize = m_DataSize;
-	m_randomGeneratorParameters.m_SelGenerator = m_SelGenerator;
-	m_randomGeneratorParameters.m_seed = m_seed;
-	m_randomGeneratorParameters.m_PrintInternalStates = m_PrintInternalStates;
+	m_randomGeneratorParameters->m_DataSize = m_DataSize;
+	m_randomGeneratorParameters->m_SelGenerator = m_SelGenerator;
+	m_randomGeneratorParameters->m_seed = m_seed;
+	m_randomGeneratorParameters->m_PrintInternalStates = m_PrintInternalStates;
 	UpdateData(FALSE);
 	if (m_DataSize >= 1 && m_DataSize < 1048576) {
-		AfxBeginThread(GenRandomDataThread, &m_randomGeneratorParameters);
+		AfxBeginThread(GenRandomDataThread, m_randomGeneratorParameters);
 		CDialog::OnOK();
 	}
 	else {
@@ -150,6 +153,7 @@ void CDlgRandomGenerator::OnGenRandomData() {
 
 void CDlgRandomGenerator::OnCancel() {
 	CDialog::OnCancel();
+	delete m_randomGeneratorParameters;
 }
 
 BEGIN_MESSAGE_MAP(CDlgRandomGenerator, CDialog)
@@ -158,18 +162,17 @@ BEGIN_MESSAGE_MAP(CDlgRandomGenerator, CDialog)
 END_MESSAGE_MAP()
 
 UINT GenRandomDataThread(PVOID pParam) {
-#ifndef _UNSTABLE
 	BOOL Out;
 	CString title;
 	CString progress;
 	char	outfile[256], outfile2[256];
-	RandPar* par = static_cast<RandPar*>(pParam);
+	RandomGeneratorParameters *par = static_cast<RandomGeneratorParameters*>(pParam);
 	GetTmpName(outfile, "cry", ".hex");
 	ofstream rndData(outfile, ios::binary);
 	ofstream rndState;
 	CString  rndStateStr;
 
-	if (par->m_SelGenerator && par->m_PrintInternalStates)
+	if (par->m_PrintInternalStates)
 	{
 		GetTmpName(outfile2, "cry", ".txt");
 		rndState.open(outfile2);
@@ -180,26 +183,6 @@ UINT GenRandomDataThread(PVOID pParam) {
 
 	switch (par->m_SelGenerator) {
 	case 0:
-		title.Format(IDS_RAND_GEN_PARAM, "SECUDE", par->m_DataSize);
-		theApp.fs.Display(LPCTSTR(title));
-		for (j = 0; j<par->m_DataSize; j++)
-		{
-			o = 0;
-			for (i = 0; i<8; i++) o |= (_rand_bit()) << i;
-			rndData << o;
-			if (theApp.fs.m_canceled)
-			{
-				theApp.fs.cancel();
-				return 0;
-			}
-			if ((l = (j * 100) / par->m_DataSize)>k)            // nur einmal für jedes Prozent
-			{
-				theApp.fs.Set(k = l, "", progress);
-			}
-		}
-		title.Format(IDS_STRING_RAND_DATA_PARAM, "SECUDE", par->m_DataSize);
-		break;
-	case 1:
 	{
 		title.Format(IDS_RAND_GEN_PARAM, "X^2 (mod N)", par->m_DataSize);
 		theApp.fs.Display(LPCTSTR(title));
@@ -235,7 +218,7 @@ UINT GenRandomDataThread(PVOID pParam) {
 	}
 	title.Format(IDS_STRING_RAND_DATA_PARAM, "X^2 (mod N)", par->m_DataSize);
 	break;
-	case 2:
+	case 1:
 	{
 		title.Format(IDS_RAND_GEN_PARAM, "LCG", par->m_DataSize);
 		theApp.fs.Display(LPCTSTR(title));
@@ -271,7 +254,7 @@ UINT GenRandomDataThread(PVOID pParam) {
 	}
 	title.Format(IDS_STRING_RAND_DATA_PARAM, "LCG", par->m_DataSize);
 	break;
-	case 3:
+	case 2:
 	{
 		title.Format(IDS_RAND_GEN_PARAM, "ICG", par->m_DataSize);
 		theApp.fs.Display(LPCTSTR(title));
@@ -343,10 +326,7 @@ UINT GenRandomDataThread(PVOID pParam) {
 
 		CT_CLOSE_REGISTRY();
 	}
-
-
 	delete par;
 	par = 0;
-#endif
 	return 0;
 }

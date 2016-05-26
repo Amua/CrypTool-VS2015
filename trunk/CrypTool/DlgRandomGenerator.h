@@ -71,7 +71,7 @@ protected:
 	long m_DataSize;
 	int m_PrintInternalStates;
 protected:
-	RandomGeneratorParameters m_randomGeneratorParameters;
+	RandomGeneratorParameters *m_randomGeneratorParameters;
 
 	DECLARE_MESSAGE_MAP()
 };
