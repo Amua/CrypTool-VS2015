@@ -844,19 +844,28 @@ namespace CrypTool {
 				// extract signing key from CA private key
 				EVP_PKEY *signingKey = EVP_PKEY_new();
 				EVP_PKEY_set1_RSA(signingKey, caPrivateKey);
+				// allocate memory
+				X509 *certificate = X509_new();
 				// create the certificate serial number: for convenience, we simply use the number 
 				// of seconds passed since the unix epoch (1970/01/01), and we insert a one second 
 				// delay at the end of this function to prevent duplicate serial numbers
 				const long serial = time(0);
-
-				// insert data here
-
-
-
-
-
-
-
+				// initialize certificate data
+				X509_set_version(certificate, 2);
+				ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
+				X509_gmtime_adj(X509_get_notBefore(certificate), 0);
+				X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
+				// initialize user-specific data
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("DE"), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "S", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("Hessen"), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("CrypTool Team"), -1, -1, 0);
+				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("[" + _firstName + "][" + _lastName + "]"), -1, -1, 0);
+			// TODO/FIXME: these need to be specified as extensions
+			X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "FN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName), -1, -1, 0);
+			X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "LN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_lastName), -1, -1, 0);
+			X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "RM", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_remarks), -1, -1, 0);
+				// set issuer name to the CrypTool CA
+				X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
 				// create file names for the certificate and the private key
 				const CString fileNameUserCertificate = generateFileNameBaseForUserCertificateAndPrivateKey(serial, _firstName, _lastName) + ".crt";
 				const CString fileNameUserPrivateKey = generateFileNameBaseForUserCertificateAndPrivateKey(serial, _firstName, _lastName) + ".key";
@@ -867,7 +876,6 @@ namespace CrypTool {
 					// determine the specified key length
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
-					X509 *certificate = X509_new();
 					EVP_PKEY *privateKey = EVP_PKEY_new();
 					RSA *rsa = RSA_new();
 					BIGNUM *exponent = BN_new();
@@ -878,20 +886,6 @@ namespace CrypTool {
 							EVP_PKEY_assign_RSA(privateKey, rsa);
 							// set RSA public key
 							X509_set_pubkey(certificate, privateKey);
-							// initialize certificate data
-							X509_set_version(certificate, 2);
-							ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
-							X509_gmtime_adj(X509_get_notBefore(certificate), 0);
-							X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
-							// initialize user-specific data
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("DE"), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("CrypTool Team"), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName + " " + _lastName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "FN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "LN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_lastName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "RM", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_remarks), -1, -1, 0);
-							// set issuer name to the CrypTool CA
-							X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
 							// sign certificate with the private key of the CrypTool CA
 							X509_sign(certificate, signingKey, EVP_sha1());
 							// write user's certificate and private key
@@ -907,7 +901,6 @@ namespace CrypTool {
 						}
 					}
 					// free memory
-					X509_free(certificate);
 					EVP_PKEY_free(privateKey);
 					BN_free(exponent);
 				}
@@ -916,7 +909,6 @@ namespace CrypTool {
 					// determine the specified key length
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
-					X509 *certificate = X509_new();
 					EVP_PKEY *privateKey = EVP_PKEY_new();
 					DSA *dsa = DSA_new();
 					// generate DSA parameters
@@ -927,20 +919,6 @@ namespace CrypTool {
 							EVP_PKEY_assign_DSA(privateKey, dsa);
 							// set DSA public key
 							X509_set_pubkey(certificate, privateKey);
-							// initialize certificate data
-							X509_set_version(certificate, 2);
-							ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
-							X509_gmtime_adj(X509_get_notBefore(certificate), 0);
-							X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
-							// initialize user-specific data
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("DE"), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("CrypTool Team"), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName + " " + _lastName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "FN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "LN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_lastName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "RM", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_remarks), -1, -1, 0);
-							// set issuer name to the CrypTool CA
-							X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
 							// sign certificate with the private key of the CrypTool CA
 							X509_sign(certificate, signingKey, EVP_sha1());
 							// write user's certificate and private key
@@ -956,38 +934,22 @@ namespace CrypTool {
 						}
 					}
 					// free memory
-					X509_free(certificate);
 					EVP_PKEY_free(privateKey);
 				}
 				// EC-based certificate
 				if (_certificateType == CERTIFICATE_TYPE_EC) {
-					// determine the specified ECC curve
-					const CString curve = _certificateParameters;
+					// determine the specified curve name
+					const CString curveName = _certificateParameters;
 					// allocate memory
-					X509 *certificate = X509_new();
 					EVP_PKEY *privateKey = EVP_PKEY_new();
 					// generate EC key
-					EC_KEY *ec = EC_KEY_new_by_curve_name(OBJ_txt2nid(curve));
+					EC_KEY *ec = EC_KEY_new_by_curve_name(OBJ_txt2nid(curveName));
 					if (ec) {
 						if (EC_KEY_generate_key(ec)) {
 							// set EC private key
 							EVP_PKEY_assign_EC_KEY(privateKey, ec);
 							// set EC public key
 							X509_set_pubkey(certificate, privateKey);
-							// initialize certificate data
-							X509_set_version(certificate, 2);
-							ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
-							X509_gmtime_adj(X509_get_notBefore(certificate), 0);
-							X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
-							// initialize user-specific data
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("DE"), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)("CrypTool Team"), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName + " " + _lastName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "FN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_firstName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "LN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_lastName), -1, -1, 0);
-							X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "RM", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(_remarks), -1, -1, 0);
-							// set issuer name to the CrypTool CA
-							X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
 							// sign certificate with the private key of the CrypTool CA
 							X509_sign(certificate, signingKey, EVP_sha1());
 							// write user's certificate and private key
@@ -1003,11 +965,11 @@ namespace CrypTool {
 						}
 					}
 					// free memory
-					X509_free(certificate);
 					EVP_PKEY_free(privateKey);
 				}
 				// free memory
 				EVP_PKEY_free(signingKey);
+				X509_free(certificate);
 				// dump an error message before returning false
 				if (!result) {
 					AfxMessageBox("CRYPTOOL_BASE: user certificate creation failed");
