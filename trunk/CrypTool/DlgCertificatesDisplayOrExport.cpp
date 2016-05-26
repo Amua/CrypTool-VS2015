@@ -32,6 +32,25 @@ CDlgCertificatesDisplayOrExport::~CDlgCertificatesDisplayOrExport() {
 
 }
 
-BEGIN_MESSAGE_MAP(CDlgCertificatesDisplayOrExport, CDialog)
+void CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowPublicParameters() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
 
+void CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowAllParameters() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesDisplayOrExport::OnBnClickedButtonDelete() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+void CDlgCertificatesDisplayOrExport::OnBnClickedButtonExport() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+BEGIN_MESSAGE_MAP(CDlgCertificatesDisplayOrExport, CDialog)
+	ON_BN_CLICKED(IDC_BUTTON_SHOW_PUBLIC_PARAMETERS, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowPublicParameters)
+	ON_BN_CLICKED(IDC_BUTTON_SHOW_ALL_PARAMETERS, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonShowAllParameters)
+	ON_BN_CLICKED(IDC_BUTTON_DELETE, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonDelete)
+	ON_BN_CLICKED(IDC_BUTTON_EXPORT, &CDlgCertificatesDisplayOrExport::OnBnClickedButtonExport)
 END_MESSAGE_MAP()

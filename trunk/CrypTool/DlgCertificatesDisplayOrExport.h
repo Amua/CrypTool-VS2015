@@ -26,6 +26,11 @@ class CDlgCertificatesDisplayOrExport : public CDialog {
 public:
 	CDlgCertificatesDisplayOrExport(CWnd *_parent = 0);
 	virtual ~CDlgCertificatesDisplayOrExport();
+protected:
+	afx_msg void OnBnClickedButtonShowPublicParameters();
+	afx_msg void OnBnClickedButtonShowAllParameters();
+	afx_msg void OnBnClickedButtonDelete();
+	afx_msg void OnBnClickedButtonExport();
 
 	DECLARE_MESSAGE_MAP()
 };

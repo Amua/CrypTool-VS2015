@@ -32,6 +32,22 @@ CDlgCertificatesGenerateOrImport::~CDlgCertificatesGenerateOrImport() {
 
 }
 
-BEGIN_MESSAGE_MAP(CDlgCertificatesGenerateOrImport, CDialog)
+void CDlgCertificatesGenerateOrImport::OnBnClickedButtonCreate() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
 
+
+void CDlgCertificatesGenerateOrImport::OnBnClickedButtonImport() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+
+void CDlgCertificatesGenerateOrImport::OnBnClickedButtonClose() {
+	AfxMessageBox("CRYPTOOL_BASE: implement me");
+}
+
+BEGIN_MESSAGE_MAP(CDlgCertificatesGenerateOrImport, CDialog)
+	ON_BN_CLICKED(IDC_BUTTON_CREATE, &CDlgCertificatesGenerateOrImport::OnBnClickedButtonCreate)
+	ON_BN_CLICKED(IDC_BUTTON_IMPORT, &CDlgCertificatesGenerateOrImport::OnBnClickedButtonImport)
+	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CDlgCertificatesGenerateOrImport::OnBnClickedButtonClose)
 END_MESSAGE_MAP()
