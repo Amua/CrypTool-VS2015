@@ -22,6 +22,7 @@ limitations under the License.
 #include "CrypToolApp.h"
 #include "CrypToolBase.h"
 #include "DlgCertificateStoreDisplayOrExport.h"
+#include "DlgCertificateStoreAskForPassword.h"
 
 CDlgCertificateStoreDisplayOrExport::CDlgCertificateStoreDisplayOrExport(CWnd *_parent) :
 	CDialog(CDlgCertificateStoreDisplayOrExport::IDD, _parent),
@@ -77,7 +78,19 @@ void CDlgCertificateStoreDisplayOrExport::clickedButtonShowAllParameters() {
 }
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonDelete() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+	const long serialOfSelectedCertificate = getSerialOfSelectedCertificate();
+	if (serialOfSelectedCertificate) {
+		CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword;
+		if (dlgCertificateStoreAskForPassword.DoModal() == IDOK) {
+			if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().deleteUserCertificate(serialOfSelectedCertificate, dlgCertificateStoreAskForPassword.getPassword())) {
+				AfxMessageBox("CRYPTOOL_BASE: the selected certificate was deleted");
+				updateListCertificates();
+			}
+			else {
+				AfxMessageBox("CRYPTOOL_BASE: the selected certificate was NOT deleted");
+			}
+		}
+	}
 }
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonExport() {
@@ -132,6 +145,16 @@ void CDlgCertificateStoreDisplayOrExport::updateListCertificates() {
 			m_listCertificates.SetItemText(row, 6, stringValidTo);
 		}
 	}
+}
+
+long CDlgCertificateStoreDisplayOrExport::getSerialOfSelectedCertificate() const {
+	long serial = 0;
+	const int selectedItem = m_listCertificates.GetSelectionMark();
+	if (selectedItem != -1) {
+		const CString stringSerial = m_listCertificates.GetItemText(selectedItem, 0);
+		serial = atol(stringSerial);
+	}
+	return serial;
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificateStoreDisplayOrExport, CDialog)

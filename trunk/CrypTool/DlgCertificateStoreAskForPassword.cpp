@@ -24,7 +24,8 @@
 #include "DlgCertificateStoreAskForPassword.h"
 
 CDlgCertificateStoreAskForPassword::CDlgCertificateStoreAskForPassword(CWnd *_parent) :
-	CDialog(CDlgCertificateStoreAskForPassword::IDD, _parent) {
+	CDialog(CDlgCertificateStoreAskForPassword::IDD, _parent),
+	m_editPassword("") {
 
 }
 
@@ -39,8 +40,20 @@ BOOL CDlgCertificateStoreAskForPassword::OnInitDialog() {
 
 void CDlgCertificateStoreAskForPassword::DoDataExchange(CDataExchange *_pDX) {
 	CDialog::DoDataExchange(_pDX);
+	DDX_Text(_pDX, IDC_EDIT_PASSWORD, m_editPassword);
+}
+
+void CDlgCertificateStoreAskForPassword::clickedButtonOK() {
+	UpdateData(true);
+	EndDialog(IDOK);
+}
+
+void CDlgCertificateStoreAskForPassword::clickedButtonCancel() {
+	UpdateData(true);
+	EndDialog(IDCANCEL);
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificateStoreAskForPassword, CDialog)
-	
+	ON_BN_CLICKED(IDC_BUTTON_OK, &CDlgCertificateStoreAskForPassword::clickedButtonOK)
+	ON_BN_CLICKED(IDC_BUTTON_CANCEL, &CDlgCertificateStoreAskForPassword::clickedButtonCancel)
 END_MESSAGE_MAP()

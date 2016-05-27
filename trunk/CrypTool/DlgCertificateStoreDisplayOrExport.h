@@ -45,6 +45,8 @@ protected:
 	int m_checkEC;
 private:
 	void updateListCertificates();
+private:
+	long getSerialOfSelectedCertificate() const;
 
 	DECLARE_MESSAGE_MAP()
 };

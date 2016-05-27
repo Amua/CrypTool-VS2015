@@ -988,6 +988,7 @@ namespace CrypTool {
 				
 				// TODO/FIXME
 				AfxMessageBox("CRYPTOOL_BASE: implement certificate deletion");
+				return false;
 				// TODO/FIXME
 
 				// re-load all user certificates after a certificate was created

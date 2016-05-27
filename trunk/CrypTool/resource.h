@@ -825,7 +825,7 @@
 #define IDC_BUTTON_OK                   1215
 #define IDC_EDIT811                     1215
 #define IDC_EDIT229                     1215
-#define IDC_BUTTON_cancel               1216
+#define IDC_BUTTON_CANCEL               1216
 #define IDC_BUTTON6                     1216
 #define IDC_EDIT193                     1216
 #define IDC_BUTTON_Primzahlen_generieren 1217
@@ -3490,7 +3490,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        887
+#define _APS_NEXT_RESOURCE_VALUE        888
 #define _APS_NEXT_COMMAND_VALUE         33398
 #define _APS_NEXT_CONTROL_VALUE         2158
 #define _APS_NEXT_SYMED_VALUE           114

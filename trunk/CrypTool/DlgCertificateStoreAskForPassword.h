@@ -29,6 +29,13 @@ public:
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange *_pDX);
+protected:
+	afx_msg void clickedButtonOK();
+	afx_msg void clickedButtonCancel();
+protected:
+	CString m_editPassword;
+public:
+	const CString &getPassword() const { return m_editPassword; }
 
 	DECLARE_MESSAGE_MAP()
 };
