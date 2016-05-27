@@ -360,6 +360,13 @@ namespace CrypTool {
 				// false and all output variables remain untouched; first and foremost this function is 
 				// used as an interface to easily display user certificate information to the user
 				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const;
+				// this function is provided for convenience: it returns the public parameters of the 
+				// user certificate corresponding to the specified serial number in human-readable format
+				bool getUserCertificatePublicParameters(const long _serial, CString &_parameters) const;
+				// this function is provided for convenience: it returns all parameters of the user 
+				// certificate corresponding to the specified serial number in human-readable format, 
+				// including the private parameters, thus a password has to be supplied by the user
+				bool getUserCertificateAllParameters(const long _serial, const CString &_password, CString &_parameters) const;
 			};
 
 		}

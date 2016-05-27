@@ -1126,6 +1126,18 @@ DSA_free(dsa);
 				return true;
 			}
 
+			bool CertificateStore::getUserCertificatePublicParameters(const long _serial, CString &_parameters) const {
+				using namespace OpenSSL;
+				// TODO/FIXME
+				return false;
+			}
+
+			bool CertificateStore::getUserCertificateAllParameters(const long _serial, const CString &_password, CString &_parameters) const {
+				using namespace OpenSSL;
+				// TODO/FIXME
+				return false;
+			}
+
 		}
 
 	}
