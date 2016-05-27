@@ -913,31 +913,31 @@ namespace CrypTool {
 					// determine the specified key length
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
-DSA *dsa = DSA_new();
-// generate DSA parameters
-if (DSA_generate_parameters_ex(dsa, keyLength, NULL, 0, NULL, NULL, NULL)) {
-	// generate DSA key
-	if (DSA_generate_key(dsa)) {
-		// set DSA private key
-		EVP_PKEY_set1_DSA(pkey, dsa);
-		// set DSA public key
-		X509_set_pubkey(certificate, pkey);
-		// sign certificate with the private key of the CrypTool CA
-		X509_sign(certificate, signingKey, EVP_sha1());
-		// write user's certificate and private key
-		BIO *bioCertificate = BIO_new(BIO_s_file());
-		BIO *bioPrivateKey = BIO_new(BIO_s_file());
-		if (BIO_write_filename(bioCertificate, (void*)(LPCTSTR)(fileNameUserCertificate)) && BIO_write_filename(bioPrivateKey, (void*)(LPCTSTR)(fileNameUserPrivateKey))) {
-			if (PEM_write_bio_X509(bioCertificate, certificate) && PEM_write_bio_DSAPrivateKey(bioPrivateKey, dsa, EVP_aes_256_cbc(), 0, 0, 0, (void*)(LPCTSTR)(_password))) {
-				result = true;
-			}
-		}
-		BIO_free(bioCertificate);
-		BIO_free(bioPrivateKey);
-	}
-}
-// free memory
-DSA_free(dsa);
+					DSA *dsa = DSA_new();
+					// generate DSA parameters
+					if (DSA_generate_parameters_ex(dsa, keyLength, NULL, 0, NULL, NULL, NULL)) {
+						// generate DSA key
+						if (DSA_generate_key(dsa)) {
+							// set DSA private key
+							EVP_PKEY_set1_DSA(pkey, dsa);
+							// set DSA public key
+							X509_set_pubkey(certificate, pkey);
+							// sign certificate with the private key of the CrypTool CA
+							X509_sign(certificate, signingKey, EVP_sha1());
+							// write user's certificate and private key
+							BIO *bioCertificate = BIO_new(BIO_s_file());
+							BIO *bioPrivateKey = BIO_new(BIO_s_file());
+							if (BIO_write_filename(bioCertificate, (void*)(LPCTSTR)(fileNameUserCertificate)) && BIO_write_filename(bioPrivateKey, (void*)(LPCTSTR)(fileNameUserPrivateKey))) {
+								if (PEM_write_bio_X509(bioCertificate, certificate) && PEM_write_bio_DSAPrivateKey(bioPrivateKey, dsa, EVP_aes_256_cbc(), 0, 0, 0, (void*)(LPCTSTR)(_password))) {
+									result = true;
+								}
+							}
+							BIO_free(bioCertificate);
+							BIO_free(bioPrivateKey);
+						}
+					}
+					// free memory
+					DSA_free(dsa);
 				}
 				// EC-based certificate
 				if (_certificateType == CERTIFICATE_TYPE_EC) {
@@ -1113,16 +1113,19 @@ DSA_free(dsa);
 				if (!userCertificate) {
 					return false;
 				}
-
-				// TODO/FIXME
-				_firstName = "FIRSTNAME";
-				_lastName = "LASTNAME";
-				_remarks = "REMARKS";
-				_type = "TYPE";
-				_validFrom = "VALIDFROM";
-				_validTo = "VALIDTO";
-				// TODO/FIXME
-
+				// try to extract certificate first name, last name, and remarks
+				if (!extractCertificateFirstNameLastNameRemarks(userCertificate, _firstName, _lastName, _remarks)) {
+					return false;
+				}
+				// try to extract certificate type (i.e. "RSA-512", "DSA-1024", or "EC-prime192v1")
+				if (!extractCertificateType(userCertificate, _type)) {
+					return false;
+				}
+				// try extract certificate valid from, valid to
+				if (!extractCertificateValidFromValidTo(userCertificate, _validFrom, _validTo)) {
+					return false;
+				}
+				// obviously everything went well
 				return true;
 			}
 
@@ -1146,6 +1149,43 @@ DSA_free(dsa);
 				// TODO/FIXME
 
 				return false;
+			}
+
+			bool CertificateStore::extractCertificateFirstNameLastNameRemarks(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks) const {
+				using namespace OpenSSL;
+				// first we need to find out how long the common name is
+				const int commonNameLength = X509_NAME_get_text_by_NID(X509_get_subject_name(_certificate), NID_commonName, 0, 0);
+				if (commonNameLength <= 0) {
+					return false;
+				}
+				// then we transfer the common name into a byte string
+				ByteString byteStringCommonName;
+				byteStringCommonName.reset(commonNameLength);
+				if (X509_NAME_get_text_by_NID(X509_get_subject_name(_certificate), NID_commonName, (char*)(byteStringCommonName.getByteData()), byteStringCommonName.getByteLength()) != commonNameLength) {
+					return false;
+				}
+				// now we expect to have a common name in the format "[FIRSTNAME][LASTNAME][REMARKS]"
+				const CString commonName = byteStringCommonName.toString();
+
+				// TODO/FIXME: regular expressions?
+
+				return true;
+			}
+
+			bool CertificateStore::extractCertificateType(OpenSSL::X509 *_certificate, CString &_type) const {
+				using namespace OpenSSL;
+
+				// TODO/FIXME
+
+				return true;
+			}
+			
+			bool CertificateStore::extractCertificateValidFromValidTo(OpenSSL::X509 *_certificate, CString &_validFrom, CString &_validTo) const {
+				using namespace OpenSSL;
+
+				// TODO/FIXME
+
+				return true;
 			}
 
 		}

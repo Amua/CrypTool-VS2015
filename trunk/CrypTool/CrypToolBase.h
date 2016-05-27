@@ -355,11 +355,13 @@ namespace CrypTool {
 				// types of certificates are returned; if all arguments are false, the resulting vector 
 				// is empty of course
 				std::vector<long> getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const;
+			public:
 				// the following function is provided for convenience: if the serial number supplied as 
 				// argument doesn't match any of the available user certificates, the function returns 
 				// false and all output variables remain untouched; first and foremost this function is 
 				// used as an interface to easily display user certificate information to the user
 				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const;
+			public:
 				// this function is provided for convenience: it returns the public parameters of the 
 				// user certificate corresponding to the specified serial number in human-readable format
 				bool getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const;
@@ -368,6 +370,13 @@ namespace CrypTool {
 				// since the private parameters are only to be accessed by authorized users, naturally 
 				// the correct password is required
 				bool getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const;
+			private:
+				// internal helper function
+				bool extractCertificateFirstNameLastNameRemarks(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks) const;
+				// internal helper function 
+				bool extractCertificateType(OpenSSL::X509 *_certificate, CString &_type) const;
+				// internal helper function
+				bool extractCertificateValidFromValidTo(OpenSSL::X509 *_certificate, CString &_validFrom, CString &_validTo) const;
 			};
 
 		}
