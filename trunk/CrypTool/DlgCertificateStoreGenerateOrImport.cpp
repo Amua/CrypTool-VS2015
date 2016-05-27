@@ -97,8 +97,9 @@ void CDlgCertificateStoreGenerateOrImport::clickedButtonRadioEC() {
 void CDlgCertificateStoreGenerateOrImport::clickedButtonCreate() {
 	UpdateData(true);
 	// make sure all the required user information is there: the first name, the last name, 
-	// the remarks, and the password (where both password fields must be identical)
-	if (m_editFirstName.IsEmpty() || m_editLastName.IsEmpty() || m_editRemarks.IsEmpty() || m_editPassword1.IsEmpty() || m_editPassword2.IsEmpty() || m_editPassword1 != m_editPassword2) {
+	// and the password (where both password fields must be identical); the remarks field 
+	// is optional, so the user may leave it empty
+	if (m_editFirstName.IsEmpty() || m_editLastName.IsEmpty() || m_editPassword1.IsEmpty() || m_editPassword2.IsEmpty() || m_editPassword1 != m_editPassword2) {
 		AfxMessageBox("CRYPTOOL_BASE: supply user information");
 		return;
 	}

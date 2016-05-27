@@ -149,6 +149,11 @@ namespace CrypTool {
 		// way, the user is notified; the function returns the length of the resulting byte string
 		size_t truncateByteString(ByteString &_byteString, const unsigned int _truncateAtLength, const bool _truncateAtFirstNullByte);
 
+		// this function extracts string elements from a bracketed string; for example, if we have a 
+		// bracketed string like "<A><B><C>" and this function is called with an opening bracket of "<" 
+		// and a closing bracket of ">", then the three elements "A", "B", and "C" are returned
+		void extractElementsFromBracketedString(const CString &_input, const CString &_openingBracket, const CString &_closingBracket, std::vector<CString> &_vectorElements);
+
 		// this template function is provided for convenience, it returns true if the specified vector 
 		// contains the specified element
 		template<class T>
@@ -349,34 +354,39 @@ namespace CrypTool {
 				void loadUserCertificates();
 				// this function is called to unload all user certificates from memory
 				void unloadUserCertificates();
+			private:
+				// this function writes the custom CrypTool extension to the specified certificate;
+				// this way the asymmetric crypto implementation adheres to CrypTool 1.4 and prior; 
+				// the extension looks like this "[FIRST NAME][LAST NAME][REMARKS][TYPE]", for 
+				// example "[John][Doe][Password=1234][RSA-1024]"
+				bool writeCustomCrypToolExtension(OpenSSL::X509 *_certificate, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_type) const;
+				// this function reads the custom CrypTool extension from the specified certificate;
+				// this way the asymmetric crypto implementation adheres to CrypTool 1.4 and prior;
+				// the extension looks like this "[FIRST NAME][LAST NAME][REMARKS][TYPE]", for 
+				// example "[John][Doe][Password=1234][RSA-1024]"
+				bool readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type) const;
 			public:
-				// the following function is provided for convenience: it returns the serial numbers of 
-				// all user certificates stored in this certificate store; the arguments control which
-				// types of certificates are returned; if all arguments are false, the resulting vector 
+				// this function returns the serial numbers of all user certificates stored in this 
+				// certificate store; the arguments act as a filter in that they control which types 
+				// of certificates are returned; if all arguments are false, the resulting vector 
 				// is empty of course
 				std::vector<long> getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const;
 			public:
-				// the following function is provided for convenience: if the serial number supplied as 
-				// argument doesn't match any of the available user certificates, the function returns 
-				// false and all output variables remain untouched; first and foremost this function is 
-				// used as an interface to easily display user certificate information to the user
+				// if the serial number supplied as argument doesn't match any of the available user 
+				// certificates, the function returns false and all output variables remain untouched; 
+				// first and foremost this function is used as a convenience interface to easily display 
+				// user certificate information in list controls
 				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const;
 			public:
-				// this function is provided for convenience: it returns the public parameters of the 
-				// user certificate corresponding to the specified serial number in human-readable format
+				// this function returns the public parameters of the user certificate corresponding to 
+				// the specified serial number in human-readable format; the output is very similar to 
+				// what you get from OpenSSL's x509 CLI command
 				bool getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const;
-				// this function is provided for convenience: it returns the private parameters of the 
-				// user certificate corresponding to the specified serial number in human-readable format; 
-				// since the private parameters are only to be accessed by authorized users, naturally 
-				// the correct password is required
+				// this function returns the private parameters of the user certificate corresponding to 
+				// the specified serial number in human-readable format; the output is very similar to 
+				// what you get from OpenSSL's rsa, dsa, and ec CLI commands; since the private parameters 
+				// are only to be accessed by authorized users, naturally the correct password is required
 				bool getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const;
-			private:
-				// internal helper function
-				bool extractCertificateFirstNameLastNameRemarks(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks) const;
-				// internal helper function 
-				bool extractCertificateType(OpenSSL::X509 *_certificate, CString &_type) const;
-				// internal helper function
-				bool extractCertificateValidFromValidTo(OpenSSL::X509 *_certificate, CString &_validFrom, CString &_validTo) const;
 			};
 
 		}

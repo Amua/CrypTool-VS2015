@@ -47,13 +47,13 @@ BOOL CDlgCertificateStoreDisplayOrExport::OnInitDialog() {
 	header.Format("%s", "SERIAL");
 	m_listCertificates.InsertColumn(0, header, LVCFMT_LEFT, 75, 0);
 	header.Format("%s", "FIRSTNAME");
-	m_listCertificates.InsertColumn(1, header, LVCFMT_LEFT, 100, 0);
+	m_listCertificates.InsertColumn(1, header, LVCFMT_LEFT, 95, 0);
 	header.Format("%s", "LASTNAME");
-	m_listCertificates.InsertColumn(2, header, LVCFMT_LEFT, 100, 0);
+	m_listCertificates.InsertColumn(2, header, LVCFMT_LEFT, 95, 0);
 	header.Format("%s", "REMARKS");
 	m_listCertificates.InsertColumn(3, header, LVCFMT_LEFT, 75, 0);
 	header.Format("%s", "TYPE");
-	m_listCertificates.InsertColumn(4, header, LVCFMT_LEFT, 75, 0);
+	m_listCertificates.InsertColumn(4, header, LVCFMT_LEFT, 85, 0);
 	header.Format("%s", "VALIDFROM");
 	m_listCertificates.InsertColumn(5, header, LVCFMT_LEFT, 75, 0);
 	header.Format("%s", "VALIDTO");

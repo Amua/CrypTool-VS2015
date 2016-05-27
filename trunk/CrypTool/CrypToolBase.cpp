@@ -300,6 +300,28 @@ namespace CrypTool {
 			return _byteString.getByteLength();
 		}
 
+		void extractElementsFromBracketedString(const CString &_input, const CString &_openingBracket, const CString &_closingBracket, std::vector<CString> &_vectorElements) {
+			// we need a copy of the original string we can manipulate
+			CString input = _input;
+			// now go through the string and extract the elements
+			while (true) {
+				const int indexOpeningBracket = input.Find(_openingBracket);
+				const int indexClosingBracket = input.Find(_closingBracket);
+				if (indexOpeningBracket == -1) break;
+				if (indexClosingBracket == -1) break;
+				if (indexOpeningBracket >= indexClosingBracket) break;
+				CString element = input;
+				// delete portion after the closing bracket (including the closing bracket)
+				element = element.Left(indexClosingBracket);
+				// delete portion before the opening bracket (including the opening bracket)
+				element = element.Right(element.GetLength() - indexOpeningBracket - _openingBracket.GetLength());
+				// update the output variable
+				_vectorElements.push_back(element);
+				// don't forget to truncate the input string
+				input = input.Right(input.GetLength() - indexClosingBracket - _closingBracket.GetLength());
+			}
+		}
+
 	}
 
 	namespace Cryptography {
@@ -851,25 +873,35 @@ namespace CrypTool {
 				// of seconds passed since the unix epoch (1970/01/01), and we insert a one second 
 				// delay at the end of this function to prevent duplicate serial numbers
 				const long serial = (long)(time(0));
-				// initialize certificate data
+				// set certificate version and serial number
 				X509_set_version(certificate, 2);
 				ASN1_INTEGER_set(X509_get_serialNumber(certificate), serial);
-				X509_gmtime_adj(X509_get_notBefore(certificate), 0);
-				X509_gmtime_adj(X509_get_notAfter(certificate), 60 * 60 * 24 * 365);
-				// set issuer name
+				// set certificate validity (one year from now)
+				const long timeNotBefore = 0;
+				const long timeNotAfter = 60 * 60 * 24 * 365;
+				X509_gmtime_adj(X509_get_notBefore(certificate), timeNotBefore);
+				X509_gmtime_adj(X509_get_notAfter(certificate), timeNotAfter);
+				// set certificate type (i.e. "RSA-512", "DSA-1024", or "EC-prime192v1")
+				CString certificateType;
+				if (_certificateType == CERTIFICATE_TYPE_RSA) certificateType = "RSA-" + _certificateParameters;
+				if (_certificateType == CERTIFICATE_TYPE_DSA) certificateType = "DSA-" + _certificateParameters;
+				if (_certificateType == CERTIFICATE_TYPE_EC) certificateType = "EC-" + _certificateParameters;
+				// set certificate issuer name
 				X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
-				// set certificate data (C, S, L, O, CN)
+				// set certificate data (C, L, O, CN)
 				const CString certificateDataC = "DE";
-				const CString certificateDataS = "Hessen";
 				const CString certificateDataL = "Frankfurt";
 				const CString certificateDataO = "CrypTool Team";
-				const CString certificateDataCN = "[" + _firstName + "][" + _lastName + "][" + _remarks + "]";
-				// assign certificate data (C, S, L, O, CN)
+				CString certificateDataCN; certificateDataCN.Format("User Certificate #%d", serial);
+				// assign certificate data (C, L, O, CN)
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "C", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataC), -1, -1, 0);
-				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "S", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataS), -1, -1, 0);
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "L", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataL), -1, -1, 0);
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataO), -1, -1, 0);
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataCN), -1, -1, 0);
+				// add custom CrypTool extension
+				if (!writeCustomCrypToolExtension(certificate, _firstName, _lastName, _remarks, certificateType)) {
+					return false;
+				}
 				// generate file names for the certificate and the private key
 				CString fileNameUserCertificate;
 				CString fileNameUserPrivateKey;
@@ -1082,6 +1114,80 @@ namespace CrypTool {
 				mapUserCertificates.clear();
 			}
 
+			bool CertificateStore::writeCustomCrypToolExtension(OpenSSL::X509 *_certificate, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_type) const {
+				using namespace OpenSSL;
+				// if we don't have a valid certificate, return false right away
+				if (!_certificate) {
+					return false;
+				}
+				// ATTENTION: not sure whether this identifier interferes with anything else, 
+				// but at least the implementation is working; don't touch the following lines 
+				// unless you're absolutely positive you know what you're doing
+				const int extensionIdentifier = OBJ_create("1.2.3.4.5", "CTCX", "CrypTool Certificate Extension");
+				// at this point we create a string in the following format, without the quotes:  
+				// "[FIRST NAME][LAST NAME][REMARKS][TYPE]"
+				const CString extensionString = "[" + _firstName + "][" + _lastName + "][" + _remarks + "][" + _type + "]";
+				ASN1_OCTET_STRING *asn1String = ASN1_OCTET_STRING_new();
+				if (!ASN1_OCTET_STRING_set(asn1String, (const unsigned char*)(LPCTSTR)(extensionString), extensionString.GetLength())) {
+					return false;
+				}
+				X509_EXTENSION *extension = X509_EXTENSION_create_by_NID(0, extensionIdentifier, 0, asn1String);
+				if (!extension) {
+					return false;
+				}
+				ASN1_OCTET_STRING_free(asn1String);
+				if (!X509_add_ext(_certificate, extension, -1)) {
+					return false;
+				}
+				X509_EXTENSION_free(extension);
+				// seems like everything went fine
+				return true;
+			}
+
+			bool CertificateStore::readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type) const {
+				using namespace OpenSSL;
+				// if we don't have a valid certificate, return false right away
+				if (!_certificate) {
+					return false;
+				}
+				// ATTENTION: not sure whether this identifier interferes with anything else, 
+				// but at least the implementation is working; don't touch the following lines 
+				// unless you're absolutely positive you know what you're doing
+				const int extensionIdentifier = OBJ_create("1.2.3.4.5", "CTCX", "CrypTool Certificate Extension");
+				// extract the extension data
+				const int index = X509_get_ext_by_NID(_certificate, extensionIdentifier, -1);
+				X509_EXTENSION *extension = X509_get_ext(_certificate, index);
+				if (!extension) {
+					return false;
+				}
+				ASN1_OCTET_STRING *asn1String = X509_EXTENSION_get_data(extension);
+				if (!asn1String) {
+					return false;
+				}
+				const unsigned char *asn1StringData = asn1String->data;
+				long xlen;
+				int tag;
+				int xclass;
+				if (!ASN1_get_object(&asn1StringData, &xlen, &tag, &xclass, asn1String->length)) {
+					return false;
+				}
+				// at this point we expect a string in the following format, without the quotes:  
+				// "[FIRST NAME][LAST NAME][REMARKS][TYPE]"; if any of the elements is missing, 
+				// we return false without changing the output variables
+				const CString extensionString = asn1String->data;
+				std::vector<CString> vectorElements;
+				Utilities::extractElementsFromBracketedString(extensionString, "[", "]", vectorElements);
+				if (vectorElements.size() != 4) {
+					return false;
+				}
+				// seems like everything went fine-- assign the output variables, and then return
+				_firstName = vectorElements.at(0);
+				_lastName = vectorElements.at(1);
+				_remarks = vectorElements.at(2);
+				_type = vectorElements.at(3);
+				return true;
+			}
+
 			std::vector<long> CertificateStore::getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const {
 				using namespace OpenSSL;
 				std::vector<long> vectorUserCertificateSerials;
@@ -1113,18 +1219,23 @@ namespace CrypTool {
 				if (!userCertificate) {
 					return false;
 				}
-				// try to extract certificate first name, last name, and remarks
-				if (!extractCertificateFirstNameLastNameRemarks(userCertificate, _firstName, _lastName, _remarks)) {
+				// try to read custom CrypTool extension from the certificate
+				if (!readCustomCrypToolExtension(userCertificate, _firstName, _lastName, _remarks, _type)) {
 					return false;
 				}
-				// try to extract certificate type (i.e. "RSA-512", "DSA-1024", or "EC-prime192v1")
-				if (!extractCertificateType(userCertificate, _type)) {
-					return false;
-				}
-				// try extract certificate valid from, valid to
-				if (!extractCertificateValidFromValidTo(userCertificate, _validFrom, _validTo)) {
-					return false;
-				}
+				// manually assign valid from and valid to
+				char bufferNotBefore[1024];
+				char bufferNotAfter[1024];
+				BIO *bioNotBefore = BIO_new(BIO_s_mem());
+				BIO *bioNotAfter = BIO_new(BIO_s_mem());
+				ASN1_TIME_print(bioNotBefore, X509_get_notBefore(userCertificate));
+				ASN1_TIME_print(bioNotAfter, X509_get_notAfter(userCertificate));
+				BIO_gets(bioNotBefore, bufferNotBefore, 100);
+				BIO_gets(bioNotAfter, bufferNotAfter, 100);
+				BIO_free(bioNotBefore);
+				BIO_free(bioNotAfter);
+				_validFrom = bufferNotBefore;
+				_validTo = bufferNotAfter;
 				// obviously everything went well
 				return true;
 			}
@@ -1149,43 +1260,6 @@ namespace CrypTool {
 				// TODO/FIXME
 
 				return false;
-			}
-
-			bool CertificateStore::extractCertificateFirstNameLastNameRemarks(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks) const {
-				using namespace OpenSSL;
-				// first we need to find out how long the common name is
-				const int commonNameLength = X509_NAME_get_text_by_NID(X509_get_subject_name(_certificate), NID_commonName, 0, 0);
-				if (commonNameLength <= 0) {
-					return false;
-				}
-				// then we transfer the common name into a byte string
-				ByteString byteStringCommonName;
-				byteStringCommonName.reset(commonNameLength);
-				if (X509_NAME_get_text_by_NID(X509_get_subject_name(_certificate), NID_commonName, (char*)(byteStringCommonName.getByteData()), byteStringCommonName.getByteLength()) != commonNameLength) {
-					return false;
-				}
-				// now we expect to have a common name in the format "[FIRSTNAME][LASTNAME][REMARKS]"
-				const CString commonName = byteStringCommonName.toString();
-
-				// TODO/FIXME: regular expressions?
-
-				return true;
-			}
-
-			bool CertificateStore::extractCertificateType(OpenSSL::X509 *_certificate, CString &_type) const {
-				using namespace OpenSSL;
-
-				// TODO/FIXME
-
-				return true;
-			}
-			
-			bool CertificateStore::extractCertificateValidFromValidTo(OpenSSL::X509 *_certificate, CString &_validFrom, CString &_validTo) const {
-				using namespace OpenSSL;
-
-				// TODO/FIXME
-
-				return true;
 			}
 
 		}
