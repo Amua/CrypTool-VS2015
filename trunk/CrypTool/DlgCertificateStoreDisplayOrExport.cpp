@@ -23,6 +23,8 @@ limitations under the License.
 #include "CrypToolBase.h"
 #include "DlgCertificateStoreDisplayOrExport.h"
 #include "DlgCertificateStoreAskForPassword.h"
+#include "DlgCertificateStoreShowCertificateParametersAll.h"
+#include "DlgCertificateStoreShowCertificateParametersPublic.h"
 
 CDlgCertificateStoreDisplayOrExport::CDlgCertificateStoreDisplayOrExport(CWnd *_parent) :
 	CDialog(CDlgCertificateStoreDisplayOrExport::IDD, _parent),
@@ -70,11 +72,51 @@ void CDlgCertificateStoreDisplayOrExport::DoDataExchange(CDataExchange *_pDX) {
 }
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonShowPublicParameters() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+	// acquire the serial of the selected certificate
+	const long serial = getSerialOfSelectedCertificate();
+	if (!serial) {
+		return;
+	}
+	// try to acquire the public parameters
+	CString publicParameters;
+	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicParameters(serial, publicParameters)) {
+		AfxMessageBox("CRYPTOOL_BASE: public certificate parameters could NOT be retrieved");
+		return;
+	}
+	// show the public parameters
+	CDlgCertificateStoreShowCertificateParametersPublic dlgCertificateStoreShowCertificateParametersPublic;
+	dlgCertificateStoreShowCertificateParametersPublic.setPublicParameters(publicParameters);
+	dlgCertificateStoreShowCertificateParametersPublic.DoModal();
 }
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonShowAllParameters() {
-	AfxMessageBox("CRYPTOOL_BASE: implement me");
+	// acquire the serial of the selected certificate
+	const long serial = getSerialOfSelectedCertificate();
+	if (!serial) {
+		return;
+	}
+	// ask the user for a password to access private parameters
+	CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword;
+	if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) {
+		return;
+	}
+	// try to acquire the public parameters
+	CString publicParameters;
+	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicParameters(serial, publicParameters)) {
+		AfxMessageBox("CRYPTOOL_BASE: public certificate parameters could NOT be retrieved");
+		return;
+	}
+	// try to acquire the private parameters
+	CString privateParameters;
+	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateParameters(serial, dlgCertificateStoreAskForPassword.getPassword(), privateParameters)) {
+		AfxMessageBox("CRYPTOOL_BASE: private certificate parameters could NOT be retrieved");
+		return;
+	}
+	// show the public parameters and the private parameters
+	CDlgCertificateStoreShowCertificateParametersAll dlgCertificateStoreShowCertificateParametersAll;
+	dlgCertificateStoreShowCertificateParametersAll.setPublicParameters(publicParameters);
+	dlgCertificateStoreShowCertificateParametersAll.setPrivateParameters(privateParameters);
+	dlgCertificateStoreShowCertificateParametersAll.DoModal();
 }
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonDelete() {

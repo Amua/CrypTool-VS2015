@@ -1126,15 +1126,25 @@ DSA_free(dsa);
 				return true;
 			}
 
-			bool CertificateStore::getUserCertificatePublicParameters(const long _serial, CString &_parameters) const {
+			bool CertificateStore::getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const {
 				using namespace OpenSSL;
+				
 				// TODO/FIXME
+				_publicParameters = "TODO/FIXME: public parameters";
+				return true;
+				// TODO/FIXME
+
 				return false;
 			}
 
-			bool CertificateStore::getUserCertificateAllParameters(const long _serial, const CString &_password, CString &_parameters) const {
+			bool CertificateStore::getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const {
 				using namespace OpenSSL;
+				
 				// TODO/FIXME
+				_privateParameters = "TODO/FIXME: private parameters";
+				return true;
+				// TODO/FIXME
+
 				return false;
 			}
 
