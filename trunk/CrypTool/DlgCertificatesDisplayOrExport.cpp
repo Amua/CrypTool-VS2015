@@ -39,30 +39,22 @@ BOOL CDlgCertificatesDisplayOrExport::OnInitDialog() {
 	CDialog::OnInitDialog();
 	// initialize list of certificates
 	m_listCertificates.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-	// add header for first name
-	CString headerFirstName;
-	headerFirstName.Format("%s", "FIRST NAME");
-	m_listCertificates.InsertColumn(0, headerFirstName, LVCFMT_LEFT, 100, 0);
-	// add header for last name
-	CString headerLastName;
-	headerLastName.Format("%s", "LAST NAME");
-	m_listCertificates.InsertColumn(1, headerLastName, LVCFMT_LEFT, 100, 1);
-	// add header for remarks
-	CString headerRemarks;
-	headerRemarks.Format("%s", "REMARKS");
-	m_listCertificates.InsertColumn(2, headerRemarks, LVCFMT_LEFT, 100, 2);
-	// add header for type
-	CString headerType;
-	headerType.Format("%s", "TYPE");
-	m_listCertificates.InsertColumn(3, headerType, LVCFMT_LEFT, 65, 3);
-	// add header for serial number
-	CString headerSerialNumber;
-	headerSerialNumber.Format("%s", "SERIAL NUMBER");
-	m_listCertificates.InsertColumn(4, headerSerialNumber, LVCFMT_LEFT, 100, 4);
-	// add header for time of creation
-	CString headerTimeOfCreation;
-	headerTimeOfCreation.Format("%s", "TIME OF CREATION");
-	m_listCertificates.InsertColumn(5, headerTimeOfCreation, LVCFMT_LEFT, 100, 5);
+	// initialize headers
+	CString header;
+	header.Format("%s", "SERIAL");
+	m_listCertificates.InsertColumn(0, header, LVCFMT_LEFT, 75, 0);
+	header.Format("%s", "FIRSTNAME");
+	m_listCertificates.InsertColumn(1, header, LVCFMT_LEFT, 100, 0);
+	header.Format("%s", "LASTNAME");
+	m_listCertificates.InsertColumn(2, header, LVCFMT_LEFT, 100, 0);
+	header.Format("%s", "REMARKS");
+	m_listCertificates.InsertColumn(3, header, LVCFMT_LEFT, 75, 0);
+	header.Format("%s", "TYPE");
+	m_listCertificates.InsertColumn(4, header, LVCFMT_LEFT, 75, 0);
+	header.Format("%s", "VALIDFROM");
+	m_listCertificates.InsertColumn(5, header, LVCFMT_LEFT, 75, 0);
+	header.Format("%s", "VALIDTO");
+	m_listCertificates.InsertColumn(6, header, LVCFMT_LEFT, 75, 0);
 	// initial update for the list of certificates
 	updateListCertificates();
 	return TRUE;
@@ -114,16 +106,31 @@ void CDlgCertificatesDisplayOrExport::clickedButtonClose() {
 void CDlgCertificatesDisplayOrExport::updateListCertificates() {
 	// clear the existing contents of the list
 	m_listCertificates.DeleteAllItems();
-	// acquire the desired certificates from the certificate store (RSA, DSA, EC)
-	std::vector<CrypTool::Cryptography::Asymmetric::CertificateStore::CertificateEntry> vectorCertificateEntries = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getVectorCertificateEntries(m_checkRSA == 1, m_checkDSA == 1, m_checkEC == 1);
-	for (size_t indexCertificateEntry = 0; indexCertificateEntry < vectorCertificateEntries.size(); indexCertificateEntry++) {
-		CrypTool::Cryptography::Asymmetric::CertificateStore::CertificateEntry certificateEntry = vectorCertificateEntries[indexCertificateEntry];
-		m_listCertificates.InsertItem(indexCertificateEntry, certificateEntry.firstName);
-		m_listCertificates.SetItemText(indexCertificateEntry, 1, certificateEntry.lastName);
-		m_listCertificates.SetItemText(indexCertificateEntry, 2, certificateEntry.remarks);
-		m_listCertificates.SetItemText(indexCertificateEntry, 3, certificateEntry.type);
-		m_listCertificates.SetItemText(indexCertificateEntry, 4, certificateEntry.serial);
-		m_listCertificates.SetItemText(indexCertificateEntry, 5, certificateEntry.creation);
+	// acquire certificate serials from the certificate store; the types of user certificates 
+	// for which serials are to be fetched depend on status of the check boxes (RSA, DSA, EC)
+	const std::vector<long> vectorUserCertificateSerials = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateSerials(m_checkRSA == 1, m_checkDSA == 1, m_checkEC == 1);
+	// now that we have the serials for all user certificates we're interested in, we 
+	// can go through all the serials and fill the certificate list with some information
+	CString stringSerial;
+	CString stringFirstName;
+	CString stringLastName;
+	CString stringRemarks;
+	CString stringType;
+	CString stringValidFrom;
+	CString stringValidTo;
+	for (size_t indexSerial = 0; indexSerial < vectorUserCertificateSerials.size(); indexSerial++) {
+		const long serial = vectorUserCertificateSerials[indexSerial];
+		stringSerial.Format("%d", serial);
+		if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateInformation(serial, stringFirstName, stringLastName, stringRemarks, stringType, stringValidFrom, stringValidTo)) {
+			const int row = m_listCertificates.GetItemCount();
+			m_listCertificates.InsertItem(row, stringSerial);
+			m_listCertificates.SetItemText(row, 1, stringFirstName);
+			m_listCertificates.SetItemText(row, 2, stringLastName);
+			m_listCertificates.SetItemText(row, 3, stringRemarks);
+			m_listCertificates.SetItemText(row, 4, stringType);
+			m_listCertificates.SetItemText(row, 5, stringValidFrom);
+			m_listCertificates.SetItemText(row, 6, stringValidTo);
+		}
 	}
 }
 

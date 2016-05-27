@@ -294,9 +294,11 @@ namespace CrypTool {
 				ASYMMETRIC_OPERATION_TYPE_DECRYPTION
 			};
 
-			// TODO/FIXME: implement "AsymmetricOperation" class (see symmetric counterpart above)
+			//
+			// TODO/FIXME: implement "AsymmetricOperation" class? (see symmetric counterpart above)
+			//
 
-			// TODO/FIXME
+			// the supported certificate types
 			enum CertificateType {
 				CERTIFICATE_TYPE_NULL,
 				CERTIFICATE_TYPE_RSA,
@@ -322,7 +324,9 @@ namespace CrypTool {
 				OpenSSL::X509 *caCertificate;
 				OpenSSL::RSA *caPrivateKey;
 			private:
-				// this map holds all user certificates (mapped to serial numbers)
+				// this map holds all user certificates (mapped to serial numbers) currently held 
+				// in memory; whenever a user certificate is created or deleted, all user certificates 
+				// are automatically re-loaded so that this map is always up-to-date
 				std::map<long, OpenSSL::X509*> mapUserCertificates;
 			public:
 				// this function tries to create a certificate with the values specified by the user; the 
@@ -330,7 +334,9 @@ namespace CrypTool {
 				// either the desired key length (RSA and DSA) or the desired elliptic curve (EC); all other 
 				// parameters (first name, last name, remarks, password) are identical for all types
 				bool createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password);
-				// this function tries to delete a certificate with the specified serial number
+				// this function tries to delete the user certificate with the specified serial number; 
+				// however, the correct password (protecting the private key) must be provided for the 
+				// deletion to be successful
 				bool deleteUserCertificate(const long _serial, const CString &_password);
 			private:
 				// this function generates a file name base for user certificates and private keys 
@@ -338,27 +344,22 @@ namespace CrypTool {
 				CString generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const;
 			private:
 				// this function is called whenever the certificate store content changes, in other words: 
-				// whenever a certificate is created or deleted; it makes sure all user certificates are 
-				// always held in memory to provide quick access without expensive file operations
+				// whenever a user certificate is created or deleted; it makes sure all user certificates 
+				// are always held in memory to provide quick access without expensive file operations
 				void loadUserCertificates();
-				// this function is called to unload all certificates from memory
+				// this function is called to unload all user certificates from memory
 				void unloadUserCertificates();
 			public:
-				// this struct is provided for convenience: it makes certificates available to the outside 
-				// for display purposes, therefore we hide most of the internal information
-				struct CertificateEntry {
-					CString firstName;
-					CString lastName;
-					CString remarks;
-					CString type;
-					CString serial;
-					CString creation;
-				};
-				// this function returns a vector of certificate list entries; the parameters specify 
-				// which certificates are transferred into the vector; if all flags are false, the 
-				// resulting vector is naturally empty
-				std::vector<CertificateEntry> getVectorCertificateEntries(const bool _rsa, const bool _dsa, const bool _ec) const;
-
+				// the following function is provided for convenience: it returns the serial numbers of 
+				// all user certificates stored in this certificate store; the arguments control which
+				// types of certificates are returned; if all arguments are false, the resulting vector 
+				// is empty of course
+				std::vector<long> getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const;
+				// the following function is provided for convenience: if the serial number supplied as 
+				// argument doesn't match any of the available user certificates, the function returns 
+				// false and all output variables remain untouched; first and foremost this function is 
+				// used as an interface to easily display user certificate information to the user
+				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const;
 			};
 
 		}

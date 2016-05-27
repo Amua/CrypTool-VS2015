@@ -1043,32 +1043,48 @@ namespace CrypTool {
 				mapUserCertificates.clear();
 			}
 
-			std::vector<CertificateStore::CertificateEntry> CertificateStore::getVectorCertificateEntries(const bool _rsa, const bool _dsa, const bool _ec) const {
+			std::vector<long> CertificateStore::getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const {
 				using namespace OpenSSL;
-				// this is the result variable
-				std::vector<CertificateEntry> vectorCertificateEntries;
-				// at least one of the flags needs to be true for the result vector to contain anything
-				if (_rsa || _dsa || _ec) {
-					for (std::map<long, X509*>::const_iterator iter = mapUserCertificates.begin(); iter != mapUserCertificates.end(); iter++) {
-						X509 *userCertificate = iter->second;
+				std::vector<long> vectorUserCertificateSerials;
+				for (std::map<long, X509*>::const_iterator iter = mapUserCertificates.begin(); iter != mapUserCertificates.end(); iter++) {
+					const long userCertificateSerial = iter->first;
+					X509 *userCertificate = iter->second;
+					if (userCertificate) {
 						EVP_PKEY *pkey = X509_get_pubkey(userCertificate);
 						const int keyType = EVP_PKEY_type(pkey->type);
-						EVP_PKEY_free(pkey);
 						if ((keyType == EVP_PKEY_RSA && _rsa) || (keyType == EVP_PKEY_DSA && _dsa) || (keyType == EVP_PKEY_EC && _ec)) {
-							CertificateEntry certificateEntry;
-
-							// TODO/FIXME: we need to extract a lot more information here...
-
-							ASN1_INTEGER *asn1SerialNumber = X509_get_serialNumber(userCertificate);
-							if (asn1SerialNumber && asn1SerialNumber->length <= (int)(sizeof(long))) {
-								const long serialNumber = ASN1_INTEGER_get(asn1SerialNumber);
-								certificateEntry.serial.Format("%d", serialNumber);
-								vectorCertificateEntries.push_back(certificateEntry);
-							}
+							vectorUserCertificateSerials.push_back(userCertificateSerial);
 						}
+						EVP_PKEY_free(pkey);
 					}
 				}
-				return vectorCertificateEntries;
+				return vectorUserCertificateSerials;
+			}
+
+			bool CertificateStore::getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const {
+				using namespace OpenSSL;
+				// make sure there is a user certificate which corresponds to the provided serial number, 
+				// otherwise return false right away and leave the output variables untouched
+				const std::map<long, X509*>::const_iterator iter = mapUserCertificates.find(_serial);
+				if (iter == mapUserCertificates.end()) {
+					return false;
+				}
+				// acquire the X509 structure of the specified user certificate
+				X509 *userCertificate = iter->second;
+				if (!userCertificate) {
+					return false;
+				}
+
+				// TODO/FIXME
+				_firstName = "FIRSTNAME";
+				_lastName = "LASTNAME";
+				_remarks = "REMARKS";
+				_type = "TYPE";
+				_validFrom = "VALIDFROM";
+				_validTo = "VALIDTO";
+				// TODO/FIXME
+
+				return true;
 			}
 
 		}
