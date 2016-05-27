@@ -339,9 +339,9 @@ namespace CrypTool {
 				// deletion to be successful
 				bool deleteUserCertificate(const long _serial, const CString &_password);
 			private:
-				// this function generates a file name base for user certificates and private keys 
-				// depending on the certificate serial number and the specified common name string
-				CString generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const;
+				// this function generates file names for the user certificate and the user private key 
+				// based on the serial number of the certificate (which is unique due to the implementation)
+				void generateFileNamesForUserCertificateAndUserPrivateKey(const long _serial, CString &_fileNameUserCertificate, CString &_fileNameUserPrivateKey) const;
 			private:
 				// this function is called whenever the certificate store content changes, in other words: 
 				// whenever a user certificate is created or deleted; it makes sure all user certificates 

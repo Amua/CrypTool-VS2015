@@ -870,9 +870,10 @@ namespace CrypTool {
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "L", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataL), -1, -1, 0);
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataO), -1, -1, 0);
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataCN), -1, -1, 0);
-				// create file names for the certificate and the private key
-				const CString fileNameUserCertificate = generateFileNameBaseForUserCertificateAndPrivateKey(serial, certificateDataCN) + ".crt";
-				const CString fileNameUserPrivateKey = generateFileNameBaseForUserCertificateAndPrivateKey(serial, certificateDataCN) + ".key";
+				// generate file names for the certificate and the private key
+				CString fileNameUserCertificate;
+				CString fileNameUserPrivateKey;
+				generateFileNamesForUserCertificateAndUserPrivateKey(serial, fileNameUserCertificate, fileNameUserPrivateKey);
 				// the internal result variable
 				bool result = false;
 				// RSA-based certificate
@@ -912,31 +913,31 @@ namespace CrypTool {
 					// determine the specified key length
 					const int keyLength = atoi(_certificateParameters);
 					// allocate memory
-					DSA *dsa = DSA_new();
-					// generate DSA parameters
-					if (DSA_generate_parameters_ex(dsa, keyLength, NULL, 0, NULL, NULL, NULL)) {
-						// generate DSA key
-						if (DSA_generate_key(dsa)) {
-							// set DSA private key
-							EVP_PKEY_set1_DSA(pkey, dsa);
-							// set DSA public key
-							X509_set_pubkey(certificate, pkey);
-							// sign certificate with the private key of the CrypTool CA
-							X509_sign(certificate, signingKey, EVP_sha1());
-							// write user's certificate and private key
-							BIO *bioCertificate = BIO_new(BIO_s_file());
-							BIO *bioPrivateKey = BIO_new(BIO_s_file());
-							if (BIO_write_filename(bioCertificate, (void*)(LPCTSTR)(fileNameUserCertificate)) && BIO_write_filename(bioPrivateKey, (void*)(LPCTSTR)(fileNameUserPrivateKey))) {
-								if (PEM_write_bio_X509(bioCertificate, certificate) && PEM_write_bio_DSAPrivateKey(bioPrivateKey, dsa, EVP_aes_256_cbc(), 0, 0, 0, (void*)(LPCTSTR)(_password))) {
-									result = true;
-								}
-							}
-							BIO_free(bioCertificate);
-							BIO_free(bioPrivateKey);
-						}
-					}
-					// free memory
-					DSA_free(dsa);
+DSA *dsa = DSA_new();
+// generate DSA parameters
+if (DSA_generate_parameters_ex(dsa, keyLength, NULL, 0, NULL, NULL, NULL)) {
+	// generate DSA key
+	if (DSA_generate_key(dsa)) {
+		// set DSA private key
+		EVP_PKEY_set1_DSA(pkey, dsa);
+		// set DSA public key
+		X509_set_pubkey(certificate, pkey);
+		// sign certificate with the private key of the CrypTool CA
+		X509_sign(certificate, signingKey, EVP_sha1());
+		// write user's certificate and private key
+		BIO *bioCertificate = BIO_new(BIO_s_file());
+		BIO *bioPrivateKey = BIO_new(BIO_s_file());
+		if (BIO_write_filename(bioCertificate, (void*)(LPCTSTR)(fileNameUserCertificate)) && BIO_write_filename(bioPrivateKey, (void*)(LPCTSTR)(fileNameUserPrivateKey))) {
+			if (PEM_write_bio_X509(bioCertificate, certificate) && PEM_write_bio_DSAPrivateKey(bioPrivateKey, dsa, EVP_aes_256_cbc(), 0, 0, 0, (void*)(LPCTSTR)(_password))) {
+				result = true;
+			}
+		}
+		BIO_free(bioCertificate);
+		BIO_free(bioPrivateKey);
+	}
+}
+// free memory
+DSA_free(dsa);
 				}
 				// EC-based certificate
 				if (_certificateType == CERTIFICATE_TYPE_EC) {
@@ -985,22 +986,59 @@ namespace CrypTool {
 			}
 
 			bool CertificateStore::deleteUserCertificate(const long _serial, const CString &_password) {
-				
-				// TODO/FIXME
-				AfxMessageBox("CRYPTOOL_BASE: implement certificate deletion");
-				return false;
-				// TODO/FIXME
-
-				// re-load all user certificates after a certificate was created
+				// the first thing we need to do is check whether there is a certificate with the 
+				// specified serial at all; if not, dump a warning message and return false
+				if (mapUserCertificates.find(_serial) == mapUserCertificates.end()) {
+					AfxMessageBox("CRYPTOOL_BASE: no certificate with the specified serial exists");
+					return false;
+				}
+				// generate file names for the certificate and the private key
+				CString fileNameUserCertificate;
+				CString fileNameUserPrivateKey;
+				generateFileNamesForUserCertificateAndUserPrivateKey(_serial, fileNameUserCertificate, fileNameUserPrivateKey);
+				// here we check whether the generated file names actually point to valid files; 
+				// if not, we also dump and warning message and return false
+				CFileFind finderUserCertificate;
+				CFileFind finderUserPrivateKey;
+				if (!finderUserCertificate.FindFile(fileNameUserCertificate) || !finderUserPrivateKey.FindFile(fileNameCaPrivateKey)) {
+					AfxMessageBox("CRYPTOOL_BASE: no certificate with the specified serial exists");
+					return false;
+				}
+				// this flag will determine whether we delete the certificate
+				bool authorized = false;
+				// now we try to access the private key with the specified password
+				using namespace OpenSSL;
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				BIO *bioUserUserPrivateKey = BIO_new(BIO_s_file());
+				if (BIO_read_filename(bioUserUserPrivateKey, (void*)(LPCTSTR)(fileNameUserPrivateKey))) {
+					authorized = (PEM_read_bio_PrivateKey(bioUserUserPrivateKey, &pkey, 0, (void*)(LPCTSTR)(_password)) != 0);
+				}
+				BIO_free(bioUserUserPrivateKey);
+				EVP_PKEY_free(pkey);
+				// if the user is not authorized (as in: password is wrong), 
+				// dump a warning message and return false
+				if (!authorized) {
+					AfxMessageBox("CRYPTOOL_BASE: wrong password, not authorized to access private key");
+					return false;
+				}
+				// at this point we can safely assume the user is authorized, 
+				// so we delete both the certificate and the private key; we 
+				// don't do any error checking here on purpose, because if 
+				// the file had been removed in the meantime manually, the 
+				// result would be the same
+				DeleteFile(fileNameUserCertificate);
+				DeleteFile(fileNameUserPrivateKey);
+				// re-load all user certificates after a certificate was deleted
 				loadUserCertificates();
 				// if we reach this point, everything went well
 				return true;
 			}
 
-			CString CertificateStore::generateFileNameBaseForUserCertificateAndPrivateKey(const long _serial, const CString &_commonName) const {
+			void CertificateStore::generateFileNamesForUserCertificateAndUserPrivateKey(const long _serial, CString &_fileNameUserCertificate, CString &_fileNameUserPrivateKey) const {
 				CString fileNameBase;
-				fileNameBase.Format(pathToCertificateStore + "\\" + "[%d]%s", _serial, _commonName);
-				return fileNameBase;
+				fileNameBase.Format(pathToCertificateStore + "\\" + "%d", _serial);
+				_fileNameUserCertificate = fileNameBase + ".crt";
+				_fileNameUserPrivateKey = fileNameBase + ".key";
 			}
 
 			void CertificateStore::loadUserCertificates() {
