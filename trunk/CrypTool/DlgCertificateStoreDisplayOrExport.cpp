@@ -109,24 +109,20 @@ void CDlgCertificateStoreDisplayOrExport::clickedButtonShowPublicParameters() {
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonShowAllParameters() {
 	// acquire the serial of the selected certificate
-	const long serial = getSerialOfSelectedCertificate();
-	if (!serial) {
-		return;
-	}
+	const long serialOfSelectedCertificate = getSerialOfSelectedCertificate();
+	if (!serialOfSelectedCertificate) return;
 	// ask the user for a password to access private parameters
-	CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword;
-	if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) {
-		return;
-	}
+	CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword(serialOfSelectedCertificate);
+	if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) return;
 	// try to acquire the public parameters
 	CString publicParameters;
-	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicParameters(serial, publicParameters)) {
+	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicParameters(serialOfSelectedCertificate, publicParameters)) {
 		AfxMessageBox("CRYPTOOL_BASE: public certificate parameters could NOT be retrieved");
 		return;
 	}
 	// try to acquire the private parameters
 	CString privateParameters;
-	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateParameters(serial, dlgCertificateStoreAskForPassword.getPassword(), privateParameters)) {
+	if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateParameters(serialOfSelectedCertificate, dlgCertificateStoreAskForPassword.getCertificatePassword(), privateParameters)) {
 		AfxMessageBox("CRYPTOOL_BASE: private certificate parameters could NOT be retrieved");
 		return;
 	}
@@ -140,17 +136,18 @@ void CDlgCertificateStoreDisplayOrExport::clickedButtonShowAllParameters() {
 }
 
 void CDlgCertificateStoreDisplayOrExport::clickedButtonDelete() {
+	// acquire the serial of the selected certificate
 	const long serialOfSelectedCertificate = getSerialOfSelectedCertificate();
-	if (serialOfSelectedCertificate) {
-		CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword;
-		if (dlgCertificateStoreAskForPassword.DoModal() == IDOK) {
-			if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().deleteUserCertificate(serialOfSelectedCertificate, dlgCertificateStoreAskForPassword.getPassword())) {
-				AfxMessageBox("CRYPTOOL_BASE: the selected certificate was deleted");
-				updateListCertificates();
-			}
-			else {
-				AfxMessageBox("CRYPTOOL_BASE: the selected certificate was NOT deleted");
-			}
+	if (!serialOfSelectedCertificate) return;
+	// try to delete the selected certificate
+	CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword(serialOfSelectedCertificate);
+	if (dlgCertificateStoreAskForPassword.DoModal() == IDOK) {
+		if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().deleteUserCertificate(serialOfSelectedCertificate, dlgCertificateStoreAskForPassword.getCertificatePassword())) {
+			AfxMessageBox("CRYPTOOL_BASE: the selected certificate was deleted");
+			updateListCertificates();
+		}
+		else {
+			AfxMessageBox("CRYPTOOL_BASE: the selected certificate was NOT deleted");
 		}
 	}
 	// don't forget to update the buttons
