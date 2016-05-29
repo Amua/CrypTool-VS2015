@@ -2884,6 +2884,7 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClCompile Include="DlgCertificateStoreGenerateOrImport.cpp" />
     <ClCompile Include="DlgCertificateStoreShowCertificateParametersAll.cpp" />
     <ClCompile Include="DlgCertificateStoreShowCertificateParametersPublic.cpp" />
+    <ClCompile Include="DlgCertificateStoreSelectCertificate.cpp" />
     <ClCompile Include="DlgChangePIN.cpp" />
     <ClCompile Include="DlgComputeMersenneNumbers.cpp" />
     <ClCompile Include="DlgCrtAstronomy.cpp" />
@@ -3182,6 +3183,7 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClInclude Include="DlgCertificateStoreGenerateOrImport.h" />
     <ClInclude Include="DlgCertificateStoreShowCertificateParametersAll.h" />
     <ClInclude Include="DlgCertificateStoreShowCertificateParametersPublic.h" />
+    <ClInclude Include="DlgCertificateStoreSelectCertificate.h" />
     <ClInclude Include="DlgChangePIN.h" />
     <ClInclude Include="DlgComputeMersenneNumbers.h" />
     <ClInclude Include="DlgCrtAstronomy.h" />

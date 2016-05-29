@@ -1267,6 +1267,16 @@ namespace CrypTool {
 				return true;
 			}
 
+			bool encryptByteStringRSA(const long _serial, const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
+				// xxxxx
+				return false;
+			}
+			
+			bool decryptByteStringRSA(const long _serial, const CString &_password, const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
+				// xxxxx
+				return false;
+			}
+
 		}
 
 	}
@@ -1293,6 +1303,14 @@ namespace CrypTool {
 			dialogOperationController->SetWindowText(dialogOperationControllerTitle);
 			// start the operation in its own thread
 			dialogOperationController->startSymmetricOperation(_symmetricAlgorithmType, _documentFileName, _documentTitle);
+		}
+
+		void executeRSAEncryption(const CString &_documentFileName, const CString &_documentTitle) {
+			// xxxxx
+		}
+		
+		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle) {
+			// xxxxx
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {

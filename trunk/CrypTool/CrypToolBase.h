@@ -287,22 +287,6 @@ namespace CrypTool {
 		// this namespace encapsulates asymmetric encryption and decryption functionality
 		namespace Asymmetric {
 
-			// the supported asymmetric algorithm types
-			enum AsymmetricAlgorithmType {
-				ASYMMETRIC_ALGORITHM_TYPE_NULL
-			};
-
-			// the supported asymmetric operation types
-			enum AsymmetricOperationType {
-				ASYMMETRIC_OPERATION_TYPE_NULL,
-				ASYMMETRIC_OPERATION_TYPE_ENCRYPTION,
-				ASYMMETRIC_OPERATION_TYPE_DECRYPTION
-			};
-
-			//
-			// TODO/FIXME: implement "AsymmetricOperation" class? (see symmetric counterpart above)
-			//
-
 			// the supported certificate types
 			enum CertificateType {
 				CERTIFICATE_TYPE_NULL,
@@ -403,6 +387,13 @@ namespace CrypTool {
 				static bool readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type);
 			};
 
+			// this function encrypts a byte string using the RSA certificate corresponding to the specified 
+			// certificate serial number; if the function fails for any reason, false is returned
+			bool encryptByteStringRSA(const long _serial, const ByteString &_byteStringInput, ByteString &_byteStringOutput);
+			// this function decrypts a byte string using the private key of the RSA certificate corresponding 
+			// to the specified certificate serial number; if the function fails for any reason, false is returned
+			bool decryptByteStringRSA(const long _serial, const CString &_password, const ByteString &_byteStringInput, ByteString &_byteStringOutput);
+
 		}
 
 	}
@@ -414,6 +405,11 @@ namespace CrypTool {
 		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 		// TODO/FIXME: rename or remove this? the complexity behind this operation is unclear (threading, etc...)
 		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+
+		// this function executes an RSA encryption on the specified document
+		void executeRSAEncryption(const CString &_documentFileName, const CString &_documentTitle);
+		// this function executes an RSA decryption on the specified document
+		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle);
 
 		// this function creates a password-derived key based on the PKCS#5 standard
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key);
