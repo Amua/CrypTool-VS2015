@@ -41,7 +41,6 @@ void CDlgCertificateStoreSelectCertificate::showCertificateTypes(const bool _rsa
 	m_showCertificatesRSA = _rsa;
 	m_showCertificatesDSA = _dsa;
 	m_showCertificatesECC = _ecc;
-	updateListCertificates();
 }
 
 BOOL CDlgCertificateStoreSelectCertificate::OnInitDialog() {

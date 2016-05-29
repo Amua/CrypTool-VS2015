@@ -925,22 +925,14 @@ void CCryptDoc::OnUnzip()
     dounzip(ContentName, GetTitle());
 }
 
-// void CCryptDoc::OnCRYPTDelPse() {}
-
-void CCryptDoc::OnCRYPTRsaDec() 
-{
+void CCryptDoc::OnCRYPTRsaEnc() {
 	UpdateContent();
-#ifndef _UNSTABLE
-	RsaDec(ContentName, GetTitle());
-#endif
+	CrypTool::Functions::executeRSAEncryption(ContentName, GetTitle());
 }
 
-void CCryptDoc::OnCRYPTRsaEnc() 
-{
+void CCryptDoc::OnCRYPTRsaDec() {
 	UpdateContent();
-#ifndef _UNSTABLE
-	RsaEnc(ContentName, GetTitle());
-#endif
+	CrypTool::Functions::executeRSADecryption(ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptMono() 

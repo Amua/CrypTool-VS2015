@@ -23,6 +23,8 @@ limitations under the License.
 #include "Cryptography.h"
 #include "resource.h"
 
+#include "DlgCertificateStoreSelectCertificate.h"
+
 #include "DlgShowHash.h"
 #include "DlgKeyHexFixedLen.h"
 
@@ -1306,11 +1308,19 @@ namespace CrypTool {
 		}
 
 		void executeRSAEncryption(const CString &_documentFileName, const CString &_documentTitle) {
-			// xxxxx
+			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
+			dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
+			dlgCertificateStoreSelectCertificate.DoModal();
+
+			// TODO/FIXME: encryption? -> encryptByteStringRSA
 		}
 		
 		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle) {
-			// xxxxx
+			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
+			dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
+			dlgCertificateStoreSelectCertificate.DoModal();
+
+			// TODO/FIXME: password? decryption? -> decryptByteStringRSA
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {
