@@ -828,10 +828,15 @@ namespace CrypTool {
 
 			void CertificateStore::initialize(const CString &_caPassword) {
 				using namespace OpenSSL;
+				// initialize PRNG-- this is insecure!!!
+				const time_t now = time(0);
+				RAND_seed(&now, sizeof(now));
 				// before doing anything else, we need to propertly initialize 
 				// all available OpenSSL algorithms, otherwise the initialization 
-				// of the CrypTool certificate store will fail
+				// of the CrypTool certificate store will fail; also we want to load 
+				// some generic strings for error handling
 				OpenSSL_add_all_algorithms();
+				ERR_load_CRYPTO_strings();
 				// try to read the CA's certificate and private key
 				BIO *bioCertificate = BIO_new(BIO_s_file());
 				BIO *bioPrivateKey = BIO_new(BIO_s_file());
@@ -1130,6 +1135,52 @@ namespace CrypTool {
 				return true;
 			}
 
+			bool CertificateStore::getUserCertificatePublicKeyRSA(const long _serial, OpenSSL::RSA **_rsa) const {
+				using namespace OpenSSL;
+				// the result variable
+				bool result = false;
+				// generate file name based on serial
+				CString fileName;
+				fileName.Format(pathToCertificateStore + "\\" + "%d" + ".crt", _serial);
+				// initialize memory
+				BIO *bioPublicKey = BIO_new(BIO_s_file());
+				X509 *certificate = X509_new();
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (BIO_read_filename(bioPublicKey, (LPCTSTR)(fileName))) {
+					certificate = PEM_read_bio_X509(bioPublicKey, 0, 0, 0);
+					if (certificate) {
+						pkey = X509_get_pubkey(certificate);
+						if (pkey) {
+							*_rsa = EVP_PKEY_get1_RSA(pkey);
+							result = (_rsa != 0);
+						}
+					}
+				}
+				EVP_PKEY_free(pkey);
+				X509_free(certificate);
+				BIO_free(bioPublicKey);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePrivateKeyRSA(const long _serial, const CString &_password, OpenSSL::RSA **_rsa) const {
+				using namespace OpenSSL;
+				// the result variable
+				bool result = false;
+				// generate file name based on serial
+				CString fileName;
+				fileName.Format(pathToCertificateStore + "\\" + "%d" + ".key", _serial);
+				// initialize memory
+				BIO *bioPrivateKey = BIO_new(BIO_s_file());
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (BIO_read_filename(bioPrivateKey, (LPCTSTR)(fileName))) {
+					*_rsa = PEM_read_bio_RSAPrivateKey(bioPrivateKey, 0, 0, (void*)(LPCTSTR)(_password));
+					result = (*_rsa != 0);
+				}
+				EVP_PKEY_free(pkey);
+				BIO_free(bioPrivateKey);
+				return result;
+			}
+
 			bool CertificateStore::getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const {
 				using namespace OpenSSL;
 
@@ -1271,13 +1322,77 @@ namespace CrypTool {
 			}
 
 			bool encryptByteStringRSA(const long _serial, const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
-				// xxxxx
-				return false;
+				using namespace OpenSSL;
+				// the result variable
+				bool result = true;
+				// acquire the RSA public key corresponding to the specified serial number
+				RSA *rsa = RSA_new();
+				if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicKeyRSA(_serial, &rsa)) {
+					int bytesRemaining = (int)(_byteStringInput.getByteLength());
+					const int inputBlockSize = RSA_size(rsa) - 41 - 1;
+					const int outputBlockSize = RSA_size(rsa);
+					ByteString input;
+					ByteString output;
+					input.reset(inputBlockSize);
+					output.reset(outputBlockSize);
+					const size_t blockCount = (_byteStringInput.getByteLength() + inputBlockSize - 1) / inputBlockSize;
+					for (size_t blockIndex = 0; blockIndex < blockCount && result == true; blockIndex++) {
+						memset(input.getByteData(), 0, inputBlockSize);
+						memset(output.getByteData(), 0, outputBlockSize);
+						const int inputSize = bytesRemaining >= inputBlockSize ? inputBlockSize : bytesRemaining;
+						memcpy(input.getByteData(), _byteStringInput.getByteDataConst() + blockIndex * inputBlockSize, inputSize);
+						const int encrypt = RSA_public_encrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
+						if(encrypt == -1) {
+							result = false;
+						}
+						else {
+							bytesRemaining -= inputSize;
+							output.truncate(encrypt);
+							_byteStringOutput += output;
+						}
+					}
+				}
+				else {
+					result = false;
+				}
+				RSA_free(rsa);
+				return result;
 			}
 			
 			bool decryptByteStringRSA(const long _serial, const CString &_password, const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
-				// xxxxx
-				return false;
+				using namespace OpenSSL;
+				// the result variable
+				bool result = true;
+				// acquire the RSA private key corresponding to the specified serial number
+				RSA *rsa = RSA_new();
+				if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
+					const int inputBlockSize = RSA_size(rsa);
+					const int outputBlockSize = RSA_size(rsa) - 41 - 1;
+					ByteString input;
+					ByteString output;
+					input.reset(inputBlockSize);
+					output.reset(outputBlockSize);
+					const size_t blockCount = (_byteStringInput.getByteLength() + inputBlockSize - 1) / inputBlockSize;
+					for (size_t blockIndex = 0; blockIndex < blockCount && result == true; blockIndex++) {
+						memset(input.getByteData(), 0, inputBlockSize);
+						memset(output.getByteData(), 0, outputBlockSize);
+						const int inputSize = inputBlockSize;
+						memcpy(input.getByteData(), _byteStringInput.getByteDataConst() + blockIndex * inputBlockSize, inputSize);
+						const int decrypt = RSA_private_decrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
+						if (decrypt == -1) {
+							result = false;
+						}
+						else {
+							output.truncate(decrypt);
+							_byteStringOutput += output;
+						}
+					}
+				}
+				else {
+					result = false;
+				}
+				RSA_free(rsa);
+				return result;
 			}
 
 		}
@@ -1315,8 +1430,38 @@ namespace CrypTool {
 			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
 			// extract the serial number of the selected certificate
 			const long serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
-
-			// TODO/FIXME: encryption? -> encryptByteStringRSA
+			// extract some information from the certificate for the new document title
+			CString firstName;
+			CString lastName;
+			CString remarks;
+			CString type;
+			CString notBefore;
+			CString notAfter;
+			if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateInformation(serial, firstName, lastName, remarks, type, notBefore, notAfter)) {
+				AfxMessageBox("CRYPTOOL_BASE: certificate information could NOT be extracted");
+				return;
+			}
+			// initialize a temporary string for the new document title
+			CString documentTitleHelper;
+			documentTitleHelper.Format(IDS_STRING_ASYMKEY_RSA_ENCRYPTION_OF, _documentTitle, firstName + " " + lastName);
+			// create a file name and a title for the new document
+			const CString documentFileNameNew = Utilities::createTemporaryFile();
+			const CString documentTitleNew = documentTitleHelper;
+			// declare byte strings for input and output
+			ByteString byteStringInput;
+			ByteString byteStringOutput;
+			// read document into byte string
+			byteStringInput.readFromFile(_documentFileName);
+			// try to execute the encryption
+			if (!CrypTool::Cryptography::Asymmetric::encryptByteStringRSA(serial, byteStringInput, byteStringOutput)) {
+				AfxMessageBox("CRYPTOOL_BASE: error during RSA encryption");
+				return;
+			}
+			// write byte string into document
+			byteStringOutput.writeToFile(documentFileNameNew);
+			// open document
+			CAppDocument *documentNew = theApp.OpenDocumentFileNoMRU(documentFileNameNew);
+			documentNew->SetTitle(documentTitleNew);
 		}
 		
 		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle) {
@@ -1326,8 +1471,32 @@ namespace CrypTool {
 			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
 			// extract the serial number of the selected certificate
 			const long serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
-
-			// TODO/FIXME: password? decryption? -> decryptByteStringRSA
+			// let the user enter the password for the selected certificate
+			CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword(serial);
+			if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) return;
+			// extract the password for the selected certificate
+			const CString password = dlgCertificateStoreAskForPassword.getCertificatePassword();
+			// initialize a temporary string for the new document title
+			CString documentTitleHelper;
+			documentTitleHelper.Format(IDS_STRING_ASYMKEY_RSA_DECRYPTION_OF, _documentTitle);
+			// create a file name and a title for the new document
+			const CString documentFileNameNew = Utilities::createTemporaryFile();
+			const CString documentTitleNew = documentTitleHelper;
+			// declare byte strings for input and output
+			ByteString byteStringInput;
+			ByteString byteStringOutput;
+			// read document into byte string
+			byteStringInput.readFromFile(_documentFileName);
+			// try to execute the encryption
+			if (!CrypTool::Cryptography::Asymmetric::decryptByteStringRSA(serial, password, byteStringInput, byteStringOutput)) {
+				AfxMessageBox("CRYPTOOL_BASE: error during RSA decryption");
+				return;
+			}
+			// write byte string into document
+			byteStringOutput.writeToFile(documentFileNameNew);
+			// open document
+			CAppDocument *documentNew = theApp.OpenDocumentFileNoMRU(documentFileNameNew);
+			documentNew->SetTitle(documentTitleNew);
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {

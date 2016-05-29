@@ -39,6 +39,7 @@ namespace OpenSSL {
 	#include <openssl/bio.h>
 	#include <openssl/pem.h>
 	#include <openssl/err.h>
+	#include <openssl/rand.h>
 	// hash algorithms
 	#include "OpenSSL/md4.h"
 	#include "OpenSSL/md5.h"
@@ -333,6 +334,12 @@ namespace CrypTool {
 				// first and foremost this function is used as a convenience interface to easily display 
 				// user certificate information in list controls
 				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_notBefore, CString &_notAfter) const;
+				// this function returns the RSA public key for the certificate corresponding to the 
+				// specified serial number (no password required)
+				bool getUserCertificatePublicKeyRSA(const long _serial, OpenSSL::RSA **_rsa) const;
+				// this function returns the RSA private key for the certificate corresponding to the 
+				// specified serial number (password required for the private key)
+				bool getUserCertificatePrivateKeyRSA(const long _serial, const CString &_password, OpenSSL::RSA **_rsa) const;
 				// this function returns the public parameters of the user certificate corresponding to 
 				// the specified serial number in human-readable format; the output is very similar to 
 				// what you get from OpenSSL's x509 CLI command
