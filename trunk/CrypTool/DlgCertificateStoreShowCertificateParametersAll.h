@@ -21,6 +21,10 @@
 #ifndef _DLGCERTIFICATESTORESHOWCERTIFICATEPARAMETERSALL_H_
 #define _DLGCERTIFICATESTORESHOWCERTIFICATEPARAMETERSALL_H_
 
+#include <afxwin.h>
+#include <afxcmn.h>
+#include <resource.h>
+
 class CDlgCertificateStoreShowCertificateParametersAll : public CDialog {
 	enum { IDD = IDD_CERTIFICATE_STORE_SHOW_CERTIFICATE_PARAMETERS_ALL };
 public:

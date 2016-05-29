@@ -21,6 +21,10 @@ limitations under the License.
 #ifndef _DLGCERTIFICATESTORESHOWCERTIFICATEPARAMETERSPUBLIC_H_
 #define _DLGCERTIFICATESTORESHOWCERTIFICATEPARAMETERSPUBLIC_H_
 
+#include <afxwin.h>
+#include <afxcmn.h>
+#include <resource.h>
+
 class CDlgCertificateStoreShowCertificateParametersPublic : public CDialog {
 	enum { IDD = IDD_CERTIFICATE_STORE_SHOW_CERTIFICATE_PARAMETERS_PUBLIC };
 public:

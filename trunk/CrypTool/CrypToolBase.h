@@ -308,10 +308,14 @@ namespace CrypTool {
 				CERTIFICATE_TYPE_NULL,
 				CERTIFICATE_TYPE_RSA,
 				CERTIFICATE_TYPE_DSA,
-				CERTIFICATE_TYPE_EC
+				CERTIFICATE_TYPE_ECC
 			};
 
-			// TODO/FIXME
+			// this class represents the CrypTool-internal certificate store; it is 
+			// responsible for creating and deleting certificates and acts as interface 
+			// to all other CrypTool components in terms of dealing with certificates; 
+			// internally it uses the "CertificateManipulator" class to inject and 
+			// extract information into and from certificates (see below)
 			class CertificateStore {
 			protected:
 				CertificateStore();
@@ -321,28 +325,39 @@ namespace CrypTool {
 			public:
 				void initialize(const CString &_caPassword);
 				void deinitialize();
-			private:
-				const CString pathToCertificateStore;
-				const CString fileNameCaCertificate;
-				const CString fileNameCaPrivateKey;
-			private:
-				OpenSSL::X509 *caCertificate;
-				OpenSSL::RSA *caPrivateKey;
-			private:
-				// this map holds all user certificates (mapped to serial numbers) currently held 
-				// in memory; whenever a user certificate is created or deleted, all user certificates 
-				// are automatically re-loaded so that this map is always up-to-date
-				std::map<long, OpenSSL::X509*> mapUserCertificates;
+			public:
+				// this function returns the static identifier for the custom CrypTool extension
+				int getCustomCrypToolExtensionIdentifier() const;
 			public:
 				// this function tries to create a certificate with the values specified by the user; the 
-				// certificate type is one of RSA, DSA, EC, and the the certificate parameters string contains 
-				// either the desired key length (RSA and DSA) or the desired elliptic curve (EC); all other 
+				// certificate type is one of RSA, DSA, ECC, and the the certificate parameters string contains 
+				// either the desired key length (RSA and DSA) or the desired elliptic curve (ECC); all other 
 				// parameters (first name, last name, remarks, password) are identical for all types
 				bool createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password);
 				// this function tries to delete the user certificate with the specified serial number; 
 				// however, the correct password (protecting the private key) must be provided for the 
 				// deletion to be successful
 				bool deleteUserCertificate(const long _serial, const CString &_password);
+			public:
+				// this function returns the serial numbers of all user certificates stored in this 
+				// certificate store; the arguments act as a filter in that they control which types 
+				// of certificates are returned; if all arguments are false, the resulting vector 
+				// is empty of course
+				std::vector<long> getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const;
+				// if the serial number supplied as argument doesn't match any of the available user 
+				// certificates, the function returns false and all output variables remain untouched; 
+				// first and foremost this function is used as a convenience interface to easily display 
+				// user certificate information in list controls
+				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_notBefore, CString &_notAfter) const;
+				// this function returns the public parameters of the user certificate corresponding to 
+				// the specified serial number in human-readable format; the output is very similar to 
+				// what you get from OpenSSL's x509 CLI command
+				bool getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const;
+				// this function returns the private parameters of the user certificate corresponding to 
+				// the specified serial number in human-readable format; the output is very similar to 
+				// what you get from OpenSSL's rsa, dsa, and ec CLI commands; since the private parameters 
+				// are only to be accessed by authorized users, naturally the correct password is required
+				bool getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const;
 			private:
 				// this function generates file names for the user certificate and the user private key 
 				// based on the serial number of the certificate (which is unique due to the implementation)
@@ -355,38 +370,37 @@ namespace CrypTool {
 				// this function is called to unload all user certificates from memory
 				void unloadUserCertificates();
 			private:
+				// this map holds all user certificates (mapped to serial numbers) currently held 
+				// in memory; whenever a user certificate is created or deleted, all user certificates 
+				// are automatically re-loaded so that this map is always up-to-date
+				std::map<long, OpenSSL::X509*> mapUserCertificates;
+			private:
+				// over the lifetime of the certificate store, these variables always stay the same: 
+				// the path to the certificate store (where all user certificates are stored), and 
+				// the file names for both the CA certificate and the CA private key
+				const CString pathToCertificateStore;
+				const CString fileNameCaCertificate;
+				const CString fileNameCaPrivateKey;
+				// these variables are always held in memory: the CA certificate and the CA private key
+				OpenSSL::X509 *caCertificate;
+				OpenSSL::RSA *caPrivateKey;
+			};
+
+			// this class shouldn't be used directly; it only features static methods, and it 
+			// primarily acts as helper class for the "CertificateStore" class so the latter 
+			// one isn't overblown with a gazillion individual methods
+			class CertificateManipulator {
+			public:
 				// this function writes the custom CrypTool extension to the specified certificate;
 				// this way the asymmetric crypto implementation adheres to CrypTool 1.4 and prior; 
 				// the extension looks like this "[FIRST NAME][LAST NAME][REMARKS][TYPE]", for 
 				// example "[John][Doe][Password=1234][RSA-1024]"
-				bool writeCustomCrypToolExtension(OpenSSL::X509 *_certificate, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_type) const;
+				static bool writeCustomCrypToolExtension(OpenSSL::X509 *_certificate, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_type);
 				// this function reads the custom CrypTool extension from the specified certificate;
 				// this way the asymmetric crypto implementation adheres to CrypTool 1.4 and prior;
 				// the extension looks like this "[FIRST NAME][LAST NAME][REMARKS][TYPE]", for 
 				// example "[John][Doe][Password=1234][RSA-1024]"
-				bool readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type) const;
-			public:
-				// this function returns the serial numbers of all user certificates stored in this 
-				// certificate store; the arguments act as a filter in that they control which types 
-				// of certificates are returned; if all arguments are false, the resulting vector 
-				// is empty of course
-				std::vector<long> getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const;
-			public:
-				// if the serial number supplied as argument doesn't match any of the available user 
-				// certificates, the function returns false and all output variables remain untouched; 
-				// first and foremost this function is used as a convenience interface to easily display 
-				// user certificate information in list controls
-				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const;
-			public:
-				// this function returns the public parameters of the user certificate corresponding to 
-				// the specified serial number in human-readable format; the output is very similar to 
-				// what you get from OpenSSL's x509 CLI command
-				bool getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const;
-				// this function returns the private parameters of the user certificate corresponding to 
-				// the specified serial number in human-readable format; the output is very similar to 
-				// what you get from OpenSSL's rsa, dsa, and ec CLI commands; since the private parameters 
-				// are only to be accessed by authorized users, naturally the correct password is required
-				bool getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const;
+				static bool readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type);
 			};
 
 		}

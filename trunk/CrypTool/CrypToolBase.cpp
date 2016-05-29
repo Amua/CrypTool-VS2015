@@ -857,6 +857,15 @@ namespace CrypTool {
 				unloadUserCertificates();
 			}
 
+			int CertificateStore::getCustomCrypToolExtensionIdentifier() const {
+				using namespace OpenSSL;
+				// ATTENTION: not sure whether this identifier interferes with anything else, 
+				// but at least the implementation is working; don't touch the following lines 
+				// unless you're absolutely positive you know what you're doing
+				const int customCrypToolExtensionIdentifier = OBJ_create("1.2.3.4.5", "CCTX", "Custom CrypTool Extension");
+				return customCrypToolExtensionIdentifier;
+			}
+
 			bool CertificateStore::createUserCertificate(const CertificateType _certificateType, const CString &_certificateParameters, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_password) {
 				using namespace OpenSSL;
 				// both the CA certificate and the CA private key need to be valid
@@ -881,11 +890,11 @@ namespace CrypTool {
 				const long timeNotAfter = 60 * 60 * 24 * 365;
 				X509_gmtime_adj(X509_get_notBefore(certificate), timeNotBefore);
 				X509_gmtime_adj(X509_get_notAfter(certificate), timeNotAfter);
-				// set certificate type (i.e. "RSA-512", "DSA-1024", or "EC-prime192v1")
+				// set certificate type (i.e. "RSA-512", "DSA-1024", or "ECC-prime192v1")
 				CString certificateType;
 				if (_certificateType == CERTIFICATE_TYPE_RSA) certificateType = "RSA-" + _certificateParameters;
 				if (_certificateType == CERTIFICATE_TYPE_DSA) certificateType = "DSA-" + _certificateParameters;
-				if (_certificateType == CERTIFICATE_TYPE_EC) certificateType = "EC-" + _certificateParameters;
+				if (_certificateType == CERTIFICATE_TYPE_ECC) certificateType = "ECC-" + _certificateParameters;
 				// set certificate issuer name
 				X509_set_issuer_name(certificate, X509_get_subject_name(caCertificate));
 				// set certificate data (C, L, O, CN)
@@ -899,7 +908,7 @@ namespace CrypTool {
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "O", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataO), -1, -1, 0);
 				X509_NAME_add_entry_by_txt(X509_get_subject_name(certificate), "CN", MBSTRING_ASC, (const unsigned char*)(LPCTSTR)(certificateDataCN), -1, -1, 0);
 				// add custom CrypTool extension
-				if (!writeCustomCrypToolExtension(certificate, _firstName, _lastName, _remarks, certificateType)) {
+				if (!CertificateManipulator::writeCustomCrypToolExtension(certificate, _firstName, _lastName, _remarks, certificateType)) {
 					return false;
 				}
 				// generate file names for the certificate and the private key
@@ -971,8 +980,8 @@ namespace CrypTool {
 					// free memory
 					DSA_free(dsa);
 				}
-				// EC-based certificate
-				if (_certificateType == CERTIFICATE_TYPE_EC) {
+				// ECC-based certificate
+				if (_certificateType == CERTIFICATE_TYPE_ECC) {
 					// determine the specified curve name
 					const CString curveName = _certificateParameters;
 					// generate EC key
@@ -1066,6 +1075,80 @@ namespace CrypTool {
 				return true;
 			}
 
+			std::vector<long> CertificateStore::getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const {
+				using namespace OpenSSL;
+				std::vector<long> vectorUserCertificateSerials;
+				for (std::map<long, X509*>::const_iterator iter = mapUserCertificates.begin(); iter != mapUserCertificates.end(); iter++) {
+					const long userCertificateSerial = iter->first;
+					X509 *userCertificate = iter->second;
+					if (userCertificate) {
+						EVP_PKEY *pkey = X509_get_pubkey(userCertificate);
+						const int keyType = EVP_PKEY_type(pkey->type);
+						if ((keyType == EVP_PKEY_RSA && _rsa) || (keyType == EVP_PKEY_DSA && _dsa) || (keyType == EVP_PKEY_EC && _ec)) {
+							vectorUserCertificateSerials.push_back(userCertificateSerial);
+						}
+						EVP_PKEY_free(pkey);
+					}
+				}
+				return vectorUserCertificateSerials;
+			}
+
+			bool CertificateStore::getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_notBefore, CString &_notAfter) const {
+				using namespace OpenSSL;
+				// make sure there is a user certificate which corresponds to the provided serial number, 
+				// otherwise return false right away and leave the output variables untouched
+				const std::map<long, X509*>::const_iterator iter = mapUserCertificates.find(_serial);
+				if (iter == mapUserCertificates.end()) {
+					return false;
+				}
+				// acquire the X509 structure of the specified user certificate
+				X509 *userCertificate = iter->second;
+				if (!userCertificate) {
+					return false;
+				}
+				// try to read custom CrypTool extension from the certificate
+				if (!CertificateManipulator::readCustomCrypToolExtension(userCertificate, _firstName, _lastName, _remarks, _type)) {
+					return false;
+				}
+				// manually assign not before and not after dates
+				char bufferNotBefore[1024];
+				char bufferNotAfter[1024];
+				BIO *bioNotBefore = BIO_new(BIO_s_mem());
+				BIO *bioNotAfter = BIO_new(BIO_s_mem());
+				ASN1_TIME_print(bioNotBefore, X509_get_notBefore(userCertificate));
+				ASN1_TIME_print(bioNotAfter, X509_get_notAfter(userCertificate));
+				BIO_gets(bioNotBefore, bufferNotBefore, 100);
+				BIO_gets(bioNotAfter, bufferNotAfter, 100);
+				BIO_free(bioNotBefore);
+				BIO_free(bioNotAfter);
+				_notBefore = bufferNotBefore;
+				_notAfter = bufferNotAfter;
+				// obviously everything went well
+				return true;
+			}
+
+			bool CertificateStore::getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const {
+				using namespace OpenSSL;
+
+				// TODO/FIXME
+				_publicParameters = "TODO/FIXME: public parameters";
+				return true;
+				// TODO/FIXME
+
+				return false;
+			}
+
+			bool CertificateStore::getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const {
+				using namespace OpenSSL;
+
+				// TODO/FIXME
+				_privateParameters = "TODO/FIXME: private parameters";
+				return true;
+				// TODO/FIXME
+
+				return false;
+			}
+
 			void CertificateStore::generateFileNamesForUserCertificateAndUserPrivateKey(const long _serial, CString &_fileNameUserCertificate, CString &_fileNameUserPrivateKey) const {
 				CString fileNameBase;
 				fileNameBase.Format(pathToCertificateStore + "\\" + "%d", _serial);
@@ -1114,16 +1197,14 @@ namespace CrypTool {
 				mapUserCertificates.clear();
 			}
 
-			bool CertificateStore::writeCustomCrypToolExtension(OpenSSL::X509 *_certificate, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_type) const {
+			bool CertificateManipulator::writeCustomCrypToolExtension(OpenSSL::X509 *_certificate, const CString &_firstName, const CString &_lastName, const CString &_remarks, const CString &_type) {
 				using namespace OpenSSL;
 				// if we don't have a valid certificate, return false right away
 				if (!_certificate) {
 					return false;
 				}
-				// ATTENTION: not sure whether this identifier interferes with anything else, 
-				// but at least the implementation is working; don't touch the following lines 
-				// unless you're absolutely positive you know what you're doing
-				const int extensionIdentifier = OBJ_create("1.2.3.4.5", "CTCX", "CrypTool Certificate Extension");
+				// acquire extension identifier
+				const int extensionIdentifier = CertificateStore::instance().getCustomCrypToolExtensionIdentifier();
 				// at this point we create a string in the following format, without the quotes:  
 				// "[FIRST NAME][LAST NAME][REMARKS][TYPE]"
 				const CString extensionString = "[" + _firstName + "][" + _lastName + "][" + _remarks + "][" + _type + "]";
@@ -1144,16 +1225,14 @@ namespace CrypTool {
 				return true;
 			}
 
-			bool CertificateStore::readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type) const {
+			bool CertificateManipulator::readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type) {
 				using namespace OpenSSL;
 				// if we don't have a valid certificate, return false right away
 				if (!_certificate) {
 					return false;
 				}
-				// ATTENTION: not sure whether this identifier interferes with anything else, 
-				// but at least the implementation is working; don't touch the following lines 
-				// unless you're absolutely positive you know what you're doing
-				const int extensionIdentifier = OBJ_create("1.2.3.4.5", "CTCX", "CrypTool Certificate Extension");
+				// acquire extension identifier
+				const int extensionIdentifier = CertificateStore::instance().getCustomCrypToolExtensionIdentifier();
 				// extract the extension data
 				const int index = X509_get_ext_by_NID(_certificate, extensionIdentifier, -1);
 				X509_EXTENSION *extension = X509_get_ext(_certificate, index);
@@ -1186,80 +1265,6 @@ namespace CrypTool {
 				_remarks = vectorElements.at(2);
 				_type = vectorElements.at(3);
 				return true;
-			}
-
-			std::vector<long> CertificateStore::getUserCertificateSerials(const bool _rsa, const bool _dsa, const bool _ec) const {
-				using namespace OpenSSL;
-				std::vector<long> vectorUserCertificateSerials;
-				for (std::map<long, X509*>::const_iterator iter = mapUserCertificates.begin(); iter != mapUserCertificates.end(); iter++) {
-					const long userCertificateSerial = iter->first;
-					X509 *userCertificate = iter->second;
-					if (userCertificate) {
-						EVP_PKEY *pkey = X509_get_pubkey(userCertificate);
-						const int keyType = EVP_PKEY_type(pkey->type);
-						if ((keyType == EVP_PKEY_RSA && _rsa) || (keyType == EVP_PKEY_DSA && _dsa) || (keyType == EVP_PKEY_EC && _ec)) {
-							vectorUserCertificateSerials.push_back(userCertificateSerial);
-						}
-						EVP_PKEY_free(pkey);
-					}
-				}
-				return vectorUserCertificateSerials;
-			}
-
-			bool CertificateStore::getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_validFrom, CString &_validTo) const {
-				using namespace OpenSSL;
-				// make sure there is a user certificate which corresponds to the provided serial number, 
-				// otherwise return false right away and leave the output variables untouched
-				const std::map<long, X509*>::const_iterator iter = mapUserCertificates.find(_serial);
-				if (iter == mapUserCertificates.end()) {
-					return false;
-				}
-				// acquire the X509 structure of the specified user certificate
-				X509 *userCertificate = iter->second;
-				if (!userCertificate) {
-					return false;
-				}
-				// try to read custom CrypTool extension from the certificate
-				if (!readCustomCrypToolExtension(userCertificate, _firstName, _lastName, _remarks, _type)) {
-					return false;
-				}
-				// manually assign valid from and valid to
-				char bufferNotBefore[1024];
-				char bufferNotAfter[1024];
-				BIO *bioNotBefore = BIO_new(BIO_s_mem());
-				BIO *bioNotAfter = BIO_new(BIO_s_mem());
-				ASN1_TIME_print(bioNotBefore, X509_get_notBefore(userCertificate));
-				ASN1_TIME_print(bioNotAfter, X509_get_notAfter(userCertificate));
-				BIO_gets(bioNotBefore, bufferNotBefore, 100);
-				BIO_gets(bioNotAfter, bufferNotAfter, 100);
-				BIO_free(bioNotBefore);
-				BIO_free(bioNotAfter);
-				_validFrom = bufferNotBefore;
-				_validTo = bufferNotAfter;
-				// obviously everything went well
-				return true;
-			}
-
-			bool CertificateStore::getUserCertificatePublicParameters(const long _serial, CString &_publicParameters) const {
-				using namespace OpenSSL;
-				
-				// TODO/FIXME
-				_publicParameters = "TODO/FIXME: public parameters";
-				return true;
-				// TODO/FIXME
-
-				return false;
-			}
-
-			bool CertificateStore::getUserCertificatePrivateParameters(const long _serial, const CString &_password, CString &_privateParameters) const {
-				using namespace OpenSSL;
-				
-				// TODO/FIXME
-				_privateParameters = "TODO/FIXME: private parameters";
-				return true;
-				// TODO/FIXME
-
-				return false;
 			}
 
 		}

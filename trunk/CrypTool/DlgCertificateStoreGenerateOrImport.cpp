@@ -52,18 +52,18 @@ BOOL CDlgCertificateStoreGenerateOrImport::OnInitDialog() {
 	m_comboDSA.AddString("1024");
 	m_comboDSA.AddString("2048");
 	m_comboDSA.AddString("4096");
-	// initialize combo box (EC)
-	m_comboEC.AddString("prime192v1");
-	m_comboEC.AddString("prime192v2");
-	m_comboEC.AddString("prime192v3");
-	m_comboEC.AddString("prime239v1");
-	m_comboEC.AddString("prime239v2");
-	m_comboEC.AddString("prime239v3");
-	m_comboEC.AddString("prime256v1");
-	// set initial combo box values (RSA, DSA, EC)
+	// initialize combo box (ECC)
+	m_comboECC.AddString("prime192v1");
+	m_comboECC.AddString("prime192v2");
+	m_comboECC.AddString("prime192v3");
+	m_comboECC.AddString("prime239v1");
+	m_comboECC.AddString("prime239v2");
+	m_comboECC.AddString("prime239v3");
+	m_comboECC.AddString("prime256v1");
+	// set initial combo box values (RSA, DSA, ECC)
 	m_comboRSA.SetCurSel(0);
 	m_comboDSA.SetCurSel(0);
-	m_comboEC.SetCurSel(0);
+	m_comboECC.SetCurSel(0);
 	// initial update for the combo boxes (only one can be active at any given time)
 	updateComboBoxes();
 	return TRUE;
@@ -74,7 +74,7 @@ void CDlgCertificateStoreGenerateOrImport::DoDataExchange(CDataExchange *_pDX) {
 	DDX_Radio(_pDX, IDC_RADIO_RSA, m_radioAlgorithm);
 	DDX_Control(_pDX, IDC_COMBO_RSA, m_comboRSA);
 	DDX_Control(_pDX, IDC_COMBO_DSA, m_comboDSA);
-	DDX_Control(_pDX, IDC_COMBO_EC, m_comboEC);
+	DDX_Control(_pDX, IDC_COMBO_ECC, m_comboECC);
 	DDX_Text(_pDX, IDC_EDIT_FIRST_NAME, m_editFirstName);
 	DDX_Text(_pDX, IDC_EDIT_LAST_NAME, m_editLastName);
 	DDX_Text(_pDX, IDC_EDIT_REMARKS, m_editRemarks);
@@ -90,7 +90,7 @@ void CDlgCertificateStoreGenerateOrImport::clickedButtonRadioDSA() {
 	updateComboBoxes();
 }
 
-void CDlgCertificateStoreGenerateOrImport::clickedButtonRadioEC() {
+void CDlgCertificateStoreGenerateOrImport::clickedButtonRadioECC() {
 	updateComboBoxes();
 }
 
@@ -116,8 +116,8 @@ void CDlgCertificateStoreGenerateOrImport::clickedButtonCreate() {
 		m_comboDSA.GetLBText(m_comboDSA.GetCurSel(), certificateParameters);
 	}
 	if (m_radioAlgorithm == 2) {
-		certificateType = CrypTool::Cryptography::Asymmetric::CERTIFICATE_TYPE_EC;
-		m_comboEC.GetLBText(m_comboEC.GetCurSel(), certificateParameters);
+		certificateType = CrypTool::Cryptography::Asymmetric::CERTIFICATE_TYPE_ECC;
+		m_comboECC.GetLBText(m_comboECC.GetCurSel(), certificateParameters);
 	}
 	// try to create the user certificate
 	SHOW_HOUR_GLASS
@@ -144,13 +144,13 @@ void CDlgCertificateStoreGenerateOrImport::updateComboBoxes() {
 	UpdateData(true);
 	m_comboRSA.EnableWindow(m_radioAlgorithm == 0);
 	m_comboDSA.EnableWindow(m_radioAlgorithm == 1);
-	m_comboEC.EnableWindow(m_radioAlgorithm == 2);
+	m_comboECC.EnableWindow(m_radioAlgorithm == 2);
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificateStoreGenerateOrImport, CDialog)
 	ON_BN_CLICKED(IDC_RADIO_RSA, &CDlgCertificateStoreGenerateOrImport::clickedButtonRadioRSA)
 	ON_BN_CLICKED(IDC_RADIO_DSA, &CDlgCertificateStoreGenerateOrImport::clickedButtonRadioDSA)
-	ON_BN_CLICKED(IDC_RADIO_EC, &CDlgCertificateStoreGenerateOrImport::clickedButtonRadioEC)
+	ON_BN_CLICKED(IDC_RADIO_ECC, &CDlgCertificateStoreGenerateOrImport::clickedButtonRadioECC)
 	ON_BN_CLICKED(IDC_BUTTON_CREATE, &CDlgCertificateStoreGenerateOrImport::clickedButtonCreate)
 	ON_BN_CLICKED(IDC_BUTTON_IMPORT, &CDlgCertificateStoreGenerateOrImport::clickedButtonImport)
 	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CDlgCertificateStoreGenerateOrImport::clickedButtonClose)

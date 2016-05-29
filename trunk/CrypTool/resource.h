@@ -1817,10 +1817,10 @@
 #define IDC_RADIO_HASH_FUNCTION_RIPEMD160 2135
 #define IDC_RADIO_RSA                   2136
 #define IDC_RADIO_DSA                   2137
-#define IDC_RADIO_EC                    2138
+#define IDC_RADIO_ECC                   2138
 #define IDC_COMBO_RSA                   2139
 #define IDC_COMBO_DSA                   2140
-#define IDC_COMBO_EC                    2141
+#define IDC_COMBO_ECC                   2141
 #define IDC_EDIT_FIRST_NAME             2142
 #define IDC_EDIT_LAST_NAME              2143
 #define IDC_EDIT_REMARKS                2144
@@ -1836,7 +1836,7 @@
 #define IDC_BUTTON_EXPORT               2154
 #define IDC_CHECK_RSA                   2155
 #define IDC_CHECK_DSA                   2156
-#define IDC_CHECK_EC                    2157
+#define IDC_CHECK_ECC                   2157
 #define IDC_EDIT_PUBLIC_PARAMETERS      2158
 #define IDC_EDIT_PRIVATE_PARAMETERS     2159
 #define IDC_START_RADIO                 11008

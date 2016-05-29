@@ -21,6 +21,10 @@
 #ifndef _DLGCERTIFICATESTOREASKFORPASSWORD_H_
 #define _DLGCERTIFICATESTOREASKFORPASSWORD_H_
 
+#include <afxwin.h>
+#include <afxcmn.h>
+#include <resource.h>
+
 class CDlgCertificateStoreAskForPassword : public CDialog {
 	enum { IDD = IDD_CERTIFICATE_STORE_ASK_FOR_PASSWORD };
 public:
