@@ -635,9 +635,15 @@ namespace CrypTool {
 
 			bool SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
 				using namespace OpenSSL;
+				// make sure we have a valid operation type
+				if (symmetricOperationType != SYMMETRIC_OPERATION_TYPE_ENCRYPTION && symmetricOperationType != SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					return false;
+				}
 				// make sure we have a valid cipher
 				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType, _byteStringKey.getByteLength());
-				if (!cipher) return false;
+				if (!cipher) {
+					return false;
+				}
 				// acquire iv length, key length, block size
 				const int cipherIvLength = EVP_CIPHER_iv_length(cipher);
 				const int cipherKeyLength = EVP_CIPHER_key_length(cipher);
@@ -685,9 +691,15 @@ namespace CrypTool {
 
 			bool SymmetricOperation::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const ByteString &_byteStringKey, const bool *_cancelled, double *_progress) {
 				using namespace OpenSSL;
+				// make sure we have a valid operation type
+				if (symmetricOperationType != SYMMETRIC_OPERATION_TYPE_ENCRYPTION && symmetricOperationType != SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					return false;
+				}
 				// make sure we have a valid cipher
 				const EVP_CIPHER *cipher = getOpenSSLCipher(symmetricAlgorithmType, _byteStringKey.getByteLength());
-				if (!cipher) return false;
+				if (!cipher) {
+					return false;
+				}
 				// try to open files
 				CFile fileInput;
 				CFile fileOutput;
@@ -807,6 +819,111 @@ namespace CrypTool {
 		}
 
 		namespace Asymmetric {
+
+			CString getAsymmetricAlgorithmName(const AsymmetricAlgorithmType _asymmetricAlgorithmType) {
+				CString asymmetricAlgorithmName = "";
+				switch(_asymmetricAlgorithmType) {
+				case ASYMMETRIC_ALGORITHM_TYPE_RSA:
+					asymmetricAlgorithmName = "RSA";
+					break;
+				case ASYMMETRIC_ALGORITHM_TYPE_DSA:
+					asymmetricAlgorithmName = "DSA";
+					break;
+				case ASYMMETRIC_ALGORITHM_TYPE_ECC:
+					asymmetricAlgorithmName = "ECC";
+					break;
+				default:
+					break;
+				}
+				return asymmetricAlgorithmName;
+			}
+
+			AsymmetricOperationEncryptOrDecrypt::AsymmetricOperationEncryptOrDecrypt(const AsymmetricAlgorithmType _asymmetricAlgorithmType, const AsymmetricOperationType _asymmetricOperationType) :
+				asymmetricAlgorithmType(_asymmetricAlgorithmType),
+				asymmetricOperationType(_asymmetricOperationType) {
+				
+			}
+
+			AsymmetricOperationEncryptOrDecrypt::~AsymmetricOperationEncryptOrDecrypt() {
+				
+			}
+
+			bool AsymmetricOperationEncryptOrDecrypt::executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput) {
+				using namespace OpenSSL;
+				// make sure we have a valid operation type
+				if (asymmetricOperationType != ASYMMETRIC_OPERATION_TYPE_ENCRYPTION && asymmetricOperationType != ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					return false;
+				}
+				// the result variable
+				bool result = true;
+				// initialize the RSA structure
+				RSA *rsa = RSA_new();
+				// depending on the operation type, try to fetch the public or the private key
+				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicKeyRSA(_serial, &rsa)) {
+						RSA_free(rsa);
+						return false;
+					}
+				}
+				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
+						RSA_free(rsa);
+						return false;
+					}
+				}
+				int bytesRemaining = (int)(_byteStringInput.getByteLength());
+				const int inputBlockSize = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) - 41 - 1 : RSA_size(rsa);
+				const int outputBlockSize = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) : RSA_size(rsa) - 41 - 1;
+				ByteString input;
+				ByteString output;
+				input.reset(inputBlockSize);
+				output.reset(outputBlockSize);
+				const size_t blockCount = (_byteStringInput.getByteLength() + inputBlockSize - 1) / inputBlockSize;
+				for (size_t blockIndex = 0; blockIndex < blockCount && result == true; blockIndex++) {
+					memset(input.getByteData(), 0, inputBlockSize);
+					memset(output.getByteData(), 0, outputBlockSize);
+					const int inputSize = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? (bytesRemaining >= inputBlockSize ? inputBlockSize : bytesRemaining) : (inputBlockSize);
+					memcpy(input.getByteData(), _byteStringInput.getByteDataConst() + blockIndex * inputBlockSize, inputSize);
+					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+						const int encrypt = RSA_public_encrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
+						if (encrypt == -1) {
+							result = false;
+						}
+						else {
+							bytesRemaining -= inputSize;
+							output.truncate(encrypt);
+							_byteStringOutput += output;
+						}
+					}
+					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+						const int decrypt = RSA_private_decrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
+						if (decrypt == -1) {
+							result = false;
+						}
+						else {
+							output.truncate(decrypt);
+							_byteStringOutput += output;
+						}
+					}
+				}
+				RSA_free(rsa);
+				return result;
+			}
+
+			bool AsymmetricOperationEncryptOrDecrypt::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
+				using namespace OpenSSL;
+				
+				// TODO/FIXME: this should be implemented ON FILES as soon as possible
+				ByteString byteStringInput;
+				ByteString byteStringOutput;
+				byteStringInput.readFromFile(_fileNameInput);
+				const bool result = executeOnByteStrings(byteStringInput, _serial, _password, byteStringOutput);
+				byteStringOutput.writeToFile(_fileNameOutput);
+				return result;
+				// TODO/FIXME: this should be implemented ON FILES as soon as possible
+
+				return false;
+			}
 
 			CertificateStore::CertificateStore() :
 				pathToCertificateStore(getCrypToolPath() + "\\certificates"),
@@ -1423,80 +1540,15 @@ namespace CrypTool {
 			dialogOperationController->startSymmetricOperation(_symmetricAlgorithmType, _documentFileName, _documentTitle);
 		}
 
-		void executeRSAEncryption(const CString &_documentFileName, const CString &_documentTitle) {
-			// let the user select the receiver's certificate
-			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
-			dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
-			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
-			// extract the serial number of the selected certificate
-			const long serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
-			// extract some information from the certificate for the new document title
-			CString firstName;
-			CString lastName;
-			CString remarks;
-			CString type;
-			CString notBefore;
-			CString notAfter;
-			if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateInformation(serial, firstName, lastName, remarks, type, notBefore, notAfter)) {
-				AfxMessageBox("CRYPTOOL_BASE: certificate information could NOT be extracted");
-				return;
-			}
-			// initialize a temporary string for the new document title
-			CString documentTitleHelper;
-			documentTitleHelper.Format(IDS_STRING_ASYMKEY_RSA_ENCRYPTION_OF, _documentTitle, firstName + " " + lastName);
-			// create a file name and a title for the new document
-			const CString documentFileNameNew = Utilities::createTemporaryFile();
-			const CString documentTitleNew = documentTitleHelper;
-			// declare byte strings for input and output
-			ByteString byteStringInput;
-			ByteString byteStringOutput;
-			// read document into byte string
-			byteStringInput.readFromFile(_documentFileName);
-			// try to execute the encryption
-			if (!CrypTool::Cryptography::Asymmetric::encryptByteStringRSA(serial, byteStringInput, byteStringOutput)) {
-				AfxMessageBox("CRYPTOOL_BASE: error during RSA encryption");
-				return;
-			}
-			// write byte string into document
-			byteStringOutput.writeToFile(documentFileNameNew);
-			// open document
-			CAppDocument *documentNew = theApp.OpenDocumentFileNoMRU(documentFileNameNew);
-			documentNew->SetTitle(documentTitleNew);
-		}
-		
-		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle) {
-			// let the user select the receiver's certificate
-			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
-			dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
-			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
-			// extract the serial number of the selected certificate
-			const long serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
-			// let the user enter the password for the selected certificate
-			CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword(serial);
-			if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) return;
-			// extract the password for the selected certificate
-			const CString password = dlgCertificateStoreAskForPassword.getCertificatePassword();
-			// initialize a temporary string for the new document title
-			CString documentTitleHelper;
-			documentTitleHelper.Format(IDS_STRING_ASYMKEY_RSA_DECRYPTION_OF, _documentTitle);
-			// create a file name and a title for the new document
-			const CString documentFileNameNew = Utilities::createTemporaryFile();
-			const CString documentTitleNew = documentTitleHelper;
-			// declare byte strings for input and output
-			ByteString byteStringInput;
-			ByteString byteStringOutput;
-			// read document into byte string
-			byteStringInput.readFromFile(_documentFileName);
-			// try to execute the encryption
-			if (!CrypTool::Cryptography::Asymmetric::decryptByteStringRSA(serial, password, byteStringInput, byteStringOutput)) {
-				AfxMessageBox("CRYPTOOL_BASE: error during RSA decryption");
-				return;
-			}
-			// write byte string into document
-			byteStringOutput.writeToFile(documentFileNameNew);
-			// open document
-			CAppDocument *documentNew = theApp.OpenDocumentFileNoMRU(documentFileNameNew);
-			documentNew->SetTitle(documentTitleNew);
+		void executeAsymmetricOperationEncryptOrDecrypt(const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const CrypTool::Cryptography::Asymmetric::AsymmetricOperationType _asymmetricOperationType, const CString &_documentFileName, const CString &_documentTitle) {
+			// create the operation controller dialog (implicitly destroyed after the operation)
+			CrypTool::Internal::DialogOperationController *dialogOperationController = new CrypTool::Internal::DialogOperationController();
+			// create the appropriate title for the dialog, and make it visible
+			CString dialogOperationControllerTitle;
+			dialogOperationControllerTitle.Format("CRYPTOOL_BASE: asymmetric operation enc/dec (%s)", CrypTool::Cryptography::Asymmetric::getAsymmetricAlgorithmName(_asymmetricAlgorithmType));
+			dialogOperationController->SetWindowText(dialogOperationControllerTitle);
+			// start the operation in its own thread
+			dialogOperationController->startAsymmetricOperationEncryptOrDecrypt(_asymmetricAlgorithmType, _asymmetricOperationType, _documentFileName, _documentTitle);
 		}
 
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key) {
@@ -1562,9 +1614,9 @@ namespace CrypTool {
 
 		void DialogOperationController::startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle) {
 			// initialize operation parameters
+			parameters.documentFileName = _documentFileName;
+			parameters.documentTitle = _documentTitle;
 			parameters.parametersHash.hashAlgorithmType = _hashAlgorithmType;
-			parameters.parametersHash.documentFileName = _documentFileName;
-			parameters.parametersHash.documentTitle = _documentTitle;
 			// mark the operation as started
 			parameters.operationStatus = OPERATION_STATUS_STARTED;
 			// start the update timer
@@ -1622,10 +1674,10 @@ namespace CrypTool {
 			const CrypTool::Cryptography::Symmetric::SymmetricOperationType operationType = dlgKeyHexFixedLen.ModeIsDecrypt() ? CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_DECRYPTION : CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_ENCRYPTION;
 			const ByteString operationKey = ByteString((const unsigned char*)(dlgKeyHexFixedLen.GetKeyBytes()), (const size_t)(dlgKeyHexFixedLen.GetKeyByteLength()));
 			// initialize operation parameters
+			parameters.documentFileName = _documentFileName;
+			parameters.documentTitle = _documentTitle;
 			parameters.parametersSymmetric.symmetricAlgorithmType = _symmetricAlgorithmType;
 			parameters.parametersSymmetric.symmetricOperationType = operationType;
-			parameters.parametersSymmetric.documentFileName = _documentFileName;
-			parameters.parametersSymmetric.documentTitle = _documentTitle;
 			parameters.parametersSymmetric.key = operationKey;
 			// mark the operation as started
 			parameters.operationStatus = OPERATION_STATUS_STARTED;
@@ -1635,17 +1687,45 @@ namespace CrypTool {
 			operationThread = AfxBeginThread(executeSymmetricOperation, &parameters);
 		}
 
+		void DialogOperationController::startAsymmetricOperationEncryptOrDecrypt(const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const CrypTool::Cryptography::Asymmetric::AsymmetricOperationType _asymmetricOperationType, const CString &_documentFileName, const CString &_documentTitle) {
+			// initialize operation parameters
+			parameters.documentFileName = _documentFileName;
+			parameters.documentTitle = _documentTitle;
+			parameters.parametersAsymmetric.asymmetricAlgorithmType = _asymmetricAlgorithmType;
+			parameters.parametersAsymmetric.asymmetricOperationType = _asymmetricOperationType;
+			// ask the user for operation parameters (serial of certificate for encryption/decryption)
+			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
+			dlgCertificateStoreSelectCertificate.showCertificateTypes(_asymmetricAlgorithmType == CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, _asymmetricAlgorithmType == CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA, _asymmetricAlgorithmType == CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC);
+			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
+			// extract the serial number of the selected certificate
+			parameters.parametersAsymmetric.serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
+			// if the user wants to decrypt, ask for the password for the selected certificate
+			if (_asymmetricOperationType == CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+				// let the user enter the password for the selected certificate
+				CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword(parameters.parametersAsymmetric.serial);
+				if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) return;
+				// extract the password for the selected certificate
+				parameters.parametersAsymmetric.password = dlgCertificateStoreAskForPassword.getCertificatePassword();
+			}
+			// mark the operation as started
+			parameters.operationStatus = OPERATION_STATUS_STARTED;
+			// start the update timer
+			updateTimer = SetTimer(ID_TIMER_EVENT_UPDATE, 50, NULL);
+			// start the operation thread
+			operationThread = AfxBeginThread(executeAsymmetricOperationEncryptOrDecrypt, &parameters);
+		}
+
 		UINT DialogOperationController::executeHashOperation(LPVOID _parameters) {
 			// acquire the operation parameters
 			Parameters *parameters = (Parameters*)(_parameters);
 			ASSERT(parameters);
 			// create a file name and a title for the new document, 
 			// and update the parameters accordingly
-			parameters->parametersHash.documentFileNameNew = Utilities::createTemporaryFile();
-			parameters->parametersHash.documentTitleNew.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(parameters->parametersHash.hashAlgorithmType), parameters->parametersHash.documentTitle);
+			parameters->documentFileNameNew = Utilities::createTemporaryFile();
+			parameters->documentTitleNew.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(parameters->parametersHash.hashAlgorithmType), parameters->documentTitle);
 			// execute the operation
 			CrypTool::Cryptography::Hash::HashOperation *operation = new CrypTool::Cryptography::Hash::HashOperation(parameters->parametersHash.hashAlgorithmType);
-			const bool result = operation->executeOnFiles(parameters->parametersHash.documentFileName, parameters->parametersHash.documentFileNameNew, &parameters->operationCancelled, &parameters->operationProgress);
+			const bool result = operation->executeOnFiles(parameters->documentFileName, parameters->documentFileNameNew, &parameters->operationCancelled, &parameters->operationProgress);
 			delete operation;
 			// mark the operation as finished
 			parameters->operationStatus = OPERATION_STATUS_FINISHED;
@@ -1655,11 +1735,11 @@ namespace CrypTool {
 				// result value in the show hash dialog; if desired by the user, display the result 
 				// in a new document
 				ByteString byteStringHash;
-				byteStringHash.readFromFile(parameters->parametersHash.documentFileNameNew);
+				byteStringHash.readFromFile(parameters->documentFileNameNew);
 				CDlgShowHash dlgShowHash;
-				dlgShowHash.initialize(parameters->parametersHash.documentTitleNew, byteStringHash.toString(16, " "));
+				dlgShowHash.initialize(parameters->documentTitleNew, byteStringHash.toString(16, " "));
 				if (dlgShowHash.DoModal() == IDOK) {
-					theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersHash.documentFileNameNew, parameters->parametersHash.documentTitleNew);
+					theApp.ThreadOpenDocumentFileNoMRU(parameters->documentFileNameNew, parameters->documentTitleNew);
 				}
 			}
 			// mark the operation as done, and end the thread
@@ -1674,18 +1754,43 @@ namespace CrypTool {
 			ASSERT(parameters);
 			// create a file name and a title for the new document, 
 			// and update the parameters accordingly
-			parameters->parametersSymmetric.documentFileNameNew = Utilities::createTemporaryFile();
-			parameters->parametersSymmetric.documentTitleNew.Format(parameters->parametersSymmetric.symmetricOperationType == CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_DECRYPTION ? IDS_STRING_DECRYPTION_OF_USING_KEY : IDS_STRING_ENCRYPTION_OF_USING_KEY, CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(parameters->parametersSymmetric.symmetricAlgorithmType), parameters->parametersSymmetric.documentTitle, parameters->parametersSymmetric.key.toString(16, " "));
+			parameters->documentFileNameNew = Utilities::createTemporaryFile();
+			parameters->documentTitleNew.Format(parameters->parametersSymmetric.symmetricOperationType == CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_DECRYPTION ? IDS_STRING_DECRYPTION_OF_USING_KEY : IDS_STRING_ENCRYPTION_OF_USING_KEY, CrypTool::Cryptography::Symmetric::getSymmetricAlgorithmName(parameters->parametersSymmetric.symmetricAlgorithmType), parameters->documentTitle, parameters->parametersSymmetric.key.toString(16, " "));
 			// execute the operation
 			CrypTool::Cryptography::Symmetric::SymmetricOperation *operation = new CrypTool::Cryptography::Symmetric::SymmetricOperation(parameters->parametersSymmetric.symmetricAlgorithmType, parameters->parametersSymmetric.symmetricOperationType);
-			const bool result = operation->executeOnFiles(parameters->parametersSymmetric.documentFileName, parameters->parametersSymmetric.documentFileNameNew, parameters->parametersSymmetric.key, &parameters->operationCancelled, &parameters->operationProgress);
+			const bool result = operation->executeOnFiles(parameters->documentFileName, parameters->documentFileNameNew, parameters->parametersSymmetric.key, &parameters->operationCancelled, &parameters->operationProgress);
 			delete operation;
 			// mark the operation as finished
 			parameters->operationStatus = OPERATION_STATUS_FINISHED;
 			// start post-processing only if operation was successful
 			if (result) {
 				// start post-processing: display the result in a new document
-				theApp.ThreadOpenDocumentFileNoMRU(parameters->parametersSymmetric.documentFileNameNew, parameters->parametersSymmetric.documentTitleNew);
+				theApp.ThreadOpenDocumentFileNoMRU(parameters->documentFileNameNew, parameters->documentTitleNew);
+			}
+			// mark the operation as done, and end the thread
+			parameters->operationStatus = OPERATION_STATUS_DONE;
+			AfxEndThread(0);
+			return 0;
+		}
+
+		UINT DialogOperationController::executeAsymmetricOperationEncryptOrDecrypt(LPVOID _parameters) {
+			// acquire the operation parameters
+			Parameters *parameters = (Parameters*)(_parameters);
+			ASSERT(parameters);
+			// create a file name and a title for the new document, 
+			// and update the parameters accordingly
+			parameters->documentFileNameNew = Utilities::createTemporaryFile();
+			parameters->documentTitleNew.Format(parameters->parametersAsymmetric.asymmetricOperationType == CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? IDS_STRING_ENCRYPTION_OF : IDS_STRING_DECRYPTION_OF, CrypTool::Cryptography::Asymmetric::getAsymmetricAlgorithmName(parameters->parametersAsymmetric.asymmetricAlgorithmType), parameters->documentTitle);
+			// execute the operation
+			CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt *operation = new CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt(parameters->parametersAsymmetric.asymmetricAlgorithmType, parameters->parametersAsymmetric.asymmetricOperationType);
+			const bool result = operation->executeOnFiles(parameters->documentFileName, parameters->documentFileNameNew, parameters->parametersAsymmetric.serial, parameters->parametersAsymmetric.password, &parameters->operationCancelled, &parameters->operationProgress);
+			delete operation;
+			// mark the operation as finished
+			parameters->operationStatus = OPERATION_STATUS_FINISHED;
+			// start post-processing only if operation was successful
+			if (result) {
+				// start post-processing: display the result in a new document
+				theApp.ThreadOpenDocumentFileNoMRU(parameters->documentFileNameNew, parameters->documentTitleNew);
 			}
 			// mark the operation as done, and end the thread
 			parameters->operationStatus = OPERATION_STATUS_DONE;

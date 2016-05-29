@@ -927,12 +927,12 @@ void CCryptDoc::OnUnzip()
 
 void CCryptDoc::OnCRYPTRsaEnc() {
 	UpdateContent();
-	CrypTool::Functions::executeRSAEncryption(ContentName, GetTitle());
+	CrypTool::Functions::executeAsymmetricOperationEncryptOrDecrypt(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_ENCRYPTION, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCRYPTRsaDec() {
 	UpdateContent();
-	CrypTool::Functions::executeRSADecryption(ContentName, GetTitle());
+	CrypTool::Functions::executeAsymmetricOperationEncryptOrDecrypt(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_DECRYPTION, ContentName, GetTitle());
 }
 
 void CCryptDoc::OnCryptMono() 

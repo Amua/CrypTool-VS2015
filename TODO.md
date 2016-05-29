@@ -22,7 +22,7 @@ This document contains the most important TODOs for the project.
 - speed up the CrypTool::ByteString implementation: the constant re-allocation of memory, for example when concatenating byte strings, is significantly dragging down overall performance (this is particularly evident when using the key from password dialog with an iteration count of 10000 or higher)
 - the implementations for hashing documents (the threaded ones) are leaking memory somewhere, investigate and fix it
 - finish refactoring symmetric cryptography: MARS, RC6, Serpent, Twofish, DESX (supported by OpenSSL!), DESL, DESXL
-- finish refactoring asymmetric cryptography: first finish "CertificateStore" implementation
+- finish refactoring asymmetric cryptography: implement "executeOnFiles" method, don't rely on slow ByteString operation, and improve error checking (i.e. when entering a wrong private key password, etc...)
 - implement replacement for Secude's PSE: finish "CertificateStore" implementation (parameter display, import, export, etc...)
 
 ## Other

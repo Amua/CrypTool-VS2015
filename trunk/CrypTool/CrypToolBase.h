@@ -288,6 +288,41 @@ namespace CrypTool {
 		// this namespace encapsulates asymmetric encryption and decryption functionality
 		namespace Asymmetric {
 
+			// the supported asymmetric algorithm types
+			enum AsymmetricAlgorithmType {
+				ASYMMETRIC_ALGORITHM_TYPE_NULL,
+				ASYMMETRIC_ALGORITHM_TYPE_RSA,
+				ASYMMETRIC_ALGORITHM_TYPE_DSA,
+				ASYMMETRIC_ALGORITHM_TYPE_ECC
+			};
+
+			// the supported asymmetric operation types
+			enum AsymmetricOperationType {
+				ASYMMETRIC_OPERATION_TYPE_NULL,
+				ASYMMETRIC_OPERATION_TYPE_ENCRYPTION,
+				ASYMMETRIC_OPERATION_TYPE_DECRYPTION
+			};
+
+			// this function returns the name of the specified asymmetric algorithm type
+			CString getAsymmetricAlgorithmName(const AsymmetricAlgorithmType _asymmetricAlgorithmType);
+
+			// this class provides asymmetric operations (encryption and decryption) on 
+			// the supported asymmetric algorithm types for both byte strings and files 
+			// (see different execute functions below); the file-based operations provide 
+			// the ability to cancel the operations and track their progress when run in 
+			// a separate thread
+			class AsymmetricOperationEncryptOrDecrypt {
+			public:
+				AsymmetricOperationEncryptOrDecrypt(const AsymmetricAlgorithmType _asymmetricAlgorithmType, const AsymmetricOperationType _asymmetricOperationType);
+				virtual ~AsymmetricOperationEncryptOrDecrypt();
+			public:
+				bool executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput);
+				bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled = 0, double *_progress = 0);
+			private:
+				const AsymmetricAlgorithmType asymmetricAlgorithmType;
+				const AsymmetricOperationType asymmetricOperationType;
+			};
+
 			// the supported certificate types
 			enum CertificateType {
 				CERTIFICATE_TYPE_NULL,
@@ -412,11 +447,8 @@ namespace CrypTool {
 		void executeHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 		// TODO/FIXME: rename or remove this? the complexity behind this operation is unclear (threading, etc...)
 		void executeSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
-
-		// this function executes an RSA encryption on the specified document
-		void executeRSAEncryption(const CString &_documentFileName, const CString &_documentTitle);
-		// this function executes an RSA decryption on the specified document
-		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle);
+		// TODO/FIXME: rename or remove this? the complexity behind this operation is unclear (threading, etc...)
+		void executeAsymmetricOperationEncryptOrDecrypt(const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const CrypTool::Cryptography::Asymmetric::AsymmetricOperationType _asymmetricOperationType, const CString &_documentFileName, const CString &_documentTitle);
 
 		// this function creates a password-derived key based on the PKCS#5 standard
 		bool createKeyFromPasswordPKCS5(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const ByteString &_password, const ByteString &_salt, const int _iterations, const int _keyLength, ByteString &_key);
@@ -443,32 +475,38 @@ namespace CrypTool {
 				bool operationCancelled;
 				// the progress of the operation
 				double operationProgress;
+				// document-related parameters
+				CString documentFileName;
+				CString documentTitle;
+				CString documentFileNameNew;
+				CString documentTitleNew;
 				// parameters specific to hash operations
 				struct ParametersHash {
 					CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
-					CString documentFileName;
-					CString documentTitle;
-					CString documentFileNameNew;
-					CString documentTitleNew;
 					// construction/destruction
-					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle(""), documentFileNameNew(""), documentTitleNew("") { }
+					ParametersHash() : hashAlgorithmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL) { }
 					virtual ~ParametersHash() { }
 				} parametersHash;
 				// parameters specific to symmetric operations
 				struct ParametersSymmetric {
 					CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
 					CrypTool::Cryptography::Symmetric::SymmetricOperationType symmetricOperationType;
-					CString documentFileName;
-					CString documentTitle;
-					CString documentFileNameNew;
-					CString documentTitleNew;
 					ByteString key;
 					// construction/destruction
-					ParametersSymmetric() : symmetricAlgorithmType(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_NULL), documentFileName(""), documentTitle(""), documentFileNameNew(""), documentTitleNew(""), key(ByteString()) { }
+					ParametersSymmetric() : symmetricAlgorithmType(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_NULL), key(ByteString()) { }
 					virtual ~ParametersSymmetric() { }
 				} parametersSymmetric;
+				// parameters specific to asymmetric operations
+				struct ParametersAsymmetric {
+					CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+					CrypTool::Cryptography::Asymmetric::AsymmetricOperationType asymmetricOperationType;
+					long serial;
+					CString password;
+					// construction/destruction
+					ParametersAsymmetric() : asymmetricAlgorithmType(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL), asymmetricOperationType(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_NULL), serial(0), password("") { }
+				} parametersAsymmetric;
 				// construction/destruction
-				Parameters() : operationStatus(OPERATION_STATUS_NULL), operationCancelled(false), operationProgress(0.0) { }
+				Parameters() : operationStatus(OPERATION_STATUS_NULL), operationCancelled(false), operationProgress(0.0), documentFileName(""), documentTitle(""), documentFileNameNew(""), documentTitleNew("") { }
 				virtual ~Parameters() { }
 			} parameters;
 		public:
@@ -477,9 +515,11 @@ namespace CrypTool {
 		public:
 			void startHashOperation(const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
 			void startSymmetricOperation(const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const CString &_documentFileName, const CString &_documentTitle);
+			void startAsymmetricOperationEncryptOrDecrypt(const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const CrypTool::Cryptography::Asymmetric::AsymmetricOperationType _asymmetricOperationType, const CString &_documentFileName, const CString &_documentTitle);
 		private:
 			static UINT executeHashOperation(LPVOID _parameters);
 			static UINT executeSymmetricOperation(LPVOID _parameters);
+			static UINT executeAsymmetricOperationEncryptOrDecrypt(LPVOID _parameters);
 		private:
 			// this thread is used for executing the actual operation
 			CWinThread *operationThread;
@@ -504,6 +544,8 @@ namespace CrypTool {
 			DECLARE_MESSAGE_MAP()
 		private:
 			friend class CrypTool::Cryptography::Hash::HashOperation;
+			friend class CrypTool::Cryptography::Symmetric::SymmetricOperation;
+			friend class CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt;
 		};
 
 	}
