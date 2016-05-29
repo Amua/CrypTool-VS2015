@@ -24,6 +24,7 @@ limitations under the License.
 #include "resource.h"
 
 #include "DlgCertificateStoreSelectCertificate.h"
+#include "DlgCertificateStoreAskForPassword.h"
 
 #include "DlgShowHash.h"
 #include "DlgKeyHexFixedLen.h"
@@ -1308,17 +1309,23 @@ namespace CrypTool {
 		}
 
 		void executeRSAEncryption(const CString &_documentFileName, const CString &_documentTitle) {
+			// let the user select the receiver's certificate
 			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
 			dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
-			dlgCertificateStoreSelectCertificate.DoModal();
+			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
+			// extract the serial number of the selected certificate
+			const long serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
 
 			// TODO/FIXME: encryption? -> encryptByteStringRSA
 		}
 		
 		void executeRSADecryption(const CString &_documentFileName, const CString &_documentTitle) {
+			// let the user select the receiver's certificate
 			CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
 			dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
-			dlgCertificateStoreSelectCertificate.DoModal();
+			if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
+			// extract the serial number of the selected certificate
+			const long serial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
 
 			// TODO/FIXME: password? decryption? -> decryptByteStringRSA
 		}

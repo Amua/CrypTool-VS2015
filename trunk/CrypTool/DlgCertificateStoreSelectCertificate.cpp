@@ -22,7 +22,6 @@ limitations under the License.
 #include "CrypToolApp.h"
 #include "CrypToolBase.h"
 #include "DlgCertificateStoreSelectCertificate.h"
-#include "DlgCertificateStoreAskForPassword.h"
 
 CDlgCertificateStoreSelectCertificate::CDlgCertificateStoreSelectCertificate(CWnd *_parent) :
 	CDialog(CDlgCertificateStoreSelectCertificate::IDD, _parent),

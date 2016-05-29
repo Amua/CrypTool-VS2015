@@ -23,10 +23,11 @@
 #include "CrypToolBase.h"
 #include "DlgCertificateStoreAskForPassword.h"
 
-CDlgCertificateStoreAskForPassword::CDlgCertificateStoreAskForPassword(CWnd *_parent) :
+CDlgCertificateStoreAskForPassword::CDlgCertificateStoreAskForPassword(const long _serial, CWnd *_parent) :
 	CDialog(CDlgCertificateStoreAskForPassword::IDD, _parent),
-	m_editPassword("") {
-
+	m_editCertificateSerial(""),
+	m_editCertificatePassword("") {
+	m_editCertificateSerial.Format("%d", _serial);
 }
 
 CDlgCertificateStoreAskForPassword::~CDlgCertificateStoreAskForPassword() {
@@ -40,7 +41,8 @@ BOOL CDlgCertificateStoreAskForPassword::OnInitDialog() {
 
 void CDlgCertificateStoreAskForPassword::DoDataExchange(CDataExchange *_pDX) {
 	CDialog::DoDataExchange(_pDX);
-	DDX_Text(_pDX, IDC_EDIT_PASSWORD, m_editPassword);
+	DDX_Text(_pDX, IDC_EDIT_CERTIFICATE_SERIAL, m_editCertificateSerial);
+	DDX_Text(_pDX, IDC_EDIT_CERTIFICATE_PASSWORD, m_editCertificatePassword);
 }
 
 void CDlgCertificateStoreAskForPassword::clickedButtonOK() {

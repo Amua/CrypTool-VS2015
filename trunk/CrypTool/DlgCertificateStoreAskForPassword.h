@@ -28,7 +28,7 @@
 class CDlgCertificateStoreAskForPassword : public CDialog {
 	enum { IDD = IDD_CERTIFICATE_STORE_ASK_FOR_PASSWORD };
 public:
-	CDlgCertificateStoreAskForPassword(CWnd *_parent = 0);
+	CDlgCertificateStoreAskForPassword(const long _serial, CWnd *_parent = 0);
 	virtual ~CDlgCertificateStoreAskForPassword();
 protected:
 	virtual BOOL OnInitDialog();
@@ -37,9 +37,11 @@ protected:
 	afx_msg void clickedButtonOK();
 	afx_msg void clickedButtonCancel();
 protected:
-	CString m_editPassword;
+	CString m_editCertificateSerial;
+	CString m_editCertificatePassword;
 public:
-	const CString &getPassword() const { return m_editPassword; }
+	const CString getCertificateSerial() const { return m_editCertificateSerial; }
+	const CString getCertificatePassword() const { return m_editCertificatePassword; }
 
 	DECLARE_MESSAGE_MAP()
 };
