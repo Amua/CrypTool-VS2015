@@ -192,6 +192,13 @@ namespace CrypTool {
 		}
 	}
 
+	void ByteString::randomize(const size_t _byteLength) {
+		if (_byteLength > 0) {
+			reset(_byteLength);
+			OpenSSL::RAND_bytes(byteData, _byteLength);
+		}
+	}
+
 	ByteString &ByteString::operator=(const ByteString &_byteString) {
 		reset(_byteString.byteLength);
 		std::memcpy(byteData, _byteString.byteData, byteLength);
