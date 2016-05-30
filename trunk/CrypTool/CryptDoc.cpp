@@ -935,12 +935,9 @@ void CCryptDoc::OnCRYPTRsaDec() {
 	CrypTool::Functions::executeAsymmetricOperationEncryptOrDecrypt(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_DECRYPTION, ContentName, GetTitle());
 }
 
-void CCryptDoc::OnCryptMono() 
-{
+void CCryptDoc::OnCryptMono() {
 	UpdateContent();
-#ifndef _UNSTABLE
 	Mono(ContentName, GetTitle());
-#endif
 }
 
 void CCryptDoc::OnCryptSign() 

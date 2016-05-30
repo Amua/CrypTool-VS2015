@@ -1370,7 +1370,6 @@ int AnalyseMonoManual(const char *infile, const char *OldTitle)
 
 /* Funktion zur monoalphabetischen Ver- und Entschlüsselung			*/
 void Mono(const char *infile, const char *OldTitle) {
-#ifndef _UNSTABLE
 	CFile inputFile(infile, CFile::modeRead);
 	const int inputFileLength = inputFile.GetLength();
 
@@ -1497,7 +1496,6 @@ void Mono(const char *infile, const char *OldTitle) {
 		MakeNewName3(title,sizeof(title),pc_str1, dlgMono.typeOfEncryption ,OldTitle,dlgMono.getKey());
 		NewDoc->SetTitle(title);
 	}
-#endif
 }
 
 UINT AnaSubst(PVOID p) {
