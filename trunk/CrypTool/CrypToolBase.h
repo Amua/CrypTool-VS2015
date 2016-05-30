@@ -429,13 +429,6 @@ namespace CrypTool {
 				static bool readCustomCrypToolExtension(OpenSSL::X509 *_certificate, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type);
 			};
 
-			// this function encrypts a byte string using the RSA certificate corresponding to the specified 
-			// certificate serial number; if the function fails for any reason, false is returned
-			bool encryptByteStringRSA(const long _serial, const ByteString &_byteStringInput, ByteString &_byteStringOutput);
-			// this function decrypts a byte string using the private key of the RSA certificate corresponding 
-			// to the specified certificate serial number; if the function fails for any reason, false is returned
-			bool decryptByteStringRSA(const long _serial, const CString &_password, const ByteString &_byteStringInput, ByteString &_byteStringOutput);
-
 		}
 
 	}

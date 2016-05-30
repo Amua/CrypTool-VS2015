@@ -80,7 +80,6 @@ namespace CrypTool {
 					return true;
 				}
 			}
-			infile.Close();
 			reset();
 		}
 		return false;
@@ -90,7 +89,7 @@ namespace CrypTool {
 		CFile outfile;
 		if (outfile.Open(_fileName, CFile::modeCreate | CFile::modeWrite)) {
 			outfile.Write(byteData, byteLength);
-			outfile.Close();
+			return true;
 		}
 		return false;
 	}
@@ -912,17 +911,90 @@ namespace CrypTool {
 
 			bool AsymmetricOperationEncryptOrDecrypt::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
 				using namespace OpenSSL;
-				
-				// TODO/FIXME: this should be implemented ON FILES as soon as possible
-				ByteString byteStringInput;
-				ByteString byteStringOutput;
-				byteStringInput.readFromFile(_fileNameInput);
-				const bool result = executeOnByteStrings(byteStringInput, _serial, _password, byteStringOutput);
-				byteStringOutput.writeToFile(_fileNameOutput);
-				return result;
-				// TODO/FIXME: this should be implemented ON FILES as soon as possible
-
-				return false;
+				// make sure we have a valid operation type
+				if (asymmetricOperationType != ASYMMETRIC_OPERATION_TYPE_ENCRYPTION && asymmetricOperationType != ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					return false;
+				}
+				// try to open files
+				CFile fileInput;
+				CFile fileOutput;
+				// try to open the input file for reading
+				if (!fileInput.Open(_fileNameInput, CFile::modeRead)) {
+					return false;
+				}
+				// try to open the output file for writing
+				if (!fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
+					return false;
+				}
+				// initialize the RSA structure
+				RSA *rsa = RSA_new();
+				// depending on the operation type, try to fetch the public or the private key
+				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicKeyRSA(_serial, &rsa)) {
+						RSA_free(rsa);
+						return false;
+					}
+				}
+				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
+						RSA_free(rsa);
+						return false;
+					}
+				}
+				// the buffer size we're working with (the size of the chunks to be read from the input file 
+				// and to be written to the output file), this depends on the used operation type
+				const int inputLength = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) - 41 - 1 : RSA_size(rsa);
+				const int outputLength = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) : RSA_size(rsa) - 41 - 1;
+				// create variables vor input, output
+				unsigned char *input = new unsigned char[inputLength];
+				unsigned char *output = new unsigned char[outputLength];
+				// initialize some internal variables
+				const ULONGLONG positionStart = 0;
+				const ULONGLONG positionEnd = fileInput.GetLength();
+				ULONGLONG positionCurrent = positionStart;
+				ULONGLONG bytesRead;
+				while (bytesRead = fileInput.Read(input, inputLength)) {
+					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+						const int encrypt = RSA_public_encrypt((int)(bytesRead), input, output, rsa, RSA_PKCS1_OAEP_PADDING);
+						if (encrypt == -1) {
+							RSA_free(rsa);
+							delete input;
+							delete output;
+							return false;
+						}
+						else {
+							fileOutput.Write(output, encrypt);
+						}
+					}
+					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
+						const int decrypt = RSA_private_decrypt((int)(bytesRead), input, output, rsa, RSA_PKCS1_OAEP_PADDING);
+						if (decrypt == -1) {
+							RSA_free(rsa);
+							delete input;
+							delete output;
+							return false;
+						}
+						else {
+							fileOutput.Write(output, decrypt);
+						}
+					}
+					positionCurrent += bytesRead;
+					if (_cancelled) {
+						if (*_cancelled) {
+							RSA_free(rsa);
+							delete input;
+							delete output;
+							return false;
+						}
+					}
+					if (_progress) {
+						*_progress = (double)(positionCurrent) / (double)(positionEnd);
+					}
+				}
+				RSA_free(rsa);
+				delete input;
+				delete output;
+				return true;
 			}
 
 			CertificateStore::CertificateStore() :
@@ -1436,80 +1508,6 @@ namespace CrypTool {
 				_remarks = vectorElements.at(2);
 				_type = vectorElements.at(3);
 				return true;
-			}
-
-			bool encryptByteStringRSA(const long _serial, const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
-				using namespace OpenSSL;
-				// the result variable
-				bool result = true;
-				// acquire the RSA public key corresponding to the specified serial number
-				RSA *rsa = RSA_new();
-				if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicKeyRSA(_serial, &rsa)) {
-					int bytesRemaining = (int)(_byteStringInput.getByteLength());
-					const int inputBlockSize = RSA_size(rsa) - 41 - 1;
-					const int outputBlockSize = RSA_size(rsa);
-					ByteString input;
-					ByteString output;
-					input.reset(inputBlockSize);
-					output.reset(outputBlockSize);
-					const size_t blockCount = (_byteStringInput.getByteLength() + inputBlockSize - 1) / inputBlockSize;
-					for (size_t blockIndex = 0; blockIndex < blockCount && result == true; blockIndex++) {
-						memset(input.getByteData(), 0, inputBlockSize);
-						memset(output.getByteData(), 0, outputBlockSize);
-						const int inputSize = bytesRemaining >= inputBlockSize ? inputBlockSize : bytesRemaining;
-						memcpy(input.getByteData(), _byteStringInput.getByteDataConst() + blockIndex * inputBlockSize, inputSize);
-						const int encrypt = RSA_public_encrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
-						if(encrypt == -1) {
-							result = false;
-						}
-						else {
-							bytesRemaining -= inputSize;
-							output.truncate(encrypt);
-							_byteStringOutput += output;
-						}
-					}
-				}
-				else {
-					result = false;
-				}
-				RSA_free(rsa);
-				return result;
-			}
-			
-			bool decryptByteStringRSA(const long _serial, const CString &_password, const ByteString &_byteStringInput, ByteString &_byteStringOutput) {
-				using namespace OpenSSL;
-				// the result variable
-				bool result = true;
-				// acquire the RSA private key corresponding to the specified serial number
-				RSA *rsa = RSA_new();
-				if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
-					const int inputBlockSize = RSA_size(rsa);
-					const int outputBlockSize = RSA_size(rsa) - 41 - 1;
-					ByteString input;
-					ByteString output;
-					input.reset(inputBlockSize);
-					output.reset(outputBlockSize);
-					const size_t blockCount = (_byteStringInput.getByteLength() + inputBlockSize - 1) / inputBlockSize;
-					for (size_t blockIndex = 0; blockIndex < blockCount && result == true; blockIndex++) {
-						memset(input.getByteData(), 0, inputBlockSize);
-						memset(output.getByteData(), 0, outputBlockSize);
-						const int inputSize = inputBlockSize;
-						memcpy(input.getByteData(), _byteStringInput.getByteDataConst() + blockIndex * inputBlockSize, inputSize);
-						const int decrypt = RSA_private_decrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
-						if (decrypt == -1) {
-							result = false;
-						}
-						else {
-							output.truncate(decrypt);
-							_byteStringOutput += output;
-						}
-					}
-				}
-				else {
-					result = false;
-				}
-				RSA_free(rsa);
-				return result;
 			}
 
 		}
