@@ -21,10 +21,9 @@
 #ifndef _DLGHYBRIDENCRYPTIONDEMO_H_
 #define _DLGHYBRIDENCRYPTIONDEMO_H_
 
-#include "DlgRSAEncryption.h"
-
-#define MAX_LEN_EDIT 30000
-#define DIR_ENCRYPT 0 
+#include <afxwin.h>
+#include <afxcmn.h>
+#include <resource.h>
 
 #define INFO_TEXT_COLUMNS 20
 
