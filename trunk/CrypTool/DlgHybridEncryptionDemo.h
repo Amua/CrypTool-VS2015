@@ -18,29 +18,19 @@
 
 **************************************************************************/
 
-#if !defined(AFX_HYBRIDENCR_H__EB90CA93_1BA0_11D6_AB88_0006291976BD__INCLUDED_)
-#define AFX_HYBRIDENCR_H__EB90CA93_1BA0_11D6_AB88_0006291976BD__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// HybridEncr.h : Header-Datei
-//
+#ifndef _DLGHYBRIDENCRYPTIONDEMO_H_
+#define _DLGHYBRIDENCRYPTIONDEMO_H_
 
 #include "DlgRSAEncryption.h"
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgHybridEncryptionDemo 
+
 #define MAX_LEN_EDIT 30000
 #define DIR_ENCRYPT 0 
 
-#define INFO_TEXT_COLUMNS 20 // Abhängig von der Fensterbreite in den Ressourcen !!!!!!
-                             // Beim Editieren der Ressoucen bitte Größe anpassen
-
+#define INFO_TEXT_COLUMNS 20
 
 // Falls der SCA-Modus aktiviert ist, werden in folgender Struktur Informationen
 // über das ausgewählte Zertifikat/RSA-Schlüsselpaar abgelegt:
-struct SCACertificateInformation
-{
+struct SCACertificateInformation {
 	CString firstname;
 	CString lastname;
 	CString keytype;
@@ -48,9 +38,39 @@ struct SCACertificateInformation
 	CString keyid;
 };
 
-class CDlgHybridEncryptionDemo : public CDialog
-{
-// Konstruktion
+class CDlgHybridEncryptionDemo : public CDialog {
+	enum { IDD = IDD_HYBRID_ENCRYPTION_DEMO };
+public:
+	CDlgHybridEncryptionDemo(const CString &_documentFileName = "", const CString &_documentTitle = "", CWnd* pParent = NULL);
+	virtual ~CDlgHybridEncryptionDemo();
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
+	afx_msg void OnButtonGetDocument();
+	afx_msg void OnButtonEncKeyAsym();
+	afx_msg void OnButtonEncDocumentSym();
+	afx_msg void OnButtonGenSymKey();
+	afx_msg void OnButtonGetAsymKey();
+	afx_msg void OnButtonShowSymKey();
+	afx_msg void OnButtonShowAsymKey();
+	afx_msg void OnButtonShowDocument();
+	afx_msg void OnButtonShowEncDocument();
+	afx_msg void OnButtonShowEncSymKey();
+	afx_msg void OnButtonDatenausgabe();
+	afx_msg void OnPaint();
+private:
+	CString m_documentFileName;
+	CString m_documentTitle;
+private:
+	CrypTool::ByteString m_byteStringPlainText;
+	CrypTool::ByteString m_byteStringCipherText;
+private:
+	CrypTool::ByteString m_byteStringSymmetricKey;
+private:
+	long m_selectedCertificateSerial;
+
+
 public:
 
 	SCACertificateInformation getCertInfo();
@@ -67,21 +87,12 @@ public:
 	CString Edit;
 	int m_iDocSize;
 	bool m_bAuswahlDat;
-	CDlgRSAEncryption rsaDlg;
-	char *SymKey;
-	OctetString* EncSymKey;
 	int m_iDocSizeForEnc;
 	CFont m_font;
 	CString m_strSymKey;
-	CString m_strPathSelDoc; // if not empty on DoModal, this file is opened
-	CString	m_strBuffTitle;
-	CString UserKeyId;
 
-	OctetString *PlainText;
-	OctetString *CipherText;
 	
-	CDlgHybridEncryptionDemo(CWnd* pParent = NULL);   // Standardkonstruktor
-	~CDlgHybridEncryptionDemo();
+	
 	void ShowButtons();
 	void EnDisButtons();
 	void SetCondition(int button,bool state);
@@ -89,13 +100,12 @@ public:
 	void RSAEncrypt();
 	
 
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgHybridEncryptionDemo)
-	enum { IDD = IDD_HYBRID_ENCRYPTION_DEMO };
+
+	
 	CStatic	m_ctrlBG;
 	CString	m_strEdit;
 	CString	m_strTitle;
-	//}}AFX_DATA
+
 
 	CBitmapButton m_ctrlBmpRaute1;
 	CBitmapButton m_ctrlBmpRaute2;
@@ -113,8 +123,7 @@ public:
 // Überschreibungen
 	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
 	//{{AFX_VIRTUAL(CDlgHybridEncryptionDemo)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
+	
 	//}}AFX_VIRTUAL
 
 // Implementierung
@@ -124,21 +133,8 @@ protected:
 
 	// Generierte Nachrichtenzuordnungsfunktionen
 	//{{AFX_MSG(CDlgHybridEncryptionDemo)
-	afx_msg void OnButtonGetDocument();
-	virtual BOOL OnInitDialog();
-	afx_msg void OnButtonEncKeyAsym();
-	afx_msg void OnButtonEncDocumentSym();
-	afx_msg void OnButtonGenSymKey();
-	afx_msg void OnButtonGetAsymKey();
-	afx_msg void OnButtonShowSymKey();
-	afx_msg void OnButtonShowAsymKey();
-	afx_msg void OnButtonShowDocument();
-	afx_msg void OnButtonShowEncDocument();
-	afx_msg void OnButtonShowEncSymKey();
-	afx_msg void OnButtonDatenausgabe();
-	afx_msg void OnPaint();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	
+	
 
 private:
 
@@ -148,12 +144,8 @@ private:
 	bool isSCABehaviourActivated;
 	
 	enum ButtonStatus {inactive /* = 0*/, active_not_pressed /* = 1*/, active_pressed /* = 2*/};
-	// Default-Einstellung für die Länge des symmetrischen Schlüssels; wird
-	// im Konstruktor initialisiert (Lesen aus .ini-Datei)
-	int symKeyByteLength;
+	
+	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_HYBRIDENCR_H__EB90CA93_1BA0_11D6_AB88_0006291976BD__INCLUDED_
+#endif

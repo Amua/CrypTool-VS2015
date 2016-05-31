@@ -157,10 +157,8 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			// Fall (a)
 			if(dlg.radioChoice1)
 			{
-				CDlgHybridEncryptionDemo dlg;
+				CDlgHybridEncryptionDemo dlg(initFile, initFileTitle);
 				dlg.activateSCABehaviour();
-				dlg.m_strBuffTitle = initFileTitle;
-				dlg.m_strPathSelDoc = initFile;
 				if(dlg.DoModal() == IDOK)
 				{
 					scaCertInfo = dlg.getCertInfo();

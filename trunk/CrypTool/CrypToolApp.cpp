@@ -1187,10 +1187,9 @@ BOOL CCrypToolApp::ProcessMessageFilter(int code, LPMSG lpMsg)
 	return CWinThread::ProcessMessageFilter(code,lpMsg);
 }
 
-void CCrypToolApp::OnVerentschlsselnHybridverfahrenHybridverschlsselung() 
-{
-	CDlgHybridEncryptionDemo hyb;
-	hyb.DoModal();
+void CCrypToolApp::OnVerentschlsselnHybridverfahrenHybridverschlsselung() {
+	CDlgHybridEncryptionDemo dlgHybridEncryptionDemo;
+	dlgHybridEncryptionDemo.DoModal();
 }
 
 void CCrypToolApp::OnOptionsStartoptions() 

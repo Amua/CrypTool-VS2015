@@ -1463,16 +1463,13 @@ void CCryptDoc::OnUpdateAesSelfextract(CCmdUI* pCmdUI)
 void CCryptDoc::OnEinzelverfahrenHashwerteHashdemo() 
 {
 	UpdateContent();
-	Hashdemo(ContentName,GetTitle());
+	Hashdemo(ContentName, GetTitle());
 }
 
-void CCryptDoc::OnEinzelverfahrenHybridverfahrenHybridverschlsselung() 
-{
-	CDlgHybridEncryptionDemo hyb;
+void CCryptDoc::OnEinzelverfahrenHybridverfahrenHybridverschlsselung() {
 	UpdateContent();
-	hyb.m_strBuffTitle = GetTitle();
-	hyb.m_strPathSelDoc = ContentName;
-	hyb.DoModal();
+	CDlgHybridEncryptionDemo dlgHybridEncryptionDemo(ContentName, GetTitle());
+	dlgHybridEncryptionDemo.DoModal();
 }
 
 

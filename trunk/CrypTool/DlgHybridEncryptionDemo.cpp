@@ -18,13 +18,14 @@
 
 **************************************************************************/
 
-// HybridEncr.cpp: Implementierungsdatei
-//
-
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
 #include "DlgHybridEncryptionDemo.h"
+
+#include "DlgCertificateStoreSelectCertificate.h"
+
+// TODO/FIXME: which ones of these do we REALLY need?!
 #include "DialogeMessage.h"
 #include <fstream>
 #include "FileTools.h"
@@ -33,7 +34,7 @@
 #include "DlgKeyHexAnalysis.h"
 #include "Cryptography.h"
 #include "CryptDoc.h"
-#include "DlgKeyHex.h"	// Dialog-Box für die Schlüsseleingabe
+#include "DlgKeyHex.h"
 #include "AppDocument.h"
 #include "DlgKeyHexAnalysis.h"
 #include <mbstring.h>
@@ -47,17 +48,16 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-extern char* CaPseDatei;
-extern char* CaPseVerzeichnis;
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgHybridEncryptionDemo 
 
 #define NO_BUTTONS 11
 int g_Status[NO_BUTTONS];
 
-CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgHybridEncryptionDemo::IDD, pParent)
-{
+CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
+	CDialog(CDlgHybridEncryptionDemo::IDD, pParent),
+	m_documentFileName(_documentFileName),
+	m_documentTitle(_documentTitle),
+	m_selectedCertificateSerial(0) {
+
 	this->scaCertInfo.firstname = "";
 	this->scaCertInfo.lastname = "";
 	this->scaCertInfo.keytype = "";
@@ -70,107 +70,76 @@ CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(CWnd* pParent /*=NULL*/)
 	m_strEdit = _T("");
 	m_strTitle = _T("");
 	//}}AFX_DATA_INIT
-	
+
 	int i;
-	for(i=0;i<11;i++)
+	for (i = 0; i<11; i++)
 	{
 		m_ButtonStatus[i] = inactive;
 		m_ActionPerformed[i] = false;
 	}
-	
+
 	m_ButtonStatus[0] = active_not_pressed;		// diese drei Buttons können am Anfang schon gedrückt werden, daher
 	m_ButtonStatus[1] = active_not_pressed;		// werden sie auf active_not_pressed gesetzt
 	m_ButtonStatus[3] = active_not_pressed;
 
 	//Array mit den Voraussetzungen
 
-	for (i=0; i<NO_BUTTONS; i++) 
+	for (i = 0; i<NO_BUTTONS; i++)
 		g_Status[i] = m_ButtonStatus[i];
 
-	for(i=0;i<11;i++)
+	for (i = 0; i<11; i++)
 	{
-		for(int j=0;j<11;j++)
+		for (int j = 0; j<11; j++)
 		{
-			m_setMatrix[i][j]=false;
+			m_setMatrix[i][j] = false;
 		}
 	}
-	m_setMatrix[2][1]=true;
-	m_setMatrix[4][3]=true;
-	m_setMatrix[5][0]=true;
-	m_setMatrix[5][1]=true;
-	m_setMatrix[6][1]=true;
-	m_setMatrix[6][3]=true;
-	m_setMatrix[7][0]=true;
-	m_setMatrix[8][5]=true;
-	m_setMatrix[9][6]=true;
-	m_setMatrix[10][0]=true;
-	m_setMatrix[10][1]=true;
-	m_setMatrix[10][3]=true;
-	m_setMatrix[10][5]=true;
-	m_setMatrix[10][6]=true;
+	m_setMatrix[2][1] = true;
+	m_setMatrix[4][3] = true;
+	m_setMatrix[5][0] = true;
+	m_setMatrix[5][1] = true;
+	m_setMatrix[6][1] = true;
+	m_setMatrix[6][3] = true;
+	m_setMatrix[7][0] = true;
+	m_setMatrix[8][5] = true;
+	m_setMatrix[9][6] = true;
+	m_setMatrix[10][0] = true;
+	m_setMatrix[10][1] = true;
+	m_setMatrix[10][3] = true;
+	m_setMatrix[10][5] = true;
+	m_setMatrix[10][6] = true;
 
-	PlainText = CipherText = 0;
 	m_bAuswahlDat = true;
 
-	// Länge für symmetrischen Schlüssel auf 128 Bit (128/8 Byte) setzen...
-	symKeyByteLength = 128/8;
-	// ...und Speicher für symmetrischen Schlüssel anfordern
-	SymKey = new char[symKeyByteLength];
+	// initialize symmetric key to 16 bytes (128 bits)
+	m_byteStringSymmetricKey.reset(16);
 }
 
+CDlgHybridEncryptionDemo::~CDlgHybridEncryptionDemo() {
 
-void CDlgHybridEncryptionDemo::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgHybridEncryptionDemo)
-	DDX_Text(pDX, IDC_EDIT_TXT, m_strEdit);
-	DDX_Text(pDX, IDC_EDIT_TITLE, m_strTitle);
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgHybridEncryptionDemo, CDialog)
-	//{{AFX_MSG_MAP(CDlgHybridEncryptionDemo)
-	ON_BN_CLICKED(IDC_BUTTON1_TXT_EINFUEGEN, OnButtonGetDocument)
-	ON_BN_CLICKED(IDC_BUTTON_ENC_KEY_ASYM, OnButtonEncKeyAsym)
-	ON_BN_CLICKED(IDC_BUTTON_ENC_TXT_SYM, OnButtonEncDocumentSym)
-	ON_BN_CLICKED(IDC_BUTTON_GEN_SYM_KEY, OnButtonGenSymKey)
-	ON_BN_CLICKED(IDC_BUTTON_GET_ASYM_KEY, OnButtonGetAsymKey)
-	ON_BN_CLICKED(IDC_BUTTON_SHOW_SYM_KEY, OnButtonShowSymKey)
-	ON_BN_CLICKED(IDC_BUTTON_SHOW_ASYM_KEY, OnButtonShowAsymKey)
-	ON_BN_CLICKED(IDC_BUTTON_SHOWTXT, OnButtonShowDocument)
-	ON_BN_CLICKED(IDC_BUTTON2, OnButtonShowEncDocument)
-	ON_BN_CLICKED(IDC_BUTTON3, OnButtonShowEncSymKey)
-	ON_BN_CLICKED(IDC_BUTTON_DATENAUSGABE, OnButtonDatenausgabe)
-	ON_WM_SETCURSOR()
-	ON_WM_PAINT()
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgHybridEncryptionDemo 
-BOOL CDlgHybridEncryptionDemo::OnInitDialog() 
-{
+BOOL CDlgHybridEncryptionDemo::OnInitDialog() {
 	CDialog::OnInitDialog();
-	
-	m_ctrlBmpSechseck1.AutoLoad(IDC_BUTTON1_TXT_EINFUEGEN,this);
-	m_ctrlBmpSechseck2.AutoLoad(IDC_BUTTON_GEN_SYM_KEY,this);
-	m_ctrlBmpSechseck3.AutoLoad(IDC_BUTTON_GET_ASYM_KEY,this);
-	m_ctrlBmpRaute1.AutoLoad(IDC_BUTTON_SHOWTXT,this);
-	m_ctrlBmpRaute2.AutoLoad(IDC_BUTTON_SHOW_SYM_KEY,this);
-	m_ctrlBmpRaute3.AutoLoad(IDC_BUTTON_SHOW_ASYM_KEY,this);
-	m_ctrlBmpRaute4.AutoLoad(IDC_BUTTON2,this);
-	m_ctrlBmpRaute5.AutoLoad(IDC_BUTTON3,this);
-	m_ctrlBmpRechteck1.AutoLoad(IDC_BUTTON_ENC_TXT_SYM,this);
-	m_ctrlBmpRechteck2.AutoLoad(IDC_BUTTON_ENC_KEY_ASYM,this);
-	m_ctrlBmpOval1.AutoLoad(IDCANCEL,this);
-	m_ctrlBmpOval2.AutoLoad(IDC_BUTTON_DATENAUSGABE,this);
+
+	m_ctrlBmpSechseck1.AutoLoad(IDC_BUTTON1_TXT_EINFUEGEN, this);
+	m_ctrlBmpSechseck2.AutoLoad(IDC_BUTTON_GEN_SYM_KEY, this);
+	m_ctrlBmpSechseck3.AutoLoad(IDC_BUTTON_GET_ASYM_KEY, this);
+	m_ctrlBmpRaute1.AutoLoad(IDC_BUTTON_SHOWTXT, this);
+	m_ctrlBmpRaute2.AutoLoad(IDC_BUTTON_SHOW_SYM_KEY, this);
+	m_ctrlBmpRaute3.AutoLoad(IDC_BUTTON_SHOW_ASYM_KEY, this);
+	m_ctrlBmpRaute4.AutoLoad(IDC_BUTTON2, this);
+	m_ctrlBmpRaute5.AutoLoad(IDC_BUTTON3, this);
+	m_ctrlBmpRechteck1.AutoLoad(IDC_BUTTON_ENC_TXT_SYM, this);
+	m_ctrlBmpRechteck2.AutoLoad(IDC_BUTTON_ENC_KEY_ASYM, this);
+	m_ctrlBmpOval1.AutoLoad(IDCANCEL, this);
+	m_ctrlBmpOval2.AutoLoad(IDC_BUTTON_DATENAUSGABE, this);
 
 	//Laden der Bitmaps und als Steuerelemte anzeigen
 
-	if(!m_bAuswahlDat)
+	if (!m_bAuswahlDat)
 	{
-		m_ActionPerformed[0]=true;
+		m_ActionPerformed[0] = true;
 	}
 	//wenn m_bAuswahlDat auf false gesetzt ist, wurde Text aus dem CrypTool-Editor in das Editfeld des 
 	//HybridverfahrenDialogs geladen, d.h. es muss keine Datei mehr ausgewählt werden.
@@ -179,53 +148,55 @@ BOOL CDlgHybridEncryptionDemo::OnInitDialog()
 	//Aktualisieren der gegebenen Voraussetzungen
 	ShowButtons();
 	//Aktivieren /Deaktivieren der Buttons
-	
+
 
 	// Schriftart im Textfeld "aktuelle Datei", Felder in denen die Hashwerte und die Differenz angezeigt 
 	// werden, "Courier" definieren
-	LOGFONT lf={14,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_DONTCARE,"Courier"};
+	LOGFONT lf = { 14,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,"Courier" };
 	//Struktur lf wird deklariert und initialisiert
 	m_font.CreateFontIndirect(&lf);
 	//Objekt der Klasse CFont (m_font) wird gesetzt initialisiert
-	CWnd* pStatic=GetDlgItem(IDC_EDIT_TXT);
-	pStatic->SetFont(&m_font,false);
-	
+	CWnd* pStatic = GetDlgItem(IDC_EDIT_TXT);
+	pStatic->SetFont(&m_font, false);
+
 
 	// Falls ein Dokument vorliegt, wird es initial im Demo-Dialog angezeigt
-	if (!m_strPathSelDoc.IsEmpty())
+	if (!m_documentFileName.IsEmpty())
 	{
 		// Den Fokus _nur_ dann auf den Button "Dokument" legen (und deshalb FALSE zurückgeben),
 		// wenn auch wirklich ein Dokument vorliegt; für diesen Fall liefert DateiOeffnen(...) TRUE zurück!
-		if(DateiOeffnen(m_strPathSelDoc))
+		if (DateiOeffnen(m_documentFileName))
 		{
 			EnDisButtons();
 			ShowButtons();
-			OnButtonShowDocument();	
+			OnButtonShowDocument();
 			m_ctrlBmpRaute1.SetFocus();
 			return FALSE;
 		}
 
 	}
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
+	return TRUE;
 }
 
-void CDlgHybridEncryptionDemo::OnButtonGetDocument() 
-{
-	m_ButtonStatus[0]=active_pressed;
+void CDlgHybridEncryptionDemo::DoDataExchange(CDataExchange* pDX) {
+	CDialog::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT_TXT, m_strEdit);
+	DDX_Text(pDX, IDC_EDIT_TITLE, m_strTitle);
+}
 
+void CDlgHybridEncryptionDemo::OnButtonGetDocument() {
+	m_ButtonStatus[0]=active_pressed;
 	// Attributwerte sichern
 	CString s_strBuffTitle, s_strEdit, s_strTitle;
-	s_strBuffTitle = m_strBuffTitle;
+	s_strBuffTitle = m_documentTitle;
 	s_strEdit = m_strEdit;
 	s_strTitle = m_strTitle;
 
-	m_strBuffTitle = "";
+	m_documentTitle = "";
 	m_strEdit = "";
 	m_strTitle = "";
 
-	
 	CFileDialog m_dlgFile( TRUE ); // TRUE = Datei öffnen,FALSE = Datei speichern 
 	if( m_dlgFile.DoModal() == IDOK ) 
 	{
@@ -235,16 +206,16 @@ void CDlgHybridEncryptionDemo::OnButtonGetDocument()
 		CString loc_filename = "";
 		UpdateData(false);
 		loc_filename = m_dlgFile.GetPathName();
-		m_strBuffTitle = m_dlgFile.GetFileName();
+		m_documentTitle = m_dlgFile.GetFileName();
 		DateiOeffnen(loc_filename);
-		m_strPathSelDoc = loc_filename;
+		m_documentFileName = loc_filename;
 		ShowButtons();
  	} 
 	else
 	//wenn auf Abbrechen geklickt wurde, wird abgebrochen
 	{
 		// Attribute zurücksetzen (siehe oben)
-		m_strBuffTitle = s_strBuffTitle;
+		m_documentTitle = s_strBuffTitle;
 		m_strEdit = s_strEdit;
 		m_strTitle = s_strTitle;
 
@@ -254,69 +225,24 @@ void CDlgHybridEncryptionDemo::OnButtonGetDocument()
 	}
 }
 
-void CDlgHybridEncryptionDemo::OnButtonGenSymKey() 
-{
-#ifndef _UNSTABLE
-	//Generieren eines symmetrischen Schluessels mit einem Zufallsgenerator
-
+void CDlgHybridEncryptionDemo::OnButtonGenSymKey() {
 	m_ButtonStatus[1]=active_pressed;
 	UpdateData(true);
 	m_strSymKey="";
 	m_strEdit = "";
 	m_strTitle="";
-	unsigned char o;
-
-	int j;
-	for (j=0; j<symKeyByteLength; j++ )
-	{
-		o=0;
-		for(int i=0;i<8;i++)
-		{
-			o|=(_rand_bit())<<i;
-		}
-		SymKey[j]=o;
-	}
-	//Zufallsgenerator
-	//SymKey beeinhaltet den symmetrischen Schlüssel
-
-	for (j=0;j<symKeyByteLength;j++)
-	{
-		
-			char array[3];
-			_snprintf(array,3,"%02.2X",(unsigned char) SymKey[j]);
-			m_strSymKey+=array;					
-	}
-
+	// generate a random symmetric key
+	m_byteStringSymmetricKey.randomize(m_byteStringSymmetricKey.getByteLength());
 	SetCondition(1,true);
-#endif
 	UpdateData(false);
 }
 
-void CDlgHybridEncryptionDemo::OnButtonShowSymKey() 
-{
-	if(inactive==m_ButtonStatus[2])	
-	{
+void CDlgHybridEncryptionDemo::OnButtonShowSymKey() {
+	if (inactive==m_ButtonStatus[2]) {
 		Message( IDS_STRING_HYB_SHOW_SYM_KEY, MB_ICONEXCLAMATION );
 		return;
 	}
-	
-	CString SymKeyInHexDump = "";
-	
-	
-	// Symmetrischer Schlüssel soll hexadezimal angezeigt werden
-	// (jeweils zwei Halb-Bytes durch Space getrennt)
-	for (int i=0;i<this->symKeyByteLength*2;i++)
-	{
-		SymKeyInHexDump += m_strSymKey[i];
-		if(i%2==1)
-		{
-			SymKeyInHexDump += ' ';
-		}
-		
-	}
-	
-
-	m_strEdit = SymKeyInHexDump;
+	m_strEdit = m_byteStringSymmetricKey.toString(16, " ");
 	m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_SYM_KEY);
 	UpdateData(false);
 }
@@ -432,79 +358,21 @@ void CDlgHybridEncryptionDemo::OnButtonEncDocumentSym()
 	UpdateData(false);
 }
 
-void CDlgHybridEncryptionDemo::OnButtonGetAsymKey() 
-{	
-#ifndef _UNSTABLE
-	CSortAsymKeyList sortedAsymKeyList;
-	CAvailabAsymmKeys asymmKeys;
-	// ermittele alle vorhandenen RSA Schlüsselbezeichner die im PseVerzeichnis liegen
-	int ret = asymmKeys.GetKeyList( sortedAsymKeyList, RSA_KEY, BY_NAME);
-	if ( sortedAsymKeyList.IsEmpty() )
-	{
-		// Benutzer informieren, das KEINE RSA-Schlüssel gefunden wurden
-		Message( IDS_NORSAKEY_AVAILABLE, MB_ICONSTOP );
-		// RSA-Schlüsselerzeugungs-Dialog aufrufen
-		CDlgKeyAsymGeneration dlg;
-		dlg.showRSAKeysOnly();
-		dlg.DoModal();
-		return;
+void CDlgHybridEncryptionDemo::OnButtonGetAsymKey() {
+	// let the user pick an RSA certificate
+	CDlgCertificateStoreSelectCertificate dlgCertificateStoreSelectCertificate;
+	dlgCertificateStoreSelectCertificate.showCertificateTypes(true, false, false);
+	if (dlgCertificateStoreSelectCertificate.DoModal() != IDOK) return;
+	m_selectedCertificateSerial = dlgCertificateStoreSelectCertificate.getSelectedCertificateSerial();
+	if (m_selectedCertificateSerial > 0) {
+		m_ButtonStatus[3] = active_pressed;
+		SetCondition(3, true);
 	}
-
-	rsaDlg.disableButtons = true;
-
-	if ( IDOK == rsaDlg.DoModal() ) 
-	{
-		// the information stored in this struct is used after closing the dialog
-		this->scaCertInfo.firstname = rsaDlg.Firstname;
-		this->scaCertInfo.lastname = rsaDlg.Name;
-		this->scaCertInfo.keytype = rsaDlg.KeyType;
-		this->scaCertInfo.time = rsaDlg.CreatTime;
-		this->scaCertInfo.keyid = rsaDlg.KeyInfo;
-		
-
-		CKeyFile KeyHandling;
-		CString caDB_entry_name = KeyHandling.CreateDistName(rsaDlg.Name, rsaDlg.Firstname, rsaDlg.CreatTime);
-		//LPTSTR string1 = new TCHAR[caDB_entry_name.GetLength()+1];
-		//_tcscpy(string1, caDB_entry_name);
-		//char *Auswahl=string1; // Auswahl entspricht caDB_entry_name
-		PSE PseHandle;
-		PseHandle=theApp.SecudeLib.af_open(CaPseDatei, CaPseVerzeichnis, PSEUDO_MASTER_CA_PINNR, NULL);
-		if (PseHandle==NULL)
-		{
-			// Fehler beim öffnen der CA-Datenbank
-			SetCondition(3,false);
-			Message(IDS_STRING_ASYMKEY_ERR_ON_OPEN_PSE, MB_ICONSTOP, theApp.SecudeLib.LASTTEXT);
-		//	delete string1;
-			return;
-		}
-		
-		//Routine für das Holen von Zertifikaten aus der CA-Datenbank
-		SET_OF_IssuedCertificate *Zert;
-		Zert=theApp.SecudeLib.af_cadb_get_user(PseHandle, (char *)LPCTSTR(caDB_entry_name)); // Cast discards 'const'
-		if (Zert==NULL)
-		{
-			// Fehler beim lesen des Zertifikats
-			SetCondition(3,false);
-			char *Fehler=theApp.SecudeLib.LASTTEXT;
-			CString Fehler2=Fehler;
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_GET_PSE,pc_str,STR_LAENGE_STRING_TABLE);
-			CString Fehler3=(CString)pc_str+(CString)Fehler2;
-			AfxMessageBox (Fehler3,MB_ICONSTOP);
-			// Freigeben von dynamisch angelegtem Speicher
-		//	delete string1;
-			theApp.SecudeLib.af_close(PseHandle);
-			return;
-		}
-		theApp.SecudeLib.af_close(PseHandle);
-		m_ButtonStatus[3]=active_pressed;
-		SetCondition(3,true);
+	else {
+		SetCondition(3, false);
 	}
-	UserKeyId=rsaDlg.UserKeyId;
-#endif
 	UpdateData(false);
 }
-
-
 
 void CDlgHybridEncryptionDemo::RSAEncrypt()
 {
@@ -693,145 +561,10 @@ void CDlgHybridEncryptionDemo::OnButtonEncKeyAsym()
 	//Sanduhr durch einen Pfeil ersetzen
 }
 
-
-void CDlgHybridEncryptionDemo::OnButtonShowAsymKey() 
-{
-#ifndef _UNSTABLE
-
-	if(inactive==m_ButtonStatus[4])	
-	{
-		Message(IDS_STRING_HYB_SHOW_ASYM_KEY, MB_ICONEXCLAMATION);
-		return;
-	}
-	UpdateData(true);
-	m_strEdit = "";
-	m_strTitle = "";
-	UpdateData(false);
-	OctetString *in=new OctetString;
-	BitString out;
-	in->octets=new char[symKeyByteLength];	
-	memcpy(in->octets,SymKey,symKeyByteLength);
-	in->noctets=symKeyByteLength;
-	int max_RSA_keysize_in_octs = ((MAX_RSA_MODULSIZE+1)+7)/8; // siehe DlgAsymKeyCreat.h for MAX_RSA_MODULSIZE
-	int number_outbits_in_wc = in->noctets + in->noctets/37 + max_RSA_keysize_in_octs; // Blocksize ~ 37
-	
-	out.nbits=0;
-	out.bits=(char*)malloc(number_outbits_in_wc);
-	if (out.bits == NULL)
-	{
-		// Fehler. Speicher kann nicht allokiert werden
-		Message(IDS_STRING_ERR_MEMORY_RSA_ENCRYPTION,MB_ICONSTOP);
-		return;
-	}
-	
-	CKeyFile KeyHandling;
-	CString caDB_keyid_name = KeyHandling.CreateDistName(rsaDlg.Name, rsaDlg.Firstname, rsaDlg.CreatTime);
-	// cDB_keyid_name: unter diesem Bezeichner/Namen wurde das Zertifikat in die CA-Datenbank geschrieben
-	
-	
-	LPTSTR string3 = new TCHAR[caDB_keyid_name.GetLength()+1];
-	_tcscpy(string3, caDB_keyid_name);
-	char *string4=string3; // string4 wird benutzt, um in der CA-Datenbank die Parameter abzufragen 
-	
-	// Öffnen der CA-PSE
-	PSE PseHandle;
-	PseHandle=theApp.SecudeLib.af_open(CaPseDatei, CaPseVerzeichnis, PSEUDO_MASTER_CA_PINNR, NULL);
-	if (PseHandle==NULL)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_ON_OPEN_PSE,pc_str,STR_LAENGE_STRING_TABLE);
-		AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-		// Freigeben von dynamisch angelegtem Speicher
-		
-		theApp.SecudeLib.aux_free_OctetString(&in);
-		free(out.bits);
-		delete[] string3;
-		return;
-	}
-	
-	// Besorgen des Zertifikates der Adressaten
-	SET_OF_IssuedCertificate *Liste;
-	Liste=theApp.SecudeLib.af_cadb_get_user (PseHandle, string4);
-	if (Liste==NULL)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_ON_LOAD_CERTIFICATE,pc_str,STR_LAENGE_STRING_TABLE);
-		AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-		// Freigeben von dynamisch angelegtem Speicher
-		theApp.SecudeLib.af_close (PseHandle);
-		theApp.SecudeLib.aux_free_OctetString(&in);
-		free(out.bits);
-		delete string3;
-		return;
-	}
-	
-	Certificate *Zert;
-	OctetString *SNummer;
-	SNummer=Liste->element->serial;
-	Zert=theApp.SecudeLib.af_cadb_get_Certificate (PseHandle, SNummer);
-	if (Zert==NULL)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_ON_LOAD_CERTIFICATE,pc_str,STR_LAENGE_STRING_TABLE);
-		AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-		// Freigeben von dynamisch angelegtem Speicher
-		theApp.SecudeLib.aux_free_SET_OF_IssuedCertificate (&Liste);
-		theApp.SecudeLib.af_close (PseHandle);
-		theApp.SecudeLib.aux_free_OctetString(&in);
-		free(out.bits);
-		delete string3;
-		return;
-	}
-	
-	// Besorgen des öffentlichen Schlüssels des Adressaten aus seinem Zertifikat
-	Key Schluessel;
-	Schluessel.key=Zert->tbs->subjectPK;
-	Schluessel.pse_sel=NULL;
-	Schluessel.alg=theApp.SecudeLib.rsa_aid;
-	Schluessel.add_object=NULL;
-	Schluessel.add_object_type=NULL;
-	Schluessel.key_size=NULL;
-	Schluessel.private_key=NULL;
-
-	// create a modified "show key parameter" dialog title
-	CString dlgTitle;
-	dlgTitle.LoadString(IDS_STRING_HYBRID_ENC_PUBLIC_KEY_OF);
-	dlgTitle += rsaDlg.Firstname;
-	dlgTitle += " ";
-	dlgTitle += rsaDlg.Name;
-	// use the newly created dialog title
-	CDlgShowKeyParameter dlg;
-	dlg.setDialogTitle(dlgTitle);
-	// disable the OK button by default
-	dlg.disableOkButton = true;
-
-	KeyBits *ki;
-	ki=theApp.SecudeLib.d_KeyBits(&(Schluessel.key->subjectkey));
-	int mlen = ki->part1.noctets;
-	unsigned char* buf = (unsigned char*) ki->part1.octets;
-	L_NUMBER temp[MAXLGTH];
-	sprintf(pc_str,"0x");
-
-	int i;
-	for (i=0;i<mlen;i++)
-	{
-		sprintf(pc_str+2+(2*i),"%02X",buf[i]);
-	
-	}
-	string_to_ln(pc_str,temp);
-	dlg.setModul(temp);
-
-	int mlen2 = ki->part2.noctets;
-	unsigned char* buf2 = (unsigned char*) ki->part2.octets;
-	sprintf(pc_str,"0x");
-	for (i=0;i<mlen2;i++)
-	{
-		sprintf(pc_str+2+(2*i),"%02X",buf2[i]);
-	
-	}
-	string_to_ln(pc_str,temp);
-	dlg.setExponent(temp);
-	
-	dlg.DoModal();
-	UpdateData(false);
-#endif
+void CDlgHybridEncryptionDemo::OnButtonShowAsymKey() {
+	// create the dialog, and then display it
+	CDlgShowKeyParameter dlgShowKeyParameter(m_selectedCertificateSerial);
+	dlgShowKeyParameter.DoModal();
 }
 
 void CDlgHybridEncryptionDemo::SetCondition(int button,bool state)
@@ -889,7 +622,7 @@ void CDlgHybridEncryptionDemo::OnButtonShowDocument()
 		Message(IDS_STRING_HYB_SHOW_DOC, MB_ICONEXCLAMATION);
 		return;
 	}
-	m_strTitle = m_strBuffTitle;
+	m_strTitle = m_documentTitle;
 
 	int destSize; 
 	{
@@ -904,7 +637,7 @@ void CDlgHybridEncryptionDemo::OnButtonShowDocument()
 	char *dest = new char [destSize+1];
 	SHOW_HOUR_GLASS
 	
-	int err = HexDumpMem(dest,destSize,(unsigned char*)PlainText->octets,m_iDocSize, INFO_TEXT_COLUMNS);
+	int err = HexDumpMem(dest,destSize,(unsigned char*)m_byteStringPlainText.getByteData(),m_iDocSize, INFO_TEXT_COLUMNS);
 
 	m_strEdit = dest;
 	HIDE_HOUR_GLASS
@@ -929,14 +662,14 @@ void CDlgHybridEncryptionDemo::OnButtonShowEncDocument()
 		int lines, rest;
 
 		linelen = 11 + INFO_TEXT_COLUMNS * 4;
-		lines = (CipherText->noctets+INFO_TEXT_COLUMNS-1) / INFO_TEXT_COLUMNS;
-		rest  = (CipherText->noctets) % INFO_TEXT_COLUMNS;
+		lines = (m_byteStringCipherText.getByteLength()+INFO_TEXT_COLUMNS-1) / INFO_TEXT_COLUMNS;
+		rest  = (m_byteStringCipherText.getByteLength()) % INFO_TEXT_COLUMNS;
 		destSize = lines * linelen; // - INFO_TEXT_COLUMNS + rest;
 	}
 	char *dest = new char [destSize+1];
 	SHOW_HOUR_GLASS
 	
-	int err = HexDumpMem(dest,destSize,(unsigned char*)CipherText->octets, CipherText->noctets, INFO_TEXT_COLUMNS);
+	int err = HexDumpMem(dest,destSize,(unsigned char*)m_byteStringCipherText.getByteData(), m_byteStringCipherText.getByteLength(), INFO_TEXT_COLUMNS);
 
 	m_strEdit = dest;
 	HIDE_HOUR_GLASS
@@ -1139,47 +872,21 @@ void CDlgHybridEncryptionDemo::ShowButtons()
 	m_hFocus->SetFocus();
 }
 
-CDlgHybridEncryptionDemo::~CDlgHybridEncryptionDemo()
-{
-#ifndef _UNSTABLE
-	if(CipherText)
-		theApp.SecudeLib.aux_free_OctetString(&CipherText);
-	if(PlainText)
-		theApp.SecudeLib.aux_free_OctetString(&PlainText);
-
-	// allokierten Speicher freigeben
-	if(SymKey) delete [] SymKey;
-#endif
-}
-
-bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName)
-{
-#ifndef _UNSTABLE
+bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
 	SHOW_HOUR_GLASS
-
-	if ( PlainText )
-		theApp.SecudeLib.aux_free_OctetString(&PlainText);
-	PlainText = theApp.SecudeLib.aux_file2OctetString(DateiPfadName);
-	if (!PlainText)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_Hashdemo_FileNotFound,pc_str,100);
-		AfxMessageBox(pc_str,MB_ICONEXCLAMATION);
+	// try to read plain text from the specified file
+	if (!m_byteStringPlainText.readFromFile(DateiPfadName)) {
 		return false;
 	}
-	m_iDocSize=PlainText->noctets;
-	if(m_iDocSize == 0)
-	//wenn in der Datei nichts steht
-	{
+	// assign the document size, and return false if empty
+	m_iDocSize = m_byteStringPlainText.getByteLength();
+	if (m_iDocSize == 0) {
 		return false;
 	}
 	m_bAuswahlDat = false;
-	m_strPathSelDoc = DateiPfadName;
-
+	m_documentFileName = DateiPfadName;
 	HIDE_HOUR_GLASS
-
-	//Schalter für EnDisButtons() siehe OnInitDialog()
-	SetCondition(0,true);
-#endif
+	SetCondition(0, true);
 	return true;
 }
 
@@ -1330,3 +1037,19 @@ SCACertificateInformation CDlgHybridEncryptionDemo::getCertInfo()
 {
 	return this->scaCertInfo;
 }
+
+BEGIN_MESSAGE_MAP(CDlgHybridEncryptionDemo, CDialog)
+	ON_BN_CLICKED(IDC_BUTTON1_TXT_EINFUEGEN, OnButtonGetDocument)
+	ON_BN_CLICKED(IDC_BUTTON_ENC_KEY_ASYM, OnButtonEncKeyAsym)
+	ON_BN_CLICKED(IDC_BUTTON_ENC_TXT_SYM, OnButtonEncDocumentSym)
+	ON_BN_CLICKED(IDC_BUTTON_GEN_SYM_KEY, OnButtonGenSymKey)
+	ON_BN_CLICKED(IDC_BUTTON_GET_ASYM_KEY, OnButtonGetAsymKey)
+	ON_BN_CLICKED(IDC_BUTTON_SHOW_SYM_KEY, OnButtonShowSymKey)
+	ON_BN_CLICKED(IDC_BUTTON_SHOW_ASYM_KEY, OnButtonShowAsymKey)
+	ON_BN_CLICKED(IDC_BUTTON_SHOWTXT, OnButtonShowDocument)
+	ON_BN_CLICKED(IDC_BUTTON2, OnButtonShowEncDocument)
+	ON_BN_CLICKED(IDC_BUTTON3, OnButtonShowEncSymKey)
+	ON_BN_CLICKED(IDC_BUTTON_DATENAUSGABE, OnButtonDatenausgabe)
+	ON_WM_SETCURSOR()
+	ON_WM_PAINT()
+END_MESSAGE_MAP()

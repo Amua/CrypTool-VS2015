@@ -18,79 +18,32 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLG_PARAM_H__91FFB993_588B_11D4_A054_002035F23D41__INCLUDED_)
-#define AFX_DLG_PARAM_H__91FFB993_588B_11D4_A054_002035F23D41__INCLUDED_
+#ifndef _DLGSHOWKEYPARAMETER_H_
+#define _DLGSHOWKEYPARAMETER_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DLG_param.h : Header-Datei
-//
+#include <afxwin.h>
+#include <afxcmn.h>
+#include <resource.h>
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgShowKeyParameter 
-
-struct param
-{
-	char titel[10];
-#ifndef _UNSTABLE
-	L_NUMBER data[MAXLGTH];
-#endif
-};
-
-class CDlgShowKeyParameter : public CDialog
-{
-// Konstruktion
-public:
-	bool disableOkButton;
-	CDlgShowKeyParameter(CWnd* pParent = NULL);   // Standardkonstruktor
-
-protected:
-	// flomar, 02/14/2012: new interface for setting dialog title, modul and exponent
-	CString m_title;
-	CString m_modul;
-	CString m_exponent;
-public:
-	void setDialogTitle(CString _title) {
-		m_title = _title;
-	}
-#ifndef _UNSTABLE
-	void setModul(L_NUMBER *_modul) {
-		memcpy(m_data[0].data,_modul,MAXLGTH*sizeof(L_NUMBER));
-	}
-	void setExponent(L_NUMBER *_exponent) {
-		memcpy(m_data[1].data,_exponent,MAXLGTH*sizeof(L_NUMBER));
-	}
-#endif
-
-	struct param m_data[10];
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgShowKeyParameter)
+class CDlgShowKeyParameter : public CDialog {
 	enum { IDD = IDD_SHOW_KEY_PARAMETER };
-	CButton	m_ctrlOK;
-	int		m_radio;
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgShowKeyParameter)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgShowKeyParameter(const long _serial, CWnd *_pParent = NULL);
+	virtual ~CDlgShowKeyParameter();
 protected:
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgShowKeyParameter)
-	afx_msg void OnUpdate();
 	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
+	afx_msg void OnUpdate();
+protected:
+	CString m_exponent;
+	CString m_modul;
+	int m_radio;
+private:
+	// the serial number of the certificate to be displayed
+	const long m_serial;
+	
 	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLG_PARAM_H__91FFB993_588B_11D4_A054_002035F23D41__INCLUDED_
+#endif

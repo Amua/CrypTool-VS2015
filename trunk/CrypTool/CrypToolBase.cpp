@@ -82,6 +82,7 @@ namespace CrypTool {
 			}
 			reset();
 		}
+		AfxMessageBox("CRYPTOOL_BASE: could not read from file " + _fileName);
 		return false;
 	}
 
@@ -91,6 +92,7 @@ namespace CrypTool {
 			outfile.Write(byteData, byteLength);
 			return true;
 		}
+		AfxMessageBox("CRYPTOOL_BASE: could not write to file " + _fileName);
 		return false;
 	}
 
@@ -329,6 +331,94 @@ namespace CrypTool {
 				// don't forget to truncate the input string
 				input = input.Right(input.GetLength() - indexClosingBracket - _closingBracket.GetLength());
 			}
+		}
+
+		CString StringNumberBaseConverter::convertNumberFromBaseToBase(const CString &_number, const unsigned int _baseSource, const unsigned int _baseTarget) {
+			StringNumberBaseConverter snbc(_baseSource, _baseTarget);
+			if (!snbc.areAlphabetsValid()) return _number;
+			SHOW_HOUR_GLASS
+			CString result = snbc.convert(_number);
+			HIDE_HOUR_GLASS
+			return result;
+		}
+
+		StringNumberBaseConverter::StringNumberBaseConverter(const unsigned int _baseSource, const unsigned int _baseTarget) :
+			m_baseSource(_baseSource),
+			m_baseTarget(_baseTarget),
+			m_alphabetSource(_baseSource == 2 ? "01" : _baseSource == 8 ? "01234567" : _baseSource == 10 ? "0123456789" : _baseSource == 16 ? "0123456789ABCDEF" : ""),
+			m_alphabetTarget(_baseTarget == 2 ? "01" : _baseTarget == 8 ? "01234567" : _baseTarget == 10 ? "0123456789" : _baseTarget == 16 ? "0123456789ABCDEF" : "") {
+
+		}
+
+		StringNumberBaseConverter::~StringNumberBaseConverter() {
+
+		}
+
+		bool StringNumberBaseConverter::areAlphabetsValid() const {
+			return !m_alphabetSource.IsEmpty() && !m_alphabetTarget.IsEmpty();
+		}
+
+		CString StringNumberBaseConverter::convert(const CString &_number) const {
+			CString result;
+			CString number = _number;
+			do {
+				unsigned int remainder = divide(number, m_baseTarget);
+				result.AppendChar(m_alphabetTarget[remainder]);
+			} while (!number.IsEmpty() && !(number.GetLength() == 1 && number[0] == m_alphabetSource[0]));
+			result.MakeReverse();
+			return result;
+		}
+
+		CString StringNumberBaseConverter::convert(const CString &_number, const size_t _minimumDigits) const {
+			CString result = convert(_number);
+			const int countLeadingZeros = (int)(_minimumDigits) - result.GetLength();
+			if (countLeadingZeros > 0) {
+				CString leadingZeros;
+				while (leadingZeros.GetLength() < countLeadingZeros) {
+					leadingZeros.AppendChar(m_alphabetTarget[0]);
+				}
+				result = leadingZeros + result;
+			}
+			return result;
+		}
+
+		unsigned int StringNumberBaseConverter::divide(CString &_x, const unsigned int _y) const {
+			CString quotient;
+			const size_t length = (size_t)(_x.GetLength());
+			for (size_t i = 0; i < length; i++) {
+				size_t j = i + 1 + (size_t)(_x.GetLength()) - length;
+				if ((size_t)(_x.GetLength()) < j)
+					break;
+				const unsigned int value = base2dec(_x.Mid(0, j));
+				quotient.AppendChar(m_alphabetSource[value / _y]);
+				_x = dec2base(value % _y) + _x.Mid(j);
+			}
+			const unsigned int remainder = base2dec(_x);
+			while (quotient.Find(m_alphabetSource[0]) == 0)
+				quotient.Delete(0);
+			_x = quotient;
+			return remainder;
+		}
+
+		CString StringNumberBaseConverter::dec2base(const unsigned int _number) const {
+			CString result;
+			unsigned int number = _number;
+			do {
+				result.AppendChar(m_alphabetSource[number % m_baseSource]);
+				number /= m_baseSource;
+			} while (number > 0);
+			result.MakeReverse();
+			return result;
+		}
+
+		unsigned int StringNumberBaseConverter::base2dec(const CString &_number) const {
+			unsigned int result = 0;
+			for (size_t i = 0; i < (size_t)(_number.GetLength()); i++) {
+				result *= m_baseSource;
+				const int c = m_alphabetSource.Find(_number[i]);
+				result += (unsigned int)(c);
+			}
+			return result;
 		}
 
 	}
@@ -1397,6 +1487,52 @@ namespace CrypTool {
 				// TODO/FIXME
 
 				return false;
+			}
+
+			CString CertificateStore::getUserCertificateStringName(const long _serial) const {
+				// result variable
+				CString name;
+				// try to extract certificate information
+				CString firstName;
+				CString lastName;
+				CString remarks;
+				CString type;
+				CString notBefore;
+				CString notAfter;
+				if (getUserCertificateInformation(_serial, firstName, lastName, remarks, type, notBefore, notAfter)) {
+					name = firstName + " " + lastName;
+				}
+				return name;
+			}
+
+			CString CertificateStore::getUserCertificateHexStringRSAExponent(const long _serial) const {
+				using namespace OpenSSL;
+				// result variable
+				CString exponent;
+				// try to extract certificate information
+				RSA *rsa = RSA_new();
+				if (getUserCertificatePublicKeyRSA(_serial, &rsa)) {
+					char* cExponent = BN_bn2hex(rsa->e);
+					exponent = cExponent;
+					OPENSSL_free(cExponent);
+				}
+				RSA_free(rsa);
+				return exponent;
+			}
+
+			CString CertificateStore::getUserCertificateHexStringRSAModul(const long _serial) const {
+				using namespace OpenSSL;
+				// result variable
+				CString modul;
+				// try to extract certificate information
+				RSA *rsa = RSA_new();
+				if (getUserCertificatePublicKeyRSA(_serial, &rsa)) {
+					char* cModul = BN_bn2hex(rsa->n);
+					modul = cModul;
+					OPENSSL_free(cModul);
+				}
+				RSA_free(rsa);
+				return modul;
 			}
 
 			void CertificateStore::generateFileNamesForUserCertificateAndUserPrivateKey(const long _serial, CString &_fileNameUserCertificate, CString &_fileNameUserPrivateKey) const {
