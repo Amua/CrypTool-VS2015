@@ -23,7 +23,13 @@ This document contains the most important TODOs for the project.
 - the implementations for hashing documents (the threaded ones) are leaking memory somewhere, investigate and fix it
 - finish refactoring symmetric cryptography: MARS, RC6, Serpent, Twofish, DESX (supported by OpenSSL!), DESL, DESXL
 - finish refactoring asymmetric cryptography: improve error checking and user notification (i.e. when entering a wrong private key password, etc...)
-- implement replacement for Secude's PSE: finish "CertificateStore" implementation (parameter display, import, export, etc...)
+- implement replacement for Secude's PSE: finish "CertificateStore" implementation (adhere to OpenSSL CLI output for parameter display, honor custom CrypTool certificate extensions for PKCS#12 import/export, etc...)
+
+## Resources
+
+- REMEMBER: most of the refactored sections only work for the German version, other languages have not been adapted yet to avoid redundant changes in the CrypTool resource file, dealing with Visual Studio's airs and graces is cumbersome enough for a single language
+- when everything is said and done, make sure there a NO MORE WARNINGS caused by the resource compiler
+
 
 ## Other
 
