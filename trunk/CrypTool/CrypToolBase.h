@@ -127,10 +127,10 @@ namespace CrypTool {
 		// this function returns the length of the internal data
 		size_t getByteLength() const { return byteLength; }
 	public:
-		// operator implementation
 		ByteString &operator=(const ByteString &_byteString);
-		// operator implementation
 		ByteString &operator+=(const ByteString &_byteString);
+		ByteString &operator=(const CString &_string);
+		ByteString &operator+=(const CString &_string);
 	private:
 		// the byte data
 		unsigned char *byteData;

@@ -246,31 +246,26 @@ void CDlgHybridEncryptionDemo::OnButtonShowSymKey() {
 	UpdateData(false);
 }
 
-void CDlgHybridEncryptionDemo::OnButtonEncDocumentSym() 
-{
+void CDlgHybridEncryptionDemo::OnButtonEncDocumentSym() {
 #ifndef _UNSTABLE
 	// *** SCA-SPECIFIC BEGIN ***
 	// für den Seitenkanalangriff: testen, ob die ausgewählte Datei
 	// das Schlüsselwort enthält, anhand dessen Bob erkennt, ob die Nachricht
 	// wirklich von Alice kommt; wenn nicht, dann dem Benutzer anbieten,
 	// das Schlüsselwort an die Datei anzufügen
-	if(this->isSCABehaviourActivated)
-	{
+	if(this->isSCABehaviourActivated) {
 		CString keyword;
-		
 		// retrieve keyword from registry (if unsuccessful, go with "Alice" by default)
 		if(CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, "SideChannelAttack") == ERROR_SUCCESS) {
-			unsigned long	u_length = 1024;
-			char			c_SCA_keyWord[1025];
+			unsigned long u_length = 1024;
+			char c_SCA_keyWord[1025];
 			if(CT_READ_REGISTRY(c_SCA_keyWord, "Keyword", u_length))
 				keyword = c_SCA_keyWord;
 			else
-            keyword.LoadStringA( IDS_SCA_KEYWORD );
+				keyword.LoadStringA(IDS_SCA_KEYWORD);
 			CT_CLOSE_REGISTRY();
 		}
-		
 		bool keywordFound = false;
-
 		// flomar, 07/15/2010
 		// the latest bug fix: we read in BINARY mode instead of TEXT mode, and we're using 
 		// "memcmp" instead of a normal string find; this way we can deal with binary zeros
@@ -434,7 +429,7 @@ void CDlgHybridEncryptionDemo::OnButtonShowDocument() {
 }
 
 void CDlgHybridEncryptionDemo::OnButtonShowEncDocument() {
-	if(inactive==m_ButtonStatus[8]) {
+	if (inactive == m_ButtonStatus[8]) {
 		Message(IDS_STRING_HYB_SHOW_ENC_DOC, MB_ICONEXCLAMATION);
 		return;
 	}
@@ -642,106 +637,79 @@ bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
 	return true;
 }
 
-void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() 
-{
-#ifndef _UNSTABLE
-	if(!m_ButtonStatus[10])	
-	{
+void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
+	// check user interface
+	if (!m_ButtonStatus[10]) {
 		Message(IDS_STRING_HYB_SHOW_DATA, MB_ICONEXCLAMATION);
 		return;
 	}
-	char outfile[128], title[128];
-	CAppDocument *NewDoc;
-	
-	GetTmpName(outfile,"cry",".hex");
-	// Falls SCA-Verhalten aktiviert ist, wird temporäre Datei in scaFile gespeichert.
-	if(isSCABehaviourActivated) scaFile = outfile;
-			
-	//----------------------------------------------------------------------------------------------------------	
-	// Ausgabe von Reciever, Symmetriche- , asymmetrische Methode, verschl.Session Key und 
-	// Ciphertext in einem Fenster
-	//----------------------------------------------------------------------------------------------------------
-	OctetString Text;
-	char helptext[100];
-	// Ausgabe Empfänger
-		// Umwandeln von CString nach char*
-	//LPTSTR string_tmp1 = new TCHAR[UserKeyId.GetLength()+1];
-	//_tcscpy(string_tmp1, UserKeyId);
-	//char *UserKeyId_tmp=string_tmp1;
+	// declare temporary variable
+	CString stringTemp;
+	// this byte string will hold all the result data to be written
+	CrypTool::ByteString byteStringResult;
 
+	SHOW_HOUR_GLASS
 
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_RECIEVER,helptext,100);
-	Text.noctets=strlen(helptext);
-	Text.octets=helptext;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,2);
-	Text.noctets=UserKeyId.GetLength();
-	Text.octets=(char *)LPCTSTR(UserKeyId); // Cast discards 'const'
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
+	// write receiver information
+	stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
+	byteStringResult += stringTemp;
+	stringTemp.Format("%d", m_selectedCertificateSerial);
+	byteStringResult += stringTemp;
 
-	//delete[] string_tmp1;
-	
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_LENGTH_ENC_KEY,helptext,100);
-	Text.noctets=strlen(helptext);
-	Text.octets=helptext;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
-	int Keylength=8*(EncSymKey->noctets);
-	char Keylen_in_bits_str[20];
-	// schreibe die zahl Keylength im Dezimalsystem nach Keylen_in_bits_str
-	_itoa(Keylength, Keylen_in_bits_str, 10);
-	Text.noctets=strlen(Keylen_in_bits_str);
-	Text.octets=Keylen_in_bits_str;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
-	
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_ENC_KEY,helptext,100);
-	Text.noctets=strlen(helptext);
-	Text.octets=helptext;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
-	theApp.SecudeLib.aux_OctetString2file(EncSymKey,outfile,3);
-	
-	theApp.SecudeLib.aux_free_OctetString(&EncSymKey);
+	// write length of encrypted session key
+	stringTemp.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
+	byteStringResult += stringTemp;
+	stringTemp.Format("%d", m_byteStringSymmetricKeyEncrypted.getByteLength() * 8);
+	byteStringResult += stringTemp;
 
-	// Ausgabe Symmetric method
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_SYM_METHOD,helptext,100);
-	Text.noctets=strlen(helptext);
-	Text.octets=helptext;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
-	Text.noctets=strlen("AES");
-	Text.octets="AES";
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
+	// write encrypted session key
+	stringTemp.LoadString(IDS_STRING_HYBRID_ENC_KEY);
+	byteStringResult += stringTemp;
+	byteStringResult += m_byteStringSymmetricKeyEncrypted;
 
-	// Ausgabe Asymmetric method
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_ASYM_METHOD,helptext,100);
-	Text.noctets=strlen(helptext);
-	Text.octets=helptext;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
-	Text.noctets=strlen("RSA");
-	Text.octets="RSA";
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
+	// write symmetric algorithm
+	stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
+	byteStringResult += stringTemp;
+	stringTemp = "AES";
+	byteStringResult += stringTemp;
 
-	// Ciphertext
-	LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_CIPHERTEXT,helptext,100);
-	Text.noctets=strlen(helptext);
-	Text.octets=helptext;
-	theApp.SecudeLib.aux_OctetString2file(&Text,outfile,3);
-	theApp.SecudeLib.aux_OctetString2file(CipherText,outfile,3);
-	
-	NewDoc = theApp.OpenDocumentFileNoMRU(outfile);
-		
-	// temporäre Datei nur dann löschen, wenn sie nicht nochmal gebraucht wird;
-	// dies ist im Fall des SCA-Modus aber gegeben
-	if(!isSCABehaviourActivated) remove(outfile);
-		
+	// write asymmetric algorithm
+	stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+	byteStringResult += stringTemp;
+	stringTemp = "RSA";
+	byteStringResult += stringTemp;
+
+	// write cipher text
+	stringTemp.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
+	byteStringResult += stringTemp;
+	byteStringResult += m_byteStringCipherText;
+
+	// create a file for the result (with the .hex suffix)
+	const CString fileNameResult = CrypTool::Utilities::createTemporaryFile(".hex");
+	// write result byte string to temporary file
+	byteStringResult.writeToFile(fileNameResult);
+
 	HIDE_HOUR_GLASS
-		
-	if(NewDoc)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_HYBRID_ENC_TITLE,pc_str,STR_LAENGE_STRING_TABLE);
-		// add the name of the receiver to the document title ("FOO encrypted for BAR")
-		CString receiverName = scaCertInfo.firstname + " " + scaCertInfo.lastname;
-		MakeNewNameIncludingReceiver(title,sizeof(title),pc_str,m_strBuffTitle,(const char*)receiverName);
-		NewDoc->SetTitle(title);
+	
+	// open result file in new document
+	CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
+	if (document) {
+		// create a meaningful title
+		const CString receiverName = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_selectedCertificateSerial);
+		CString title;
+		title.Format(IDS_STRING_HYBRID_ENC_TITLE, m_documentTitle, receiverName);
+		document->SetTitle(title);
+	}	
+
+	// if the SCA behavior is active, store the result file name in scaFile 
+	// and don't remove the result file
+	if (isSCABehaviourActivated) {
+		scaFile = fileNameResult;
 	}
-#endif
+	else {
+		remove(fileNameResult);
+	}
+
 	CDialog::OnOK();
 }
 

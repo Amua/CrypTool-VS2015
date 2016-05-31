@@ -82,12 +82,9 @@ public:
 	CString getSCAFile();
 	void activateSCABehaviour();
 	
-	
-	
-	CString Edit;
 	int m_iDocSize;
 	bool m_bAuswahlDat;
-	int m_iDocSizeForEnc;
+	
 	CFont m_font;
 	
 	void ShowButtons();

@@ -215,6 +215,18 @@ namespace CrypTool {
 		return *this;
 	}
 
+	ByteString &ByteString::operator=(const CString &_string) {
+		fromString(_string);
+		return *this;
+	}
+
+	ByteString &ByteString::operator+=(const CString &_string) {
+		ByteString byteStringNew;
+		byteStringNew.fromString(_string);
+		*this += byteStringNew;
+		return *this;
+	}
+
 	CString getCrypToolPath() {
 		// acquire the module file name, which is the full path to the CrypTool 
 		// executable including "\\CrypTool.exe"
