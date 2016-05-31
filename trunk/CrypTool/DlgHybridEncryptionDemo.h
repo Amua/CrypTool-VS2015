@@ -67,9 +67,15 @@ private:
 	CrypTool::ByteString m_byteStringCipherText;
 private:
 	CrypTool::ByteString m_byteStringSymmetricKey;
+	CrypTool::ByteString m_byteStringSymmetricKeyEncrypted;
 private:
 	long m_selectedCertificateSerial;
-
+private:
+	bool DateiOeffnen(const CString &DateiPfadName);
+private:
+	int m_ButtonStatus[11];
+	bool m_ActionPerformed[11];
+	bool m_setMatrix[11][11];
 
 public:
 
@@ -77,35 +83,22 @@ public:
 	CString getSCAFile();
 	void activateSCABehaviour();
 	
-	bool DateiOeffnen(const CString &DateiPfadName);
-	int m_ButtonStatus[11];					// Zustand des Buttons (deaktiviert / aktiviert, aber noch nicht
-											// gedrückt / aktiviert und schon gedrückt)
-	bool m_ActionPerformed[11];				// Button wurde gedrückt? (TRUE = ja / FALSE = nein)
-	bool m_setMatrix[11][11];
-	CString m_strBuffEditEncKeyAsym;
-	CString m_strBuffEditEncDoc;
+	
+	
 	CString Edit;
 	int m_iDocSize;
 	bool m_bAuswahlDat;
 	int m_iDocSizeForEnc;
 	CFont m_font;
-	CString m_strSymKey;
-
-	
 	
 	void ShowButtons();
 	void EnDisButtons();
 	void SetCondition(int button,bool state);
 	void ResetDependent(int button);
-	void RSAEncrypt();
-	
-
-
 	
 	CStatic	m_ctrlBG;
 	CString	m_strEdit;
 	CString	m_strTitle;
-
 
 	CBitmapButton m_ctrlBmpRaute1;
 	CBitmapButton m_ctrlBmpRaute2;
@@ -120,21 +113,7 @@ public:
 	CBitmapButton m_ctrlBmpOval1;
 	CBitmapButton m_ctrlBmpOval2;
 
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgHybridEncryptionDemo)
-	
-	//}}AFX_VIRTUAL
-
-// Implementierung
-protected:
-
-	CWnd *m_hFocus;		// Zeiger auf CWnd
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgHybridEncryptionDemo)
-	
-	
+	CWnd *m_hFocus;
 
 private:
 

@@ -113,7 +113,9 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					finalHybEncFile = dlg.getSCAFile();
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
+#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
+#endif
 					CDialog::OnOK();
 				}
 				return;
@@ -165,7 +167,9 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
+#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
+#endif
 					finalHybEncFile = dlg.getSCAFile();
 					CDialog::OnOK();
 				}
@@ -183,7 +187,9 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
+#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
+#endif
 					finalHybEncFile = dlg.getSCAFile();
 					CDialog::OnOK();
 				}
@@ -262,7 +268,9 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
+#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
+#endif
 					finalHybEncFile = dlg.getSCAFile();
 					CDialog::OnOK();
 				}

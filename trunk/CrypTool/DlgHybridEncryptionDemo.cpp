@@ -228,7 +228,6 @@ void CDlgHybridEncryptionDemo::OnButtonGetDocument() {
 void CDlgHybridEncryptionDemo::OnButtonGenSymKey() {
 	m_ButtonStatus[1]=active_pressed;
 	UpdateData(true);
-	m_strSymKey="";
 	m_strEdit = "";
 	m_strTitle="";
 	// generate a random symmetric key
@@ -309,52 +308,24 @@ void CDlgHybridEncryptionDemo::OnButtonEncDocumentSym()
 		}
 	}
 	// *** SCA-SPECIFIC END ***
-
-	if(inactive==m_ButtonStatus[5])	
-	{
+#endif
+	// check user interface
+	if (inactive == m_ButtonStatus[5]) {
 		Message(IDS_STRING_HYB_ENC_DOC_SYM, MB_ICONEXCLAMATION);
 		return;
 	}
-
+	// update user interface
 	m_ButtonStatus[5]=active_pressed;
-
-	UpdateData(true);
-
-	// Henrik Koy, 19. April 2002,
-	// Programm unter Windows XP-abgestürzt: 20 Zeichen Speicher sind zu wenig
-	char strPathEncDocument[CRYPTOOL_PATH_LENGTH];
-	GetTmpName(strPathEncDocument,"cry",".tmp");
-	//Name für eine temporäre Datei wird erzeugt, in der 
-	//der Verschluesselte Text geschrieben werden soll
-	//der Name wird in die Variable strPathEncDocument geschrieben
-	char key[100];
-	strcpy(key,(LPCTSTR)m_strSymKey);
-
+	// execute AES encryption
 	SHOW_HOUR_GLASS
-
-	//das Dokument wird mit AES verschlüsselt
-	sym_encrypt(IDS_CRYPT_RIJNDAEL, CORE_PROVIDER, key, 128, 
-		(char*)(LPCTSTR)m_strPathSelDoc, strPathEncDocument);
-
-	if ( CipherText )
-		theApp.SecudeLib.aux_free_OctetString(&CipherText);
-	CipherText = theApp.SecudeLib.aux_file2OctetString(strPathEncDocument);
-	if (!CipherText)
-	{
-		LoadString(AfxGetInstanceHandle(),IDS_STRING_Hashdemo_FileNotFound,pc_str,100);
-		AfxMessageBox(pc_str,MB_ICONEXCLAMATION);
-		return;
-	}		
-
-	UpdateData();
-	m_strBuffEditEncDoc = "";
+	CrypTool::Cryptography::Symmetric::SymmetricOperation operation(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES, CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_ENCRYPTION);
+	const bool result = operation.executeOnByteStrings(m_byteStringPlainText, m_byteStringSymmetricKey, m_byteStringCipherText);
+	HIDE_HOUR_GLASS
+	if (!result) return;
+	// update user interface
+	SetCondition(5,true);
 	m_strTitle = "";
 	m_strEdit = "";
-
-	HIDE_HOUR_GLASS
-
-	SetCondition(5,true);
-#endif
 	UpdateData(false);
 }
 
@@ -374,191 +345,25 @@ void CDlgHybridEncryptionDemo::OnButtonGetAsymKey() {
 	UpdateData(false);
 }
 
-void CDlgHybridEncryptionDemo::RSAEncrypt()
-{
-#ifndef _UNSTABLE
-	// Dialogbox zur Auswahl des zu benutzenden (öffentlichen) Schlüssels anzeigen
-	
-	if(m_ActionPerformed[3])
-	{
-		// Initialisierung der Variablen
-		OctetString *in=new OctetString;
-		BitString out;
-		in->octets=new char[symKeyByteLength];	
-		memcpy(in->octets,SymKey,symKeyByteLength);
-		in->noctets=symKeyByteLength;
-		
-		int max_RSA_keysize_in_octs = ((MAX_RSA_MODULSIZE+1)+7)/8; // siehe DlgAsymKeyCreat.h for MAX_RSA_MODULSIZE
-		int number_outbits_in_wc = in->noctets + in->noctets/37 + max_RSA_keysize_in_octs; // Blocksize ~ 37
-		
-		out.nbits=0;
-		out.bits=(char*)malloc(number_outbits_in_wc);
-		if (out.bits == NULL)
-		{
-			// Fehler. Speicher kann nicht allokiert werden
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_ERR_MEMORY_RSA_ENCRYPTION,pc_str,STR_LAENGE_STRING_TABLE);
-			AfxMessageBox (pc_str,MB_ICONSTOP);
-			return;
-		}
-		
-		CKeyFile KeyHandling;
-		CString caDB_keyid_name = KeyHandling.CreateDistName(rsaDlg.Name, rsaDlg.Firstname, rsaDlg.CreatTime);
-		// caDB_keyid_name: unter diesem Bezeichner/Namen wurde das Zertifikat in die CA-Datenbank geschrieben
-		
-		LPTSTR string3 = new TCHAR[caDB_keyid_name.GetLength()+1];
-		_tcscpy(string3, caDB_keyid_name);
-		char *string4=string3; // string4 wird benutzt, um in der CA-Datenbank die Parameter abzufragen 
-		
-		// Öffnen der CA-PSE
-		PSE PseHandle;
-		PseHandle=theApp.SecudeLib.af_open(CaPseDatei, CaPseVerzeichnis, PSEUDO_MASTER_CA_PINNR, NULL);
-		if (PseHandle==NULL)
-		{
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_ON_OPEN_PSE,pc_str,STR_LAENGE_STRING_TABLE);
-			AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-			// Freigeben von dynamisch angelegtem Speicher
-			theApp.SecudeLib.aux_free_OctetString(&in);
-			free(out.bits);
-			delete string3;
-			return;
-		}
-		
-		// Besorgen des Zertifikates der Adressaten
-		SET_OF_IssuedCertificate *Liste;
-		Liste=theApp.SecudeLib.af_cadb_get_user (PseHandle, string4);
-		if (Liste==NULL)
-		{
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_ON_LOAD_CERTIFICATE,pc_str,STR_LAENGE_STRING_TABLE);
-			AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-			// Freigeben von dynamisch angelegtem Speicher
-			theApp.SecudeLib.af_close (PseHandle);
-			theApp.SecudeLib.aux_free_OctetString(&in);
-			free(out.bits);
-			delete string3;
-			return;
-		}
-		
-		Certificate *Zert;
-		OctetString *SNummer;
-		SNummer=Liste->element->serial;
-		Zert=theApp.SecudeLib.af_cadb_get_Certificate (PseHandle, SNummer);
-		if (Zert==NULL)
-		{
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_ASYMKEY_ERR_ON_LOAD_CERTIFICATE,pc_str,STR_LAENGE_STRING_TABLE);
-			AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-			// Freigeben von dynamisch angelegtem Speicher
-			theApp.SecudeLib.aux_free_SET_OF_IssuedCertificate (&Liste);
-			theApp.SecudeLib.af_close (PseHandle);
-			theApp.SecudeLib.aux_free_OctetString(&in);
-			free(out.bits);
-			delete string3;
-			return;
-		}
-		
-		// Besorgen des öffentlichen Schlüssels des Adressaten aus seinem Zertifikat
-		Key Schluessel;
-		Schluessel.key=Zert->tbs->subjectPK;
-		Schluessel.pse_sel=NULL;
-		Schluessel.alg=theApp.SecudeLib.rsa_aid;
-		Schluessel.add_object=NULL;
-		Schluessel.add_object_type=NULL;
-		Schluessel.key_size=NULL;
-		Schluessel.private_key=NULL;
-
-		OctetString newIn;
-		// KeyType holen ("RSA-512" oder "DES-256"...)
-		CString strModulLength = rsaDlg.KeyType;
-		int index = strModulLength.Find("-",0);
-		// Bitlänge isolieren
-		strModulLength.Delete(0, index + 1);
-		int modulLengthInBits = atoi((const char*)(LPCTSTR)strModulLength);
-		int modulLengthInBytes = (modulLengthInBits - 1)/8;
-		// [BITLÄNGE_SESSIONKEY]/8 Bytes speicher allokieren
-		newIn.octets = new char[modulLengthInBytes];
-		// Null-Padding von links
-		for(int i=0;i<modulLengthInBytes;i++)
-			newIn.octets[i] = (unsigned char)0;
-		int start = modulLengthInBytes - in->noctets;
-		memcpy(newIn.octets + start, in->octets, in->noctets);
-		newIn.noctets = modulLengthInBytes;
-		delete []in->octets;
-		in->octets = new char[modulLengthInBytes];
-		memcpy(in->octets, newIn.octets, newIn.noctets);
-		in->noctets = modulLengthInBytes;
-		// Speicher freigeben
-		delete newIn.octets;
-		
-		// Verschlüsselung der Daten
-		int fret = theApp.SecudeLib.af_encrypt_all(PseHandle, in, &out, &Schluessel, NULL);
-
-		if (fret==-1)
-		{  
-			// Fehler bei der Verschlüsselung
-			// Ausgabe einer Fehlermeldung
-			LoadString(AfxGetInstanceHandle(),IDS_STRING_ENCRYPTION_ERROR,pc_str,STR_LAENGE_STRING_TABLE);
-			AfxMessageBox (((CString)pc_str)+theApp.SecudeLib.LASTTEXT,MB_ICONSTOP);
-			// Freigeben von dynamisch angelegtem Speicher
-			theApp.SecudeLib.af_close (PseHandle);
-			theApp.SecudeLib.aux_free_SET_OF_IssuedCertificate (&Liste);
-			theApp.SecudeLib.aux_free_Certificate (&Zert);
-			theApp.SecudeLib.aux_free_OctetString(&in);
-			free(out.bits);
-			delete string3;
-			return;
-		}
-		delete []in->octets;
-		delete []in;
-
-		// Ausgabe der verschlüsselten Daten
-
-		EncSymKey = theApp.SecudeLib.aux_BString2OString(&out);
-		
-		theApp.SecudeLib.af_close (PseHandle);
-		theApp.SecudeLib.aux_free_SET_OF_IssuedCertificate (&Liste);
-		theApp.SecudeLib.aux_free_Certificate (&Zert);
-		free(out.bits);
-		delete string3;	
-	}
-#endif
-}
-
-
-void CDlgHybridEncryptionDemo::OnButtonEncKeyAsym() 
-{
-#ifndef _UNSTABLE
-	if(inactive==m_ButtonStatus[6])	
-	{
-		Message(IDS_STRING_HYB_ENC_KEY_ASYM,MB_ICONEXCLAMATION);
+void CDlgHybridEncryptionDemo::OnButtonEncKeyAsym() {
+	// check user interface
+	if (inactive == m_ButtonStatus[6]) {
+		Message(IDS_STRING_HYB_ENC_KEY_ASYM, MB_ICONEXCLAMATION);
 		return;
 	}
-
-	m_ButtonStatus[6]=active_pressed;
-
+	// update user interface
+	m_ButtonStatus[6] = active_pressed;
+	// execute RSA encryption
 	SHOW_HOUR_GLASS
-	//Sanduhr als Cursor
-
-	RSAEncrypt();
-	UpdateData();
-	m_strBuffEditEncKeyAsym = "";
-	m_strEdit = "";
-	for (unsigned int j=0;j<EncSymKey->noctets;j++)
-	{
-			char array[3];
-			_snprintf(array,3,"%02.2X",(unsigned char) EncSymKey->octets[j]);
-			m_strBuffEditEncKeyAsym+=array;					
-	}
-	m_strTitle = "";
-
-	
-
-	UpdateData(false);
-
-
-	SetCondition(6,true);
-	UpdateData(false);
+	CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt operation(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_ENCRYPTION);
+	const bool result = operation.executeOnByteStrings(m_byteStringSymmetricKey, m_selectedCertificateSerial, "", m_byteStringSymmetricKeyEncrypted);
 	HIDE_HOUR_GLASS
-#endif
-	//Sanduhr durch einen Pfeil ersetzen
+	if (!result) return;
+	// update user interface
+	SetCondition(6, true);
+	m_strTitle = "";
+	m_strEdit = "";
+	UpdateData(false);
 }
 
 void CDlgHybridEncryptionDemo::OnButtonShowAsymKey() {
@@ -567,46 +372,34 @@ void CDlgHybridEncryptionDemo::OnButtonShowAsymKey() {
 	dlgShowKeyParameter.DoModal();
 }
 
-void CDlgHybridEncryptionDemo::SetCondition(int button,bool state)
-{
+void CDlgHybridEncryptionDemo::SetCondition(int button,bool state) {
 	m_ActionPerformed[button] = state;
 	ResetDependent(button);
 	EnDisButtons();
 	ShowButtons();
 }
 
-void CDlgHybridEncryptionDemo::ResetDependent(int button)
-{
+void CDlgHybridEncryptionDemo::ResetDependent(int button) {
 	int i;
-	for (i = 0; i < 11; i++)
-	{
-		if (m_setMatrix[i][button] && m_ActionPerformed[i])
-		{
+	for (i = 0; i < 11; i++) {
+		if (m_setMatrix[i][button] && m_ActionPerformed[i]) {
 			m_ActionPerformed[i] = false;
 			ResetDependent(i);
 		}
 	}
 }
 
-void CDlgHybridEncryptionDemo::EnDisButtons()
-{
-	for(int i=0;i<11;i++)
-	{
-		if(!m_ActionPerformed[i])
-		{
+void CDlgHybridEncryptionDemo::EnDisButtons() {
+	for(int i=0;i<11;i++) {
+		if(!m_ActionPerformed[i]) {
 			m_ButtonStatus[i]=active_not_pressed;
 		}
-		else
-		{
+		else {
 			m_ButtonStatus[i]=active_pressed;
 		}
-
-		for(int j=0;j<11;j++)
-		{
-			if(m_setMatrix[i][j])
-			{
-				if(!m_ActionPerformed[j])
-				{
+		for(int j=0;j<11;j++) {
+			if(m_setMatrix[i][j]) {
+				if(!m_ActionPerformed[j]) {
 					m_ButtonStatus[i]=inactive;
 					break;
 				}
@@ -615,15 +408,12 @@ void CDlgHybridEncryptionDemo::EnDisButtons()
 	}
 }
 
-void CDlgHybridEncryptionDemo::OnButtonShowDocument() 
-{
-	if(inactive==m_ButtonStatus[7])	
-	{
+void CDlgHybridEncryptionDemo::OnButtonShowDocument() {
+	if( inactive == m_ButtonStatus[7]) {
 		Message(IDS_STRING_HYB_SHOW_DOC, MB_ICONEXCLAMATION);
 		return;
 	}
 	m_strTitle = m_documentTitle;
-
 	int destSize; 
 	{
 		int linelen;
@@ -636,26 +426,19 @@ void CDlgHybridEncryptionDemo::OnButtonShowDocument()
 	}
 	char *dest = new char [destSize+1];
 	SHOW_HOUR_GLASS
-	
 	int err = HexDumpMem(dest,destSize,(unsigned char*)m_byteStringPlainText.getByteData(),m_iDocSize, INFO_TEXT_COLUMNS);
-
-	m_strEdit = dest;
 	HIDE_HOUR_GLASS
+	m_strEdit = dest;
 	delete []dest;
-
 	UpdateData(false);
 }
 
-void CDlgHybridEncryptionDemo::OnButtonShowEncDocument() 
-{
-	if(inactive==m_ButtonStatus[8])	
-	{
+void CDlgHybridEncryptionDemo::OnButtonShowEncDocument() {
+	if(inactive==m_ButtonStatus[8]) {
 		Message(IDS_STRING_HYB_SHOW_ENC_DOC, MB_ICONEXCLAMATION);
 		return;
 	}
-
 	m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_SYM_ENC_DOC);
-
 	int destSize; 
 	{
 		int linelen;
@@ -668,207 +451,176 @@ void CDlgHybridEncryptionDemo::OnButtonShowEncDocument()
 	}
 	char *dest = new char [destSize+1];
 	SHOW_HOUR_GLASS
-	
 	int err = HexDumpMem(dest,destSize,(unsigned char*)m_byteStringCipherText.getByteData(), m_byteStringCipherText.getByteLength(), INFO_TEXT_COLUMNS);
-
-	m_strEdit = dest;
 	HIDE_HOUR_GLASS
+	m_strEdit = dest;
 	delete []dest;
-
 	UpdateData(false);
 }
 
-void CDlgHybridEncryptionDemo::OnButtonShowEncSymKey() 
-{
-	if(inactive==m_ButtonStatus[9])	
-	{
+void CDlgHybridEncryptionDemo::OnButtonShowEncSymKey() {
+	if (inactive == m_ButtonStatus[9]) {
 		Message(IDS_STRING_HYB_ENC_SYM_KEY, MB_ICONEXCLAMATION);
 		return;
 	}
 	SHOW_HOUR_GLASS
 	m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_ASYM_ENC_KEY);
-	m_strEdit = m_strBuffEditEncKeyAsym;
+	m_strEdit = m_byteStringSymmetricKeyEncrypted.toString(16, " ");
 	UpdateData(false);
 	HIDE_HOUR_GLASS
 }
 
-void CDlgHybridEncryptionDemo::ShowButtons()
-{
-
+void CDlgHybridEncryptionDemo::ShowButtons() {
 	m_hFocus = GetFocus();
-	for(int i=0;i<11;i++)
-	{
-		if ( g_Status[i] != m_ButtonStatus[i] )
-		{
-			switch(i)
-			{
-			case 0:if(active_not_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpSechseck1.LoadBitmaps("SECHSECK1_R_U", "SECHSECK1_R_D", "SECHSECK1_R_F", NULL);
-						m_ctrlBmpSechseck1.ShowWindow(SW_HIDE);
-						m_ctrlBmpSechseck1.ShowWindow(SW_SHOW);
-				   }
-					else if(active_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpSechseck1.LoadBitmaps("SECHSECK1_G_U", "SECHSECK1_G_D", "SECHSECK1_G_F", NULL);
-						m_ctrlBmpSechseck1.ShowWindow(SW_HIDE);
-						m_ctrlBmpSechseck1.ShowWindow(SW_SHOW);
-				   };break;
-
-			case 1:if(active_not_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpSechseck2.LoadBitmaps("SECHSECK2_R_U", "SECHSECK2_R_D", "SECHSECK2_R_F", NULL);
-						m_ctrlBmpSechseck2.ShowWindow(SW_HIDE);
-						m_ctrlBmpSechseck2.ShowWindow(SW_SHOW);
-				   }
-					else if(active_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpSechseck2.LoadBitmaps("SECHSECK2_G_U", "SECHSECK2_G_D", "SECHSECK2_G_F", NULL);
-						m_ctrlBmpSechseck2.ShowWindow(SW_HIDE);
-						m_ctrlBmpSechseck2.ShowWindow(SW_SHOW);
-				   };break;
-
-			case 2:if(m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRaute2.LoadBitmaps("RAUTE2_B_U", "RAUTE2_B_D", "RAUTE2_B_F", NULL);
-						m_ctrlBmpRaute2.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute2.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRaute2.LoadBitmaps("RAUTE2_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRaute2.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute2.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-			case 3:if(active_not_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpSechseck3.LoadBitmaps("SECHSECK3_R_U", "SECHSECK3_R_D", "SECHSECK3_R_F", NULL);
-						m_ctrlBmpSechseck3.ShowWindow(SW_HIDE);
-						m_ctrlBmpSechseck3.ShowWindow(SW_SHOW);
-				   }
-					else if(active_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpSechseck3.LoadBitmaps("SECHSECK3_G_U", "SECHSECK3_G_D", "SECHSECK3_G_F", NULL);
-						m_ctrlBmpSechseck3.ShowWindow(SW_HIDE);
-						m_ctrlBmpSechseck3.ShowWindow(SW_SHOW);
-				   };break;
-
-			case 4:if(m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRaute3.LoadBitmaps("RAUTE3_B_U", "RAUTE3_B_D", "RAUTE3_B_F", NULL);
-						m_ctrlBmpRaute3.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute3.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRaute3.LoadBitmaps("RAUTE3_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRaute3.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute3.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-			case 5:if(active_not_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRechteck1.LoadBitmaps("RECHTECK1_R_U", "RECHTECK1_R_D", "RECHTECK1_R_F", NULL);
-						m_ctrlBmpRechteck1.ShowWindow(SW_HIDE);
-						m_ctrlBmpRechteck1.ShowWindow(SW_SHOW);
-				   }
-					else if(active_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRechteck1.LoadBitmaps("RECHTECK1_G_U", "RECHTECK1_G_D", "RECHTECK1_G_F", NULL);
-						m_ctrlBmpRechteck1.ShowWindow(SW_HIDE);
-						m_ctrlBmpRechteck1.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRechteck1.LoadBitmaps("RECHTECK1_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRechteck1.ShowWindow(SW_HIDE);
-						m_ctrlBmpRechteck1.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-			case 6:if(active_not_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRechteck2.LoadBitmaps("RECHTECK2_R_U", "RECHTECK2_R_D", "RECHTECK2_R_F", NULL);
-						m_ctrlBmpRechteck2.ShowWindow(SW_HIDE);
-						m_ctrlBmpRechteck2.ShowWindow(SW_SHOW);
-				   }
-					else if(active_pressed==m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRechteck2.LoadBitmaps("RECHTECK2_G_U", "RECHTECK2_G_D", "RECHTECK2_G_F", NULL);
-						m_ctrlBmpRechteck2.ShowWindow(SW_HIDE);
-						m_ctrlBmpRechteck2.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRechteck2.LoadBitmaps("RECHTECK2_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRechteck2.ShowWindow(SW_HIDE);
-						m_ctrlBmpRechteck2.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-			case 7:if(m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRaute1.LoadBitmaps("RAUTE1_B_U", "RAUTE1_B_D", "RAUTE1_B_F", NULL);
-						m_ctrlBmpRaute1.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute1.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRaute1.LoadBitmaps("RAUTE1_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRaute1.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute1.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-			case 8:if(m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRaute4.LoadBitmaps("RAUTE4_B_U", "RAUTE4_B_D", "RAUTE4_B_F", NULL);
-						m_ctrlBmpRaute4.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute4.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRaute4.LoadBitmaps("RAUTE4_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRaute4.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute4.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-			case 9:if(m_ButtonStatus[i])
-				   {
-						m_ctrlBmpRaute5.LoadBitmaps("RAUTE5_B_U", "RAUTE5_B_D", "RAUTE5_B_F", NULL);
-						m_ctrlBmpRaute5.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute5.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpRaute5.LoadBitmaps("RAUTE5_X_U", NULL, NULL, NULL);
-						m_ctrlBmpRaute5.ShowWindow(SW_HIDE);
-						m_ctrlBmpRaute5.ShowWindow(SW_SHOW);
-				   
-				   };break;
-
-   		   case 10:if(m_ButtonStatus[i])
-				   {
-						m_ctrlBmpOval2.LoadBitmaps("OVAL2_G_U", "OVAL2_G_D", "OVAL2_G_F", NULL);
-						m_ctrlBmpOval2.ShowWindow(SW_HIDE);
-						m_ctrlBmpOval2.ShowWindow(SW_SHOW);
-				   }
-				   else
-				   {
-						m_ctrlBmpOval2.LoadBitmaps("OVAL2_X_U", NULL, NULL, NULL);
-						m_ctrlBmpOval2.ShowWindow(SW_HIDE);
-						m_ctrlBmpOval2.ShowWindow(SW_SHOW);
-				   
-				   };break;
+	for(int i=0;i<11;i++) {
+		if (g_Status[i] != m_ButtonStatus[i]) {
+			switch(i) {
+			case 0:
+				if (active_not_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpSechseck1.LoadBitmaps("SECHSECK1_R_U", "SECHSECK1_R_D", "SECHSECK1_R_F", NULL);
+					m_ctrlBmpSechseck1.ShowWindow(SW_HIDE);
+					m_ctrlBmpSechseck1.ShowWindow(SW_SHOW);
+				}
+				else if (active_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpSechseck1.LoadBitmaps("SECHSECK1_G_U", "SECHSECK1_G_D", "SECHSECK1_G_F", NULL);
+					m_ctrlBmpSechseck1.ShowWindow(SW_HIDE);
+					m_ctrlBmpSechseck1.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 1:
+				if (active_not_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpSechseck2.LoadBitmaps("SECHSECK2_R_U", "SECHSECK2_R_D", "SECHSECK2_R_F", NULL);
+					m_ctrlBmpSechseck2.ShowWindow(SW_HIDE);
+					m_ctrlBmpSechseck2.ShowWindow(SW_SHOW);
+				}
+				else if (active_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpSechseck2.LoadBitmaps("SECHSECK2_G_U", "SECHSECK2_G_D", "SECHSECK2_G_F", NULL);
+					m_ctrlBmpSechseck2.ShowWindow(SW_HIDE);
+					m_ctrlBmpSechseck2.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 2:
+				if (m_ButtonStatus[i]) {
+					m_ctrlBmpRaute2.LoadBitmaps("RAUTE2_B_U", "RAUTE2_B_D", "RAUTE2_B_F", NULL);
+					m_ctrlBmpRaute2.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute2.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRaute2.LoadBitmaps("RAUTE2_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRaute2.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute2.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 3:
+				if (active_not_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpSechseck3.LoadBitmaps("SECHSECK3_R_U", "SECHSECK3_R_D", "SECHSECK3_R_F", NULL);
+					m_ctrlBmpSechseck3.ShowWindow(SW_HIDE);
+					m_ctrlBmpSechseck3.ShowWindow(SW_SHOW);
+				}
+				else if(active_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpSechseck3.LoadBitmaps("SECHSECK3_G_U", "SECHSECK3_G_D", "SECHSECK3_G_F", NULL);
+					m_ctrlBmpSechseck3.ShowWindow(SW_HIDE);
+					m_ctrlBmpSechseck3.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 4:
+				if (m_ButtonStatus[i]) {
+					m_ctrlBmpRaute3.LoadBitmaps("RAUTE3_B_U", "RAUTE3_B_D", "RAUTE3_B_F", NULL);
+					m_ctrlBmpRaute3.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute3.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRaute3.LoadBitmaps("RAUTE3_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRaute3.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute3.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 5:
+				if (active_not_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpRechteck1.LoadBitmaps("RECHTECK1_R_U", "RECHTECK1_R_D", "RECHTECK1_R_F", NULL);
+					m_ctrlBmpRechteck1.ShowWindow(SW_HIDE);
+					m_ctrlBmpRechteck1.ShowWindow(SW_SHOW);
+				}
+				else if (active_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpRechteck1.LoadBitmaps("RECHTECK1_G_U", "RECHTECK1_G_D", "RECHTECK1_G_F", NULL);
+					m_ctrlBmpRechteck1.ShowWindow(SW_HIDE);
+					m_ctrlBmpRechteck1.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRechteck1.LoadBitmaps("RECHTECK1_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRechteck1.ShowWindow(SW_HIDE);
+					m_ctrlBmpRechteck1.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 6:
+				if (active_not_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpRechteck2.LoadBitmaps("RECHTECK2_R_U", "RECHTECK2_R_D", "RECHTECK2_R_F", NULL);
+					m_ctrlBmpRechteck2.ShowWindow(SW_HIDE);
+					m_ctrlBmpRechteck2.ShowWindow(SW_SHOW);
+				}
+				else if (active_pressed == m_ButtonStatus[i]) {
+					m_ctrlBmpRechteck2.LoadBitmaps("RECHTECK2_G_U", "RECHTECK2_G_D", "RECHTECK2_G_F", NULL);
+					m_ctrlBmpRechteck2.ShowWindow(SW_HIDE);
+					m_ctrlBmpRechteck2.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRechteck2.LoadBitmaps("RECHTECK2_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRechteck2.ShowWindow(SW_HIDE);
+					m_ctrlBmpRechteck2.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 7:
+				if (m_ButtonStatus[i]) {
+					m_ctrlBmpRaute1.LoadBitmaps("RAUTE1_B_U", "RAUTE1_B_D", "RAUTE1_B_F", NULL);
+					m_ctrlBmpRaute1.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute1.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRaute1.LoadBitmaps("RAUTE1_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRaute1.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute1.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 8:
+				if (m_ButtonStatus[i]) {
+					m_ctrlBmpRaute4.LoadBitmaps("RAUTE4_B_U", "RAUTE4_B_D", "RAUTE4_B_F", NULL);
+					m_ctrlBmpRaute4.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute4.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRaute4.LoadBitmaps("RAUTE4_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRaute4.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute4.ShowWindow(SW_SHOW);
+				}
+				break;
+			case 9:
+				if (m_ButtonStatus[i]) {
+					m_ctrlBmpRaute5.LoadBitmaps("RAUTE5_B_U", "RAUTE5_B_D", "RAUTE5_B_F", NULL);
+					m_ctrlBmpRaute5.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute5.ShowWindow(SW_SHOW);
+				}
+				else {
+					m_ctrlBmpRaute5.LoadBitmaps("RAUTE5_X_U", NULL, NULL, NULL);
+					m_ctrlBmpRaute5.ShowWindow(SW_HIDE);
+					m_ctrlBmpRaute5.ShowWindow(SW_SHOW);
+				}
+				break;
+   		   case 10:
+			   if (m_ButtonStatus[i]) {
+					m_ctrlBmpOval2.LoadBitmaps("OVAL2_G_U", "OVAL2_G_D", "OVAL2_G_F", NULL);
+					m_ctrlBmpOval2.ShowWindow(SW_HIDE);
+					m_ctrlBmpOval2.ShowWindow(SW_SHOW);
+			   }
+			   else {
+					m_ctrlBmpOval2.LoadBitmaps("OVAL2_X_U", NULL, NULL, NULL);
+					m_ctrlBmpOval2.ShowWindow(SW_HIDE);
+					m_ctrlBmpOval2.ShowWindow(SW_SHOW);
+			   }
+			   break;
 			}
 		}
 		g_Status[i] = m_ButtonStatus[i];
 	}
-
 	m_hFocus->SetFocus();
 }
 
@@ -992,49 +744,31 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe()
 #endif
 	CDialog::OnOK();
 }
-void CDlgHybridEncryptionDemo::OnPaint() 
-{
-	CPaintDC dc(this); // device context for painting
-	// TODO: Code für die Behandlungsroutine für Nachrichten hier einfügen
-	// Kein Aufruf von CDialog::OnPaint() für Zeichnungsnachrichten
 
-
+void CDlgHybridEncryptionDemo::OnPaint() {
+	CPaintDC dc(this);
 	CBitmap bmp, *poldbmp;
 	CDC memdc;
-
 	// Load the bitmap resource
 	bmp.LoadBitmap( IDB_HYBRID_BACK );
-
 	// Create a compatible memory DC
-	memdc.CreateCompatibleDC( &dc );
-
+	memdc.CreateCompatibleDC(&dc);
 	// Select the bitmap into the DC
-	poldbmp = memdc.SelectObject( &bmp );
-
+	poldbmp = memdc.SelectObject(&bmp);
 	// Copy (BitBlt) bitmap from memory DC to screen DC
-	dc.BitBlt( 0, 0, 838, 730, &memdc, 0, 0, SRCCOPY );
-
-	memdc.SelectObject( poldbmp );
-
-			 // Do not call CDialog::OnPaint() for painting messages
+	dc.BitBlt(0, 0, 838, 730, &memdc, 0, 0, SRCCOPY);
+	memdc.SelectObject(poldbmp);
 }
 
-// Diese Funktion aktiviert das seitenkanalangriffsspezifische Verhalten des Dialogs
-// (sorry für dieses Unwort). Mit anderen Worten: wird diese Funktion ausgeführt,
-// so wird die temporär entstehende hybridverschlüsselte Datei nach Beenden des Dialogs
-// NICHT gelöscht, d.h. sie bleibt über ein bestimmtes Handle (scaFile) zugreifbar.
-void CDlgHybridEncryptionDemo::activateSCABehaviour()
-{
+void CDlgHybridEncryptionDemo::activateSCABehaviour() {
 	this->isSCABehaviourActivated = true;
 }
 
-CString CDlgHybridEncryptionDemo::getSCAFile()
-{
+CString CDlgHybridEncryptionDemo::getSCAFile() {
 	return this->scaFile;
 }
 
-SCACertificateInformation CDlgHybridEncryptionDemo::getCertInfo()
-{
+SCACertificateInformation CDlgHybridEncryptionDemo::getCertInfo() {
 	return this->scaCertInfo;
 }
 
