@@ -1472,20 +1472,16 @@ void CCryptDoc::OnEinzelverfahrenHybridverfahrenHybridverschlsselung() {
 	dlgHybridEncryptionDemo.DoModal();
 }
 
+void CCryptDoc::OnEinzelverfahrenHybridverfahrenHybridentschlsselung() {
+	UpdateContent();
+	CDlgHybridDecryptionDemo dlgHybridDecryptionDemo(ContentName, GetTitle());
+	dlgHybridDecryptionDemo.DoModal();
+}
 
 void CCryptDoc::OnEinzelverfahrenSignDoc() 
 {
 	UpdateContent();
 	SignatureTutorial ( ContentName, GetTitle());
-}
-
-
-void CCryptDoc::OnEinzelverfahrenHybridverfahrenHybridentschlsselung() 
-{
-	UpdateContent();
-#ifndef _UNSTABLE
-	DecHyb( ContentName, GetTitle() );
-#endif
 }
 
 

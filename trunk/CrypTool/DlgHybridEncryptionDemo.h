@@ -64,7 +64,6 @@ private:
 private:
 	CrypTool::ByteString m_byteStringPlainText;
 	CrypTool::ByteString m_byteStringCipherText;
-private:
 	CrypTool::ByteString m_byteStringSymmetricKey;
 	CrypTool::ByteString m_byteStringSymmetricKeyEncrypted;
 private:

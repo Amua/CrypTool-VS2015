@@ -201,6 +201,28 @@ namespace CrypTool {
 		}
 	}
 
+	bool ByteString::findPattern(const ByteString &_pattern, size_t &_start, size_t &_end) const {
+		if (getByteLength() < _pattern.getByteLength()) return false;
+		if (_pattern.getByteLength() == 0) return false;
+		for (size_t index = 0; index <= getByteLength() - _pattern.getByteLength(); index++) {
+			if (std::memcmp(getByteDataConst() + index, _pattern.getByteDataConst(), _pattern.getByteLength()) == 0) {
+				_start = index;
+				_end = _start + _pattern.getByteLength();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool ByteString::extractPattern(const size_t _start, const size_t _end, ByteString &_pattern) const {
+		if (_start >= _end) return false;
+		if (_end > getByteLength()) return false;
+		const size_t patternLength = _end - _start;
+		_pattern.reset(patternLength);
+		std::memcpy(_pattern.getByteData(), getByteDataConst() + _start, patternLength);
+		return true;
+	}
+
 	ByteString &ByteString::operator=(const ByteString &_byteString) {
 		reset(_byteString.byteLength);
 		std::memcpy(byteData, _byteString.byteData, byteLength);
@@ -346,6 +368,9 @@ namespace CrypTool {
 		}
 
 		CString StringNumberBaseConverter::convertNumberFromBaseToBase(const CString &_number, const unsigned int _baseSource, const unsigned int _baseTarget) {
+			// optimization: if bases are equal, don't do any conversion at all
+			if (_baseSource == _baseTarget) return _number;
+			// execute the actual conversion
 			StringNumberBaseConverter snbc(_baseSource, _baseTarget);
 			if (!snbc.areAlphabetsValid()) return _number;
 			SHOW_HOUR_GLASS
@@ -1501,9 +1526,7 @@ namespace CrypTool {
 				return false;
 			}
 
-			CString CertificateStore::getUserCertificateStringName(const long _serial) const {
-				// result variable
-				CString name;
+			bool CertificateStore::getUserCertificateStringName(const long _serial, CString &_name) const {
 				// try to extract certificate information
 				CString firstName;
 				CString lastName;
@@ -1512,39 +1535,62 @@ namespace CrypTool {
 				CString notBefore;
 				CString notAfter;
 				if (getUserCertificateInformation(_serial, firstName, lastName, remarks, type, notBefore, notAfter)) {
-					name = firstName + " " + lastName;
+					_name = firstName + " " + lastName;
+					return true;
 				}
-				return name;
+				return false;
 			}
 
-			CString CertificateStore::getUserCertificateHexStringRSAExponent(const long _serial) const {
+			bool CertificateStore::getUserCertificateStringRSAPublicKeyE(const long _serial, const unsigned int _base, CString &_e) const {
 				using namespace OpenSSL;
-				// result variable
-				CString exponent;
 				// try to extract certificate information
 				RSA *rsa = RSA_new();
 				if (getUserCertificatePublicKeyRSA(_serial, &rsa)) {
-					char* cExponent = BN_bn2hex(rsa->e);
-					exponent = cExponent;
-					OPENSSL_free(cExponent);
+					char* cE = BN_bn2hex(rsa->e);
+					_e = cE;
+					OPENSSL_free(cE);
+					// convert to specified base
+					_e = Utilities::StringNumberBaseConverter::convertNumberFromBaseToBase(_e, 16, _base);
+					RSA_free(rsa);
+					return true;
 				}
 				RSA_free(rsa);
-				return exponent;
+				return false;
 			}
 
-			CString CertificateStore::getUserCertificateHexStringRSAModul(const long _serial) const {
+			bool CertificateStore::getUserCertificateStringRSAPublicKeyN(const long _serial, const unsigned int _base, CString &_n) const {
 				using namespace OpenSSL;
-				// result variable
-				CString modul;
 				// try to extract certificate information
 				RSA *rsa = RSA_new();
 				if (getUserCertificatePublicKeyRSA(_serial, &rsa)) {
-					char* cModul = BN_bn2hex(rsa->n);
-					modul = cModul;
-					OPENSSL_free(cModul);
+					char* cN = BN_bn2hex(rsa->n);
+					_n = cN;
+					OPENSSL_free(cN);
+					// convert to specified base
+					_n = Utilities::StringNumberBaseConverter::convertNumberFromBaseToBase(_n, 16, _base);
+					RSA_free(rsa);
+					return true;
 				}
 				RSA_free(rsa);
-				return modul;
+				return false;
+			}
+
+			bool CertificateStore::getUserCertificateStringRSAPrivateKeyD(const long _serial, const CString &_password, const unsigned int _base, CString &_d) const {
+				using namespace OpenSSL;
+				// try to extract certificate information
+				RSA *rsa = RSA_new();
+				if (getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
+					char *cD = BN_bn2hex(rsa->d);
+					_d = cD;
+					OPENSSL_free(cD);
+					// convert to specified base
+					_d = Utilities::StringNumberBaseConverter::convertNumberFromBaseToBase(_d, 16, _base);
+					RSA_free(rsa);
+					return true;
+
+				}
+				RSA_free(rsa);
+				return false;
 			}
 
 			void CertificateStore::generateFileNamesForUserCertificateAndUserPrivateKey(const long _serial, CString &_fileNameUserCertificate, CString &_fileNameUserPrivateKey) const {

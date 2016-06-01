@@ -23,25 +23,11 @@
 #include "CrypToolBase.h"
 #include "DlgHybridEncryptionDemo.h"
 
+#include "DlgShowKeyParameter.h"
 #include "DlgCertificateStoreSelectCertificate.h"
 
-// TODO/FIXME: which ones of these do we REALLY need?!
 #include "DialogeMessage.h"
-#include <fstream>
 #include "FileTools.h"
-#include <sys\stat.h>
-#include "DlgRSAEncryption.h"
-#include "DlgKeyHexAnalysis.h"
-#include "Cryptography.h"
-#include "CryptDoc.h"
-#include "DlgKeyHex.h"
-#include "AppDocument.h"
-#include "DlgKeyHexAnalysis.h"
-#include <mbstring.h>
-#include "DlgKeyAsymGeneration.h"
-#include "DlgShowKeyParameter.h"
-#include "IntegerArithmetic.h"
-#include "CrypToolTools.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -650,10 +636,22 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 
 	SHOW_HOUR_GLASS
 
-	// write receiver information
+	// write receiver
 	stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
 	byteStringResult += stringTemp;
 	stringTemp.Format("%d", m_selectedCertificateSerial);
+	byteStringResult += stringTemp;
+
+	// write asymmetric algorithm
+	stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+	byteStringResult += stringTemp;
+	stringTemp = "RSA";
+	byteStringResult += stringTemp;
+
+	// write symmetric algorithm
+	stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
+	byteStringResult += stringTemp;
+	stringTemp = "AES";
 	byteStringResult += stringTemp;
 
 	// write length of encrypted session key
@@ -666,18 +664,6 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 	stringTemp.LoadString(IDS_STRING_HYBRID_ENC_KEY);
 	byteStringResult += stringTemp;
 	byteStringResult += m_byteStringSymmetricKeyEncrypted;
-
-	// write symmetric algorithm
-	stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
-	byteStringResult += stringTemp;
-	stringTemp = "AES";
-	byteStringResult += stringTemp;
-
-	// write asymmetric algorithm
-	stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
-	byteStringResult += stringTemp;
-	stringTemp = "RSA";
-	byteStringResult += stringTemp;
 
 	// write cipher text
 	stringTemp.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
@@ -695,10 +681,12 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 	CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
 	if (document) {
 		// create a meaningful title
-		const CString receiverName = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_selectedCertificateSerial);
-		CString title;
-		title.Format(IDS_STRING_HYBRID_ENC_TITLE, m_documentTitle, receiverName);
-		document->SetTitle(title);
+		CString receiverName;
+		if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_selectedCertificateSerial, receiverName)) {
+			CString title;
+			title.Format(IDS_STRING_HYBRID_ENC_TITLE, m_documentTitle, receiverName);
+			document->SetTitle(title);
+		}
 	}	
 
 	// if the SCA behavior is active, store the result file name in scaFile 

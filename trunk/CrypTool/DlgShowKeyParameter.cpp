@@ -8,7 +8,7 @@
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+	  http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,10 @@ BOOL CDlgShowKeyParameter::OnInitDialog() {
 	// set dialog title depending on the certificate serial
 	CString title;
 	title.Format(IDS_STRING_HYBRID_ENC_PUBLIC_KEY_OF);
-	title.Append(CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_serial));
+	CString ownerName = "?";
+	if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_serial, ownerName)) {
+		title.Append(ownerName);
+	}
 	SetWindowText(title);
 	// initial update
 	OnUpdate();
@@ -62,12 +65,9 @@ void CDlgShowKeyParameter::OnUpdate() {
 	if (m_radio == 0) base = 8;
 	if (m_radio == 1) base = 10;
 	if (m_radio == 2) base = 16;
-	// acquire both the exponent and the modul as hex string
-	const CString exponentHex = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateHexStringRSAExponent(m_serial);
-	const CString modulHex = CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateHexStringRSAModul(m_serial);
-	// convert both values to the desired base
-	m_exponent = CrypTool::Utilities::StringNumberBaseConverter::convertNumberFromBaseToBase(exponentHex, 16, base);
-	m_modul = CrypTool::Utilities::StringNumberBaseConverter::convertNumberFromBaseToBase(modulHex, 16, base);
+	// acquire both exponent e and modul n
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyE(m_serial, base, m_exponent);
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyN(m_serial, base, m_modul);
 	UpdateData(FALSE);
 }
 
