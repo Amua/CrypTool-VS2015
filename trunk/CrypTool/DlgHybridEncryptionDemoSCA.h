@@ -28,6 +28,9 @@
 #include "DlgHybridEncryptionDemo.h"
 
 class CDlgHybridEncryptionDemoSCA : public CDlgHybridEncryptionDemo {
+public:
+	CDlgHybridEncryptionDemoSCA(const CString &_documentFileName = "", const CString &_documentTitle = "", CWnd* pParent = NULL);
+	virtual ~CDlgHybridEncryptionDemoSCA();
 protected:
 	afx_msg void OnButtonEncDocumentSym();
 };

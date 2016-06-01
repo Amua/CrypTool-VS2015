@@ -41,7 +41,7 @@ static char THIS_FILE[] = __FILE__;
 extern char *Pfad;
 
 // Hybridverschlüsselungsdialog
-#include "DlgHybridEncryptionDemo.h"
+#include "DlgHybridEncryptionDemoSCA.h"
 // für content-name usw
 #include "FileTools.h"
 #include "CryptDoc.h"
@@ -104,7 +104,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			if(dlg.radioChoice1)
 			{
 				// Benutzer möchte eine Datei wählen und hybridverschlüsseln
-				CDlgHybridEncryptionDemo dlg;
+				CDlgHybridEncryptionDemoSCA dlg;
 				if(dlg.DoModal() == IDOK)
 				{
 #ifndef _UNSTABLE
@@ -159,7 +159,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			// Fall (a)
 			if(dlg.radioChoice1)
 			{
-				CDlgHybridEncryptionDemo dlg(initFile, initFileTitle);
+				CDlgHybridEncryptionDemoSCA dlg(initFile, initFileTitle);
 				if(dlg.DoModal() == IDOK)
 				{
 #ifndef _UNSTABLE
@@ -178,7 +178,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			if(dlg.radioChoice2)
 			{
 				// Benutzer möchte andere Datei wählen und hybridverschlüsseln
-				CDlgHybridEncryptionDemo dlg;
+				CDlgHybridEncryptionDemoSCA dlg;
 				if(dlg.DoModal() == IDOK)
 				{
 #ifndef _UNSTABLE
@@ -261,7 +261,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			if(dlg.radioChoice2)
 			{
 				// Benutzer möchte andere Datei wählen und hybridverschlüsseln
-				CDlgHybridEncryptionDemo dlg;
+				CDlgHybridEncryptionDemoSCA dlg;
 				if(dlg.DoModal() == IDOK)
 				{
 #ifndef _UNSTABLE

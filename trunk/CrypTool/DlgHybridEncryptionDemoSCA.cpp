@@ -33,6 +33,15 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+CDlgHybridEncryptionDemoSCA::CDlgHybridEncryptionDemoSCA(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
+	CDlgHybridEncryptionDemo(_documentFileName, _documentTitle, pParent) {
+
+}
+
+CDlgHybridEncryptionDemoSCA::~CDlgHybridEncryptionDemoSCA() {
+
+}
+
 void CDlgHybridEncryptionDemoSCA::OnButtonEncDocumentSym() {
 	// this function implements SCA-specific behavior: we need to make sure the 
 	// file chosen by the user contains a keyword based on which Bob can determine 
