@@ -27,16 +27,6 @@
 
 #define INFO_TEXT_COLUMNS 20
 
-// Falls der SCA-Modus aktiviert ist, werden in folgender Struktur Informationen
-// über das ausgewählte Zertifikat/RSA-Schlüsselpaar abgelegt:
-struct SCACertificateInformation {
-	CString firstname;
-	CString lastname;
-	CString keytype;
-	CString time;
-	CString keyid;
-};
-
 class CDlgHybridEncryptionDemo : public CDialog {
 	enum { IDD = IDD_HYBRID_ENCRYPTION_DEMO };
 public:
