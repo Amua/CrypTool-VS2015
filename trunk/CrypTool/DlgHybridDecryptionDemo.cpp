@@ -24,6 +24,7 @@
 #include "DlgHybridDecryptionDemo.h"
 
 #include "DlgCertificateStoreAskForPassword.h"
+#include "DlgCertificateStoreShowCertificateParametersAll.h"
 
 #include "DialogeMessage.h"
 
@@ -121,7 +122,16 @@ void CDlgHybridDecryptionDemo::OnButtonContinue() {
 }
 
 void CDlgHybridDecryptionDemo::OnButtonShowCertificate() {
-	AfxMessageBox("CRYPTOOL_BASE: show certificate parameters");
+	// retrieve both public and private parameters for the certificate
+	CString publicParameters;
+	CString privateParameters;
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicParameters(m_selectedCertificateSerial, publicParameters);
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateParameters(m_selectedCertificateSerial, m_selectedCertificatePassword, privateParameters);
+	// show all parameters to the user
+	CDlgCertificateStoreShowCertificateParametersAll dlgCertificateStoreShowCertificateParametersAll;
+	dlgCertificateStoreShowCertificateParametersAll.setPublicParameters(publicParameters);
+	dlgCertificateStoreShowCertificateParametersAll.setPrivateParameters(privateParameters);
+	dlgCertificateStoreShowCertificateParametersAll.DoModal();
 }
 
 bool CDlgHybridDecryptionDemo::extractHybridEncryptionDataFromDocument() {
@@ -246,6 +256,8 @@ int CDlgHybridDecryptionDemo::UpdateDataDisplay() {
 				UpdateData(false);
 				m_DisplayDataCtrl.LineScroll(step ? m_DisplayDataCtrl.GetLineCount() : 0 /* nFirstVisibleLine */);
 				UpdateData(true);
+				// enable the button for showing the certificate
+				m_ShowCertificate.EnableWindow(true);
 			}
 		}
 	}
