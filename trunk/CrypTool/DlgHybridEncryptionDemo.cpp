@@ -353,6 +353,161 @@ void CDlgHybridEncryptionDemo::OnButtonShowAsymKey() {
 	dlgShowKeyParameter.DoModal();
 }
 
+void CDlgHybridEncryptionDemo::OnButtonShowDocument() {
+	if (inactive == m_ButtonStatus[7]) {
+		Message(IDS_STRING_HYB_SHOW_DOC, MB_ICONEXCLAMATION);
+		return;
+	}
+	m_strTitle = m_documentTitle;
+	int destSize;
+	{
+		int linelen;
+		int lines, rest;
+
+		linelen = 11 + INFO_TEXT_COLUMNS * 4;
+		lines = (m_iDocSize + INFO_TEXT_COLUMNS - 1) / INFO_TEXT_COLUMNS;
+		rest = (m_iDocSize) % INFO_TEXT_COLUMNS;
+		destSize = lines * linelen; // - INFO_TEXT_COLUMNS + rest;
+	}
+	char *dest = new char[destSize + 1];
+	SHOW_HOUR_GLASS
+		int err = HexDumpMem(dest, destSize, (unsigned char*)m_byteStringPlainText.getByteData(), m_iDocSize, INFO_TEXT_COLUMNS);
+	HIDE_HOUR_GLASS
+		m_strEdit = dest;
+	delete[]dest;
+	UpdateData(false);
+}
+
+void CDlgHybridEncryptionDemo::OnButtonShowEncDocument() {
+	if (inactive == m_ButtonStatus[8]) {
+		Message(IDS_STRING_HYB_SHOW_ENC_DOC, MB_ICONEXCLAMATION);
+		return;
+	}
+	m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_SYM_ENC_DOC);
+	int destSize;
+	{
+		int linelen;
+		int lines, rest;
+
+		linelen = 11 + INFO_TEXT_COLUMNS * 4;
+		lines = (m_byteStringCipherText.getByteLength() + INFO_TEXT_COLUMNS - 1) / INFO_TEXT_COLUMNS;
+		rest = (m_byteStringCipherText.getByteLength()) % INFO_TEXT_COLUMNS;
+		destSize = lines * linelen; // - INFO_TEXT_COLUMNS + rest;
+	}
+	char *dest = new char[destSize + 1];
+	SHOW_HOUR_GLASS
+		int err = HexDumpMem(dest, destSize, (unsigned char*)m_byteStringCipherText.getByteData(), m_byteStringCipherText.getByteLength(), INFO_TEXT_COLUMNS);
+	HIDE_HOUR_GLASS
+		m_strEdit = dest;
+	delete[]dest;
+	UpdateData(false);
+}
+
+void CDlgHybridEncryptionDemo::OnButtonShowEncSymKey() {
+	if (inactive == m_ButtonStatus[9]) {
+		Message(IDS_STRING_HYB_ENC_SYM_KEY, MB_ICONEXCLAMATION);
+		return;
+	}
+	SHOW_HOUR_GLASS
+		m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_ASYM_ENC_KEY);
+	m_strEdit = m_byteStringSymmetricKeyEncrypted.toString(16, " ");
+	UpdateData(false);
+	HIDE_HOUR_GLASS
+}
+
+void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
+	// check user interface
+	if (!m_ButtonStatus[10]) {
+		Message(IDS_STRING_HYB_SHOW_DATA, MB_ICONEXCLAMATION);
+		return;
+	}
+	// declare temporary variable
+	CString stringTemp;
+	// this byte string will hold all the result data to be written
+	CrypTool::ByteString byteStringResult;
+
+	SHOW_HOUR_GLASS
+
+		// write receiver
+		stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
+	byteStringResult += stringTemp;
+	stringTemp.Format("%d", m_selectedCertificateSerial);
+	byteStringResult += stringTemp;
+
+	// write asymmetric algorithm
+	stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+	byteStringResult += stringTemp;
+	stringTemp = "RSA";
+	byteStringResult += stringTemp;
+
+	// write symmetric algorithm
+	stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
+	byteStringResult += stringTemp;
+	stringTemp = "AES";
+	byteStringResult += stringTemp;
+
+	// write length of encrypted session key
+	stringTemp.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
+	byteStringResult += stringTemp;
+	stringTemp.Format("%d", m_byteStringSymmetricKeyEncrypted.getByteLength() * 8);
+	byteStringResult += stringTemp;
+
+	// write encrypted session key
+	stringTemp.LoadString(IDS_STRING_HYBRID_ENC_KEY);
+	byteStringResult += stringTemp;
+	byteStringResult += m_byteStringSymmetricKeyEncrypted;
+
+	// write cipher text
+	stringTemp.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
+	byteStringResult += stringTemp;
+	byteStringResult += m_byteStringCipherText;
+
+	// create a file for the result (with the .hex suffix)
+	const CString fileNameResult = CrypTool::Utilities::createTemporaryFile(".hex");
+	// write result byte string to temporary file
+	byteStringResult.writeToFile(fileNameResult);
+
+	HIDE_HOUR_GLASS
+
+		// open result file in new document
+		CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
+	if (document) {
+		// create a meaningful title
+		CString receiverName;
+		if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_selectedCertificateSerial, receiverName)) {
+			CString title;
+			title.Format(IDS_STRING_HYBRID_ENC_TITLE, m_documentTitle, receiverName);
+			document->SetTitle(title);
+		}
+	}
+
+	// if the SCA behavior is active, store the result file name in scaFile 
+	// and don't remove the result file
+	if (isSCABehaviourActivated) {
+		scaFile = fileNameResult;
+	}
+	else {
+		remove(fileNameResult);
+	}
+
+	CDialog::OnOK();
+}
+
+void CDlgHybridEncryptionDemo::OnPaint() {
+	CPaintDC dc(this);
+	CBitmap bmp, *poldbmp;
+	CDC memdc;
+	// Load the bitmap resource
+	bmp.LoadBitmap(IDB_HYBRID_BACK);
+	// Create a compatible memory DC
+	memdc.CreateCompatibleDC(&dc);
+	// Select the bitmap into the DC
+	poldbmp = memdc.SelectObject(&bmp);
+	// Copy (BitBlt) bitmap from memory DC to screen DC
+	dc.BitBlt(0, 0, 838, 730, &memdc, 0, 0, SRCCOPY);
+	memdc.SelectObject(poldbmp);
+}
+
 void CDlgHybridEncryptionDemo::SetCondition(int button,bool state) {
 	m_ActionPerformed[button] = state;
 	ResetDependent(button);
@@ -368,6 +523,24 @@ void CDlgHybridEncryptionDemo::ResetDependent(int button) {
 			ResetDependent(i);
 		}
 	}
+}
+
+bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
+	SHOW_HOUR_GLASS
+		// try to read plain text from the specified file
+		if (!m_byteStringPlainText.readFromFile(DateiPfadName)) {
+			return false;
+		}
+	// assign the document size, and return false if empty
+	m_iDocSize = m_byteStringPlainText.getByteLength();
+	if (m_iDocSize == 0) {
+		return false;
+	}
+	m_bAuswahlDat = false;
+	m_documentFileName = DateiPfadName;
+	HIDE_HOUR_GLASS
+		SetCondition(0, true);
+	return true;
 }
 
 void CDlgHybridEncryptionDemo::EnDisButtons() {
@@ -387,68 +560,6 @@ void CDlgHybridEncryptionDemo::EnDisButtons() {
 			}
 		}
 	}
-}
-
-void CDlgHybridEncryptionDemo::OnButtonShowDocument() {
-	if( inactive == m_ButtonStatus[7]) {
-		Message(IDS_STRING_HYB_SHOW_DOC, MB_ICONEXCLAMATION);
-		return;
-	}
-	m_strTitle = m_documentTitle;
-	int destSize; 
-	{
-		int linelen;
-		int lines, rest;
-
-		linelen = 11 + INFO_TEXT_COLUMNS * 4;
-		lines = (m_iDocSize+INFO_TEXT_COLUMNS-1) / INFO_TEXT_COLUMNS;
-		rest  = (m_iDocSize) % INFO_TEXT_COLUMNS;
-		destSize = lines * linelen; // - INFO_TEXT_COLUMNS + rest;
-	}
-	char *dest = new char [destSize+1];
-	SHOW_HOUR_GLASS
-	int err = HexDumpMem(dest,destSize,(unsigned char*)m_byteStringPlainText.getByteData(),m_iDocSize, INFO_TEXT_COLUMNS);
-	HIDE_HOUR_GLASS
-	m_strEdit = dest;
-	delete []dest;
-	UpdateData(false);
-}
-
-void CDlgHybridEncryptionDemo::OnButtonShowEncDocument() {
-	if (inactive == m_ButtonStatus[8]) {
-		Message(IDS_STRING_HYB_SHOW_ENC_DOC, MB_ICONEXCLAMATION);
-		return;
-	}
-	m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_SYM_ENC_DOC);
-	int destSize; 
-	{
-		int linelen;
-		int lines, rest;
-
-		linelen = 11 + INFO_TEXT_COLUMNS * 4;
-		lines = (m_byteStringCipherText.getByteLength()+INFO_TEXT_COLUMNS-1) / INFO_TEXT_COLUMNS;
-		rest  = (m_byteStringCipherText.getByteLength()) % INFO_TEXT_COLUMNS;
-		destSize = lines * linelen; // - INFO_TEXT_COLUMNS + rest;
-	}
-	char *dest = new char [destSize+1];
-	SHOW_HOUR_GLASS
-	int err = HexDumpMem(dest,destSize,(unsigned char*)m_byteStringCipherText.getByteData(), m_byteStringCipherText.getByteLength(), INFO_TEXT_COLUMNS);
-	HIDE_HOUR_GLASS
-	m_strEdit = dest;
-	delete []dest;
-	UpdateData(false);
-}
-
-void CDlgHybridEncryptionDemo::OnButtonShowEncSymKey() {
-	if (inactive == m_ButtonStatus[9]) {
-		Message(IDS_STRING_HYB_ENC_SYM_KEY, MB_ICONEXCLAMATION);
-		return;
-	}
-	SHOW_HOUR_GLASS
-	m_strTitle.LoadString(IDS_STRING_HYBRID_ENC_ASYM_ENC_KEY);
-	m_strEdit = m_byteStringSymmetricKeyEncrypted.toString(16, " ");
-	UpdateData(false);
-	HIDE_HOUR_GLASS
 }
 
 void CDlgHybridEncryptionDemo::ShowButtons() {
@@ -603,117 +714,6 @@ void CDlgHybridEncryptionDemo::ShowButtons() {
 		g_Status[i] = m_ButtonStatus[i];
 	}
 	m_hFocus->SetFocus();
-}
-
-bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
-	SHOW_HOUR_GLASS
-	// try to read plain text from the specified file
-	if (!m_byteStringPlainText.readFromFile(DateiPfadName)) {
-		return false;
-	}
-	// assign the document size, and return false if empty
-	m_iDocSize = m_byteStringPlainText.getByteLength();
-	if (m_iDocSize == 0) {
-		return false;
-	}
-	m_bAuswahlDat = false;
-	m_documentFileName = DateiPfadName;
-	HIDE_HOUR_GLASS
-	SetCondition(0, true);
-	return true;
-}
-
-void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
-	// check user interface
-	if (!m_ButtonStatus[10]) {
-		Message(IDS_STRING_HYB_SHOW_DATA, MB_ICONEXCLAMATION);
-		return;
-	}
-	// declare temporary variable
-	CString stringTemp;
-	// this byte string will hold all the result data to be written
-	CrypTool::ByteString byteStringResult;
-
-	SHOW_HOUR_GLASS
-
-	// write receiver
-	stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
-	byteStringResult += stringTemp;
-	stringTemp.Format("%d", m_selectedCertificateSerial);
-	byteStringResult += stringTemp;
-
-	// write asymmetric algorithm
-	stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
-	byteStringResult += stringTemp;
-	stringTemp = "RSA";
-	byteStringResult += stringTemp;
-
-	// write symmetric algorithm
-	stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
-	byteStringResult += stringTemp;
-	stringTemp = "AES";
-	byteStringResult += stringTemp;
-
-	// write length of encrypted session key
-	stringTemp.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
-	byteStringResult += stringTemp;
-	stringTemp.Format("%d", m_byteStringSymmetricKeyEncrypted.getByteLength() * 8);
-	byteStringResult += stringTemp;
-
-	// write encrypted session key
-	stringTemp.LoadString(IDS_STRING_HYBRID_ENC_KEY);
-	byteStringResult += stringTemp;
-	byteStringResult += m_byteStringSymmetricKeyEncrypted;
-
-	// write cipher text
-	stringTemp.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
-	byteStringResult += stringTemp;
-	byteStringResult += m_byteStringCipherText;
-
-	// create a file for the result (with the .hex suffix)
-	const CString fileNameResult = CrypTool::Utilities::createTemporaryFile(".hex");
-	// write result byte string to temporary file
-	byteStringResult.writeToFile(fileNameResult);
-
-	HIDE_HOUR_GLASS
-	
-	// open result file in new document
-	CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
-	if (document) {
-		// create a meaningful title
-		CString receiverName;
-		if (CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_selectedCertificateSerial, receiverName)) {
-			CString title;
-			title.Format(IDS_STRING_HYBRID_ENC_TITLE, m_documentTitle, receiverName);
-			document->SetTitle(title);
-		}
-	}	
-
-	// if the SCA behavior is active, store the result file name in scaFile 
-	// and don't remove the result file
-	if (isSCABehaviourActivated) {
-		scaFile = fileNameResult;
-	}
-	else {
-		remove(fileNameResult);
-	}
-
-	CDialog::OnOK();
-}
-
-void CDlgHybridEncryptionDemo::OnPaint() {
-	CPaintDC dc(this);
-	CBitmap bmp, *poldbmp;
-	CDC memdc;
-	// Load the bitmap resource
-	bmp.LoadBitmap( IDB_HYBRID_BACK );
-	// Create a compatible memory DC
-	memdc.CreateCompatibleDC(&dc);
-	// Select the bitmap into the DC
-	poldbmp = memdc.SelectObject(&bmp);
-	// Copy (BitBlt) bitmap from memory DC to screen DC
-	dc.BitBlt(0, 0, 838, 730, &memdc, 0, 0, SRCCOPY);
-	memdc.SelectObject(poldbmp);
 }
 
 void CDlgHybridEncryptionDemo::activateSCABehaviour() {

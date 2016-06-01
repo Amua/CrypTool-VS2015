@@ -47,11 +47,11 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
 protected:
 	afx_msg void OnButtonGetDocument();
-	afx_msg void OnButtonEncKeyAsym();
-	afx_msg void OnButtonEncDocumentSym();
 	afx_msg void OnButtonGenSymKey();
-	afx_msg void OnButtonGetAsymKey();
 	afx_msg void OnButtonShowSymKey();
+	afx_msg void OnButtonEncDocumentSym();
+	afx_msg void OnButtonGetAsymKey();
+	afx_msg void OnButtonEncKeyAsym();
 	afx_msg void OnButtonShowAsymKey();
 	afx_msg void OnButtonShowDocument();
 	afx_msg void OnButtonShowEncDocument();
@@ -70,31 +70,23 @@ private:
 	long m_selectedCertificateSerial;
 private:
 	bool DateiOeffnen(const CString &DateiPfadName);
+	void EnDisButtons();
+	void ShowButtons();
+	void SetCondition(int button, bool state);
+	void ResetDependent(int button);
 private:
+	enum ButtonStatus { inactive, active_not_pressed, active_pressed };
 	int m_ButtonStatus[11];
 	bool m_ActionPerformed[11];
 	bool m_setMatrix[11][11];
-
-public:
-
-	SCACertificateInformation getCertInfo();
-	CString getSCAFile();
-	void activateSCABehaviour();
-	
+private:
+	CFont m_font;
 	int m_iDocSize;
 	bool m_bAuswahlDat;
-	
-	CFont m_font;
-	
-	void ShowButtons();
-	void EnDisButtons();
-	void SetCondition(int button,bool state);
-	void ResetDependent(int button);
-	
+	CWnd *m_hFocus;
 	CStatic	m_ctrlBG;
 	CString	m_strEdit;
 	CString	m_strTitle;
-
 	CBitmapButton m_ctrlBmpRaute1;
 	CBitmapButton m_ctrlBmpRaute2;
 	CBitmapButton m_ctrlBmpRaute3;
@@ -107,17 +99,19 @@ public:
 	CBitmapButton m_ctrlBmpRechteck2;
 	CBitmapButton m_ctrlBmpOval1;
 	CBitmapButton m_ctrlBmpOval2;
+public:
 
-	CWnd *m_hFocus;
 
-private:
 
+
+
+	// TODO/FIXME/DITCHME
+	SCACertificateInformation getCertInfo();
+	CString getSCAFile();
+	void activateSCABehaviour();
 	SCACertificateInformation scaCertInfo;
-	
 	CString scaFile;
 	bool isSCABehaviourActivated;
-	
-	enum ButtonStatus {inactive /* = 0*/, active_not_pressed /* = 1*/, active_pressed /* = 2*/};
 	
 	DECLARE_MESSAGE_MAP()
 };
