@@ -48,28 +48,28 @@ protected:
 	afx_msg void OnButtonShowEncSymKey();
 	afx_msg void OnButtonDatenausgabe();
 	afx_msg void OnPaint();
-private:
+protected:
 	CString m_documentFileName;
 	CString m_documentTitle;
-private:
+protected:
 	CrypTool::ByteString m_byteStringPlainText;
 	CrypTool::ByteString m_byteStringCipherText;
 	CrypTool::ByteString m_byteStringSymmetricKey;
 	CrypTool::ByteString m_byteStringSymmetricKeyEncrypted;
-private:
+protected:
 	long m_selectedCertificateSerial;
-private:
+protected:
 	bool DateiOeffnen(const CString &DateiPfadName);
 	void EnDisButtons();
 	void ShowButtons();
 	void SetCondition(int button, bool state);
 	void ResetDependent(int button);
-private:
+protected:
 	enum ButtonStatus { inactive, active_not_pressed, active_pressed };
 	int m_ButtonStatus[11];
 	bool m_ActionPerformed[11];
 	bool m_setMatrix[11][11];
-private:
+protected:
 	CFont m_font;
 	int m_iDocSize;
 	bool m_bAuswahlDat;

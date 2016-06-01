@@ -2925,6 +2925,7 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClCompile Include="DlgHMAC.cpp" />
     <ClCompile Include="DlgHybridDecryptionDemo.cpp" />
     <ClCompile Include="DlgHybridEncryptionDemo.cpp" />
+    <ClCompile Include="DlgHybridEncryptionDemoSCA.cpp" />
     <ClCompile Include="DlgICGRandomParamater.cpp" />
     <ClCompile Include="DlgKey.cpp" />
     <ClCompile Include="DlgKeyAsym.cpp" />
@@ -3224,6 +3225,7 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClInclude Include="DlgHMAC.h" />
     <ClInclude Include="DlgHybridDecryptionDemo.h" />
     <ClInclude Include="DlgHybridEncryptionDemo.h" />
+    <ClInclude Include="DlgHybridEncryptionDemoSCA.h" />
     <ClInclude Include="DlgICGRandomParamater.h" />
     <ClInclude Include="DlgKey.h" />
     <ClInclude Include="DlgKeyAsym.h" />
