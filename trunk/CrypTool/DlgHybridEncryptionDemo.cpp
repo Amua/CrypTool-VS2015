@@ -43,40 +43,18 @@ CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(const CString &_documentFileN
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle),
 	m_selectedCertificateSerial(0) {
-
-	this->scaCertInfo.firstname = "";
-	this->scaCertInfo.lastname = "";
-	this->scaCertInfo.keytype = "";
-	this->scaCertInfo.time = "";
-	this->scaCertInfo.keyid = "";
-	this->isSCABehaviourActivated = false;
-	this->scaFile = "";
-
-	//{{AFX_DATA_INIT(CDlgHybridEncryptionDemo)
-	m_strEdit = _T("");
-	m_strTitle = _T("");
-	//}}AFX_DATA_INIT
-
-	int i;
-	for (i = 0; i<11; i++)
-	{
+	for (int i = 0; i<11; i++) {
 		m_ButtonStatus[i] = inactive;
 		m_ActionPerformed[i] = false;
 	}
-
-	m_ButtonStatus[0] = active_not_pressed;		// diese drei Buttons können am Anfang schon gedrückt werden, daher
-	m_ButtonStatus[1] = active_not_pressed;		// werden sie auf active_not_pressed gesetzt
+	m_ButtonStatus[0] = active_not_pressed;
+	m_ButtonStatus[1] = active_not_pressed;
 	m_ButtonStatus[3] = active_not_pressed;
-
-	//Array mit den Voraussetzungen
-
-	for (i = 0; i<NO_BUTTONS; i++)
+	for (int i = 0; i < NO_BUTTONS; i++) {
 		g_Status[i] = m_ButtonStatus[i];
-
-	for (i = 0; i<11; i++)
-	{
-		for (int j = 0; j<11; j++)
-		{
+	}
+	for (int i = 0; i<11; i++) {
+		for (int j = 0; j<11; j++) {
 			m_setMatrix[i][j] = false;
 		}
 	}
@@ -94,9 +72,7 @@ CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(const CString &_documentFileN
 	m_setMatrix[10][3] = true;
 	m_setMatrix[10][5] = true;
 	m_setMatrix[10][6] = true;
-
 	m_bAuswahlDat = true;
-
 	// initialize symmetric key to 16 bytes (128 bits)
 	m_byteStringSymmetricKey.reset(16);
 }
@@ -107,7 +83,6 @@ CDlgHybridEncryptionDemo::~CDlgHybridEncryptionDemo() {
 
 BOOL CDlgHybridEncryptionDemo::OnInitDialog() {
 	CDialog::OnInitDialog();
-
 	m_ctrlBmpSechseck1.AutoLoad(IDC_BUTTON1_TXT_EINFUEGEN, this);
 	m_ctrlBmpSechseck2.AutoLoad(IDC_BUTTON_GEN_SYM_KEY, this);
 	m_ctrlBmpSechseck3.AutoLoad(IDC_BUTTON_GET_ASYM_KEY, this);
@@ -120,48 +95,24 @@ BOOL CDlgHybridEncryptionDemo::OnInitDialog() {
 	m_ctrlBmpRechteck2.AutoLoad(IDC_BUTTON_ENC_KEY_ASYM, this);
 	m_ctrlBmpOval1.AutoLoad(IDCANCEL, this);
 	m_ctrlBmpOval2.AutoLoad(IDC_BUTTON_DATENAUSGABE, this);
-
-	//Laden der Bitmaps und als Steuerelemte anzeigen
-
-	if (!m_bAuswahlDat)
-	{
+	if (!m_bAuswahlDat) {
 		m_ActionPerformed[0] = true;
 	}
-	//wenn m_bAuswahlDat auf false gesetzt ist, wurde Text aus dem CrypTool-Editor in das Editfeld des 
-	//HybridverfahrenDialogs geladen, d.h. es muss keine Datei mehr ausgewählt werden.
-	//Der Button um den Text anzuzeigen wird aktiviert indem m_ActionPerformed[0]auf true gesetzt wird
 	EnDisButtons();
-	//Aktualisieren der gegebenen Voraussetzungen
 	ShowButtons();
-	//Aktivieren /Deaktivieren der Buttons
-
-
-	// Schriftart im Textfeld "aktuelle Datei", Felder in denen die Hashwerte und die Differenz angezeigt 
-	// werden, "Courier" definieren
 	LOGFONT lf = { 14,0,0,0,FW_NORMAL,false,false,false,DEFAULT_CHARSET,OUT_CHARACTER_PRECIS,CLIP_CHARACTER_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,"Courier" };
-	//Struktur lf wird deklariert und initialisiert
 	m_font.CreateFontIndirect(&lf);
-	//Objekt der Klasse CFont (m_font) wird gesetzt initialisiert
 	CWnd* pStatic = GetDlgItem(IDC_EDIT_TXT);
 	pStatic->SetFont(&m_font, false);
-
-
-	// Falls ein Dokument vorliegt, wird es initial im Demo-Dialog angezeigt
-	if (!m_documentFileName.IsEmpty())
-	{
-		// Den Fokus _nur_ dann auf den Button "Dokument" legen (und deshalb FALSE zurückgeben),
-		// wenn auch wirklich ein Dokument vorliegt; für diesen Fall liefert DateiOeffnen(...) TRUE zurück!
-		if (DateiOeffnen(m_documentFileName))
-		{
+	if (!m_documentFileName.IsEmpty()) {
+		if (DateiOeffnen(m_documentFileName)) {
 			EnDisButtons();
 			ShowButtons();
 			OnButtonShowDocument();
 			m_ctrlBmpRaute1.SetFocus();
 			return FALSE;
 		}
-
 	}
-
 	return TRUE;
 }
 
@@ -172,23 +123,16 @@ void CDlgHybridEncryptionDemo::DoDataExchange(CDataExchange* pDX) {
 }
 
 void CDlgHybridEncryptionDemo::OnButtonGetDocument() {
-	m_ButtonStatus[0]=active_pressed;
-	// Attributwerte sichern
+	m_ButtonStatus[0] = active_pressed;
 	CString s_strBuffTitle, s_strEdit, s_strTitle;
 	s_strBuffTitle = m_documentTitle;
 	s_strEdit = m_strEdit;
 	s_strTitle = m_strTitle;
-
 	m_documentTitle = "";
 	m_strEdit = "";
 	m_strTitle = "";
-
-	CFileDialog m_dlgFile( TRUE ); // TRUE = Datei öffnen,FALSE = Datei speichern 
-	if( m_dlgFile.DoModal() == IDOK ) 
-	{
-	//wenn auf den OK Button geklickt wird, wird der Pfadname und der Titel der gewählten Datei in 
-	//lokale Variablen geschrieben
-	//ausserdem wird die Dateigröße ermittelt und ebenfalls in eine Variable geschrieben
+	CFileDialog m_dlgFile(TRUE);
+	if( m_dlgFile.DoModal() == IDOK ) {
 		CString loc_filename = "";
 		UpdateData(false);
 		loc_filename = m_dlgFile.GetPathName();
@@ -197,17 +141,11 @@ void CDlgHybridEncryptionDemo::OnButtonGetDocument() {
 		m_documentFileName = loc_filename;
 		ShowButtons();
  	} 
-	else
-	//wenn auf Abbrechen geklickt wurde, wird abgebrochen
-	{
-		// Attribute zurücksetzen (siehe oben)
+	else {
 		m_documentTitle = s_strBuffTitle;
 		m_strEdit = s_strEdit;
 		m_strTitle = s_strTitle;
-
 		UpdateData(false);
-
-		return;
 	}
 }
 
@@ -233,63 +171,6 @@ void CDlgHybridEncryptionDemo::OnButtonShowSymKey() {
 }
 
 void CDlgHybridEncryptionDemo::OnButtonEncDocumentSym() {
-#ifndef _UNSTABLE
-	// *** SCA-SPECIFIC BEGIN ***
-	// für den Seitenkanalangriff: testen, ob die ausgewählte Datei
-	// das Schlüsselwort enthält, anhand dessen Bob erkennt, ob die Nachricht
-	// wirklich von Alice kommt; wenn nicht, dann dem Benutzer anbieten,
-	// das Schlüsselwort an die Datei anzufügen
-	if(this->isSCABehaviourActivated) {
-		CString keyword;
-		// retrieve keyword from registry (if unsuccessful, go with "Alice" by default)
-		if(CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, "SideChannelAttack") == ERROR_SUCCESS) {
-			unsigned long u_length = 1024;
-			char c_SCA_keyWord[1025];
-			if(CT_READ_REGISTRY(c_SCA_keyWord, "Keyword", u_length))
-				keyword = c_SCA_keyWord;
-			else
-				keyword.LoadStringA(IDS_SCA_KEYWORD);
-			CT_CLOSE_REGISTRY();
-		}
-		bool keywordFound = false;
-		// flomar, 07/15/2010
-		// the latest bug fix: we read in BINARY mode instead of TEXT mode, and we're using 
-		// "memcmp" instead of a normal string find; this way we can deal with binary zeros
-		CFile infile;
-		infile.Open(m_strPathSelDoc, CFile::modeRead | CFile::typeBinary);
-		unsigned long lengthBuffer = infile.GetLength();
-		unsigned int lengthKeyword = keyword.GetLength();
-		char *bufferFile = new char[lengthBuffer + 1];
-		char *bufferKeyword = keyword.GetBuffer();
-		memset(bufferFile, 0, lengthBuffer + 1);
-		infile.Read(bufferFile, lengthBuffer);
-		for(unsigned int i=0; i<=(lengthBuffer - lengthKeyword); i++) {
-			if(memcmp(bufferFile + i, bufferKeyword, lengthKeyword) == 0) {
-				keywordFound = true;
-			}
-		}
-		infile.Close();
-		delete bufferFile;
-
-		if(!keywordFound)
-		{
-			// Schlüsselwort NICHT enthalten! Benutzer informieren und fragen...
-			LoadString(AfxGetInstanceHandle(),IDS_SCA_KEYWORDPROBLEM,pc_str,STR_LAENGE_STRING_TABLE);
-			char temp[STR_LAENGE_STRING_TABLE+1];
-			memset(temp, 0, STR_LAENGE_STRING_TABLE+1);
-			sprintf(temp, pc_str, keyword);
-
-			if(AfxMessageBox(temp, MB_YESNO) == IDYES)
-			{
-				// Schlüsselwort anfügen
-				std::ofstream outfile(this->m_strPathSelDoc, ios::app);
-				outfile.write(keyword, keyword.GetLength());
-				outfile.close();
-			}
-		}
-	}
-	// *** SCA-SPECIFIC END ***
-#endif
 	// check user interface
 	if (inactive == m_ButtonStatus[5]) {
 		Message(IDS_STRING_HYB_ENC_DOC_SYM, MB_ICONEXCLAMATION);
@@ -428,8 +309,8 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 
 	SHOW_HOUR_GLASS
 
-		// write receiver
-		stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
+	// write receiver
+	stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
 	byteStringResult += stringTemp;
 	stringTemp.Format("%d", m_selectedCertificateSerial);
 	byteStringResult += stringTemp;
@@ -469,8 +350,8 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 
 	HIDE_HOUR_GLASS
 
-		// open result file in new document
-		CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
+	// open result file in new document
+	CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
 	if (document) {
 		// create a meaningful title
 		CString receiverName;
@@ -480,16 +361,7 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 			document->SetTitle(title);
 		}
 	}
-
-	// if the SCA behavior is active, store the result file name in scaFile 
-	// and don't remove the result file
-	if (isSCABehaviourActivated) {
-		scaFile = fileNameResult;
-	}
-	else {
-		remove(fileNameResult);
-	}
-
+	remove(fileNameResult);
 	CDialog::OnOK();
 }
 
@@ -527,10 +399,10 @@ void CDlgHybridEncryptionDemo::ResetDependent(int button) {
 
 bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
 	SHOW_HOUR_GLASS
-		// try to read plain text from the specified file
-		if (!m_byteStringPlainText.readFromFile(DateiPfadName)) {
-			return false;
-		}
+	// try to read plain text from the specified file
+	if (!m_byteStringPlainText.readFromFile(DateiPfadName)) {
+		return false;
+	}
 	// assign the document size, and return false if empty
 	m_iDocSize = m_byteStringPlainText.getByteLength();
 	if (m_iDocSize == 0) {
@@ -539,7 +411,7 @@ bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
 	m_bAuswahlDat = false;
 	m_documentFileName = DateiPfadName;
 	HIDE_HOUR_GLASS
-		SetCondition(0, true);
+	SetCondition(0, true);
 	return true;
 }
 
@@ -714,18 +586,6 @@ void CDlgHybridEncryptionDemo::ShowButtons() {
 		g_Status[i] = m_ButtonStatus[i];
 	}
 	m_hFocus->SetFocus();
-}
-
-void CDlgHybridEncryptionDemo::activateSCABehaviour() {
-	this->isSCABehaviourActivated = true;
-}
-
-CString CDlgHybridEncryptionDemo::getSCAFile() {
-	return this->scaFile;
-}
-
-SCACertificateInformation CDlgHybridEncryptionDemo::getCertInfo() {
-	return this->scaCertInfo;
 }
 
 BEGIN_MESSAGE_MAP(CDlgHybridEncryptionDemo, CDialog)

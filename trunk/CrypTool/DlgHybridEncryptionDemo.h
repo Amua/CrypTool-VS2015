@@ -99,19 +99,6 @@ private:
 	CBitmapButton m_ctrlBmpRechteck2;
 	CBitmapButton m_ctrlBmpOval1;
 	CBitmapButton m_ctrlBmpOval2;
-public:
-
-
-
-
-
-	// TODO/FIXME/DITCHME
-	SCACertificateInformation getCertInfo();
-	CString getSCAFile();
-	void activateSCABehaviour();
-	SCACertificateInformation scaCertInfo;
-	CString scaFile;
-	bool isSCABehaviourActivated;
 	
 	DECLARE_MESSAGE_MAP()
 };
