@@ -84,18 +84,10 @@ class CDlgSideChannelAttackVisualizationHE : public CDialog
 	HybridEncryptedFileInfo hi;
 	bool isHybridEncryptedFileDeclared;
 	CString certFilename;
-	SCACertificateInformation certInfo;
-	// Pfad zur Input-Datei, d.h. Pfad zu der Datei, die beim Öffnen des
-	// Dialogs aktiv war (ContentName)
 	CString initFile;
-	//
 	CString initFileTitle;
-	// Pfad zur Output-Datei, d.h. Pfad zu der HYBRIDVERSCHLÜSSELTEN DATEI, die
-	// beim Ausführen des Dialogs erzeugt worden ist. Für spätere Verwendung nötig.
 	CString targetFile;
-	// Initialisierungsmodus
 	int initMode;
-	// War ein Fenster aktiv, als der Dialog geöffnet wurde?
 	bool isFileDeclared;
 
 	// SCA

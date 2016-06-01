@@ -105,15 +105,13 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			{
 				// Benutzer möchte eine Datei wählen und hybridverschlüsseln
 				CDlgHybridEncryptionDemo dlg;
-				dlg.activateSCABehaviour();
 				if(dlg.DoModal() == IDOK)
 				{
-					scaCertInfo = dlg.getCertInfo();
+#ifndef _UNSTABLE
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					finalHybEncFile = dlg.getSCAFile();
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
-#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
 #endif
 					CDialog::OnOK();
@@ -132,6 +130,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				finalHybEncFile += CString(Pfad);
 				finalHybEncFile += CString(pc_str);
 				// Zertifikatsinformationen ermitteln (Name, Vorname, Schlüsseltyp...)
+#ifndef _UNSTABLE
 				if(!extractCertInfo(finalHybEncFile, scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid))
 				{
 					char buffer[STR_LAENGE_STRING_TABLE];
@@ -140,6 +139,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					MessageBox(pc_str, "CrypTool", MB_OK);
 					return;
 				}
+#endif
 				CDialog::OnOK();
 				return;
 			}
@@ -160,17 +160,16 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			if(dlg.radioChoice1)
 			{
 				CDlgHybridEncryptionDemo dlg(initFile, initFileTitle);
-				dlg.activateSCABehaviour();
 				if(dlg.DoModal() == IDOK)
 				{
+#ifndef _UNSTABLE
 					scaCertInfo = dlg.getCertInfo();
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
-#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
-#endif
 					finalHybEncFile = dlg.getSCAFile();
+#endif
 					CDialog::OnOK();
 				}
 				return;
@@ -180,17 +179,16 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			{
 				// Benutzer möchte andere Datei wählen und hybridverschlüsseln
 				CDlgHybridEncryptionDemo dlg;
-				dlg.activateSCABehaviour();
 				if(dlg.DoModal() == IDOK)
 				{
+#ifndef _UNSTABLE
 					scaCertInfo = dlg.getCertInfo();
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
-#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
-#endif
 					finalHybEncFile = dlg.getSCAFile();
+#endif
 					CDialog::OnOK();
 				}
 				return;
@@ -198,6 +196,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			// Fall (c)
 			if(dlg.radioChoice3)
 			{
+#ifndef _UNSTABLE
 				// ACHTUNG!!! Hier möchte der Benutzer die Hybridverschlüsselung NICHT SELBST durchführen,
 				useExistingHybEncFile = true;
 				// Default-PSE-Datei verwenden
@@ -215,6 +214,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					MessageBox(pc_str, "CrypTool", MB_OK);
 					return;
 				}
+#endif
 				CDialog::OnOK();
 				return;
 			}
@@ -234,6 +234,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			// Fall (a)
 			if(dlg.radioChoice1)
 			{
+#ifndef _UNSTABLE
 				// Benutzer möchte eine bereits existente und hybridverschlüsselte
 				// Datei, die geöffnet ist, als Basis für Angriff verwenden
 				useExistingHybEncFile = true;
@@ -252,6 +253,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_CLIENT_SESSIONKEYUNKNOWN, pc_str, STR_LAENGE_STRING_TABLE);
 				originalSessionKey = pc_str;
 				finalHybEncFile = initFile;
+#endif
 				CDialog::OnOK();
 				return;
 			}
@@ -260,18 +262,16 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			{
 				// Benutzer möchte andere Datei wählen und hybridverschlüsseln
 				CDlgHybridEncryptionDemo dlg;
-				dlg.activateSCABehaviour();
 				if(dlg.DoModal() == IDOK)
 				{
+#ifndef _UNSTABLE
 					scaCertInfo = dlg.getCertInfo();
-
 					// Namen der PSE-Datei ermitteln
 					certFilename = generateCertFilename(scaCertInfo.firstname, scaCertInfo.lastname, scaCertInfo.keytype, scaCertInfo.time, scaCertInfo.keyid);
 					// ORIGINAL-Session-Key ermitteln (Alice muss Session Key kennen)
-#ifndef _UNSTABLE
 					originalSessionKey = dlg.m_strSymKey;
-#endif
 					finalHybEncFile = dlg.getSCAFile();
+#endif
 					CDialog::OnOK();
 				}
 				return;
@@ -279,6 +279,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 			// Fall (c)
 			if(dlg.radioChoice3)
 			{
+#ifndef _UNSTABLE
 				// ACHTUNG!!! Hier möchte der Benutzer die Hybridverschlüsselung NICHT SELBST durchführen,
 				useExistingHybEncFile = true;
 				// Default-PSE-Datei verwenden
@@ -296,6 +297,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 					MessageBox(pc_str, "CrypTool", MB_OK);
 					return;
 				}
+#endif
 				CDialog::OnOK();
 				return;				
 			}
@@ -324,11 +326,6 @@ void CDlgSideChannelAttackVisualizationHEPreparations::setInitFileTitle(CString 
 CString CDlgSideChannelAttackVisualizationHEPreparations::getFinalHybEncFile()
 {
 	return finalHybEncFile;
-}
-
-SCACertificateInformation CDlgSideChannelAttackVisualizationHEPreparations::getCertInfo()
-{
-	return scaCertInfo;
 }
 
 CString CDlgSideChannelAttackVisualizationHEPreparations::getOriginalSessionKey()

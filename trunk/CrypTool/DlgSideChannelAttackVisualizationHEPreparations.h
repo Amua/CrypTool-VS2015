@@ -44,7 +44,6 @@ class CDlgSideChannelAttackVisualizationHEPreparations : public CDialog
 public:
 	bool isExistingHybEncFileUsed() { return useExistingHybEncFile; };
 	CString getOriginalSessionKey();
-	SCACertificateInformation getCertInfo();
 	CString getFinalHybEncFile();
 	void setInitFile(CString);
 	void setInitFileTitle(CString);
@@ -76,7 +75,6 @@ protected:
 private:
 	CString originalSessionKey;
 	CString certFilename;
-	SCACertificateInformation scaCertInfo;
 	CString finalHybEncFile;
 	CString initFile;
 	CString initFileTitle;

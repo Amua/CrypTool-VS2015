@@ -438,6 +438,7 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations()
 		dlg.setInitFileTitle(initFileTitle);
 		if(dlg.DoModal() == IDOK)
 		{
+#ifndef _UNSTABLE
 			// Steuerelemente für Angriff "ausblenden"
 			cancelAttackCycle();			
 			// Pfeil zwischen Alice und Bob (AB) auf "normal" stellen
@@ -507,7 +508,7 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations()
 
 			// Anzeige aktualisieren (NUR bei Druck auf Ok)
 			updateGUI(1);
-
+#endif
 		 }
 		
 	}
