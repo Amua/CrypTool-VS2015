@@ -48,13 +48,103 @@ CDlgHybridDecryptionDemo::~CDlgHybridDecryptionDemo() {
 
 }
 
+bool CDlgHybridDecryptionDemo::isDocumentHybridEncrypted(const CString &_documentFileName) {
+	// declare result variables
+	long tempSerial;
+	CrypTool::ByteString tempByteStringSessionKeyEncrypted;
+	CrypTool::ByteString tempByteStringCipherText;
+	// if parsing the document succeeds, we have a valid document
+	return CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(_documentFileName, tempSerial, tempByteStringSessionKeyEncrypted, tempByteStringCipherText);
+}
+
+bool CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(const CString &_documentFileName, long &_serial, CrypTool::ByteString &_sessionKeyEncrypted, CrypTool::ByteString &_cipherText) {
+	// try to load document into byte string
+	CrypTool::ByteString byteStringDocument;
+	if (!byteStringDocument.readFromFile(_documentFileName)) return false;
+
+	// find receiver pattern
+	CString stringReceiver;
+	stringReceiver.LoadString(IDS_STRING_HYBRID_RECIEVER);
+	CrypTool::ByteString byteStringReceiver;
+	byteStringReceiver = stringReceiver;
+	size_t startReceiver;
+	size_t endReceiver;
+	if (!byteStringDocument.findPattern(byteStringReceiver, startReceiver, endReceiver))
+		return false;
+	// find asymmetric algorithm pattern
+	CString stringAsymmetricAlgorithm;
+	stringAsymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+	CrypTool::ByteString byteStringAsymmetricAlgorithm;
+	byteStringAsymmetricAlgorithm = stringAsymmetricAlgorithm;
+	size_t startAsymmetricAlgorithm;
+	size_t endAsymmetricAlgorithm;
+	if (!byteStringDocument.findPattern(byteStringAsymmetricAlgorithm, startAsymmetricAlgorithm, endAsymmetricAlgorithm))
+		return false;
+	// find symmetric algorithm pattern
+	CString stringSymmetricAlgorithm;
+	stringSymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
+	CrypTool::ByteString byteStringSymmetricAlgorithm;
+	byteStringSymmetricAlgorithm = stringSymmetricAlgorithm;
+	size_t startSymmetricAlgorithm;
+	size_t endSymmetricAlgorithm;
+	if (!byteStringDocument.findPattern(byteStringSymmetricAlgorithm, startSymmetricAlgorithm, endSymmetricAlgorithm))
+		return false;
+	// find length of encrypted session key pattern
+	CString stringEncryptedSessionKeyLength;
+	stringEncryptedSessionKeyLength.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
+	CrypTool::ByteString byteStringEncryptedSessionKeyLength;
+	byteStringEncryptedSessionKeyLength = stringEncryptedSessionKeyLength;
+	size_t startEncryptedSessionKeyLength;
+	size_t endEncryptedSessionKeyLength;
+	if (!byteStringDocument.findPattern(byteStringEncryptedSessionKeyLength, startEncryptedSessionKeyLength, endEncryptedSessionKeyLength))
+		return false;
+	// find encrypted session key
+	CString stringEncryptedSessionKey;
+	stringEncryptedSessionKey.LoadString(IDS_STRING_HYBRID_ENC_KEY);
+	CrypTool::ByteString byteStringEncryptedSessionKey;
+	byteStringEncryptedSessionKey = stringEncryptedSessionKey;
+	size_t startEncryptedSessionKey;
+	size_t endEncryptedSessionKey;
+	if (!byteStringDocument.findPattern(byteStringEncryptedSessionKey, startEncryptedSessionKey, endEncryptedSessionKey))
+		return false;
+	// find cipher text pattern
+	CString stringCipherText;
+	stringCipherText.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
+	CrypTool::ByteString byteStringCipherText;
+	byteStringCipherText = stringCipherText;
+	size_t startCipherText;
+	size_t endCipherText;
+	if (!byteStringDocument.findPattern(byteStringCipherText, startCipherText, endCipherText))
+		return false;
+
+	// if we reach this point, we do have a valid hybrid-encrypted document; however, 
+	// we still need to extract some information: the certificate serial number of the 
+	// receiver, the encrypted session key, and the actual cipher text of the document; 
+	// in order to extract this information, we rely on the previously extracted start 
+	// and end indices (see function calls above)
+
+	// extract certificate serial number
+	CrypTool::ByteString byteStringSerial;
+	if (!byteStringDocument.extractPattern(endReceiver, startAsymmetricAlgorithm, byteStringSerial))
+		return false;
+	_serial = atol(byteStringSerial.toString());
+	// extract encrypted session key
+	if (!byteStringDocument.extractPattern(endEncryptedSessionKey, startCipherText, _sessionKeyEncrypted))
+		return false;
+	// extract cipher text
+	if (!byteStringDocument.extractPattern(endCipherText, byteStringDocument.getByteLength(), _cipherText))
+		return false;
+
+	return true;
+}
+
 BOOL CDlgHybridDecryptionDemo::OnInitDialog() {
 	CDialog::OnInitDialog();
 	// the first thing we want to do is parse the document specified at construction 
 	// for hybrid-encrypted data; if the following function returns false (which is 
 	// indicating the data could not be extracted), we dump and error and close the 
 	// dialog on the spot
-	if (!extractHybridEncryptionDataFromDocument()) {
+	if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(m_documentFileName, m_selectedCertificateSerial, m_byteStringSymmetricKeyEncrypted, m_byteStringCipherText)) {
 		Message(IDS_STRING_HYBRID_DEC_MSG9, MB_ICONSTOP);
 		EndDialog(IDOK);
 	}
@@ -132,87 +222,6 @@ void CDlgHybridDecryptionDemo::OnButtonShowCertificate() {
 	dlgCertificateStoreShowCertificateParametersAll.setPublicParameters(publicParameters);
 	dlgCertificateStoreShowCertificateParametersAll.setPrivateParameters(privateParameters);
 	dlgCertificateStoreShowCertificateParametersAll.DoModal();
-}
-
-bool CDlgHybridDecryptionDemo::extractHybridEncryptionDataFromDocument() {
-	// try to load document into byte string
-	CrypTool::ByteString byteStringDocument;
-	if (!byteStringDocument.readFromFile(m_documentFileName)) return false;
-
-	// find receiver pattern
-	CString stringReceiver;
-	stringReceiver.LoadString(IDS_STRING_HYBRID_RECIEVER);
-	CrypTool::ByteString byteStringReceiver;
-	byteStringReceiver = stringReceiver;
-	size_t startReceiver;
-	size_t endReceiver;
-	if (!byteStringDocument.findPattern(byteStringReceiver, startReceiver, endReceiver))
-		return false;
-	// find asymmetric algorithm pattern
-	CString stringAsymmetricAlgorithm;
-	stringAsymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
-	CrypTool::ByteString byteStringAsymmetricAlgorithm;
-	byteStringAsymmetricAlgorithm = stringAsymmetricAlgorithm;
-	size_t startAsymmetricAlgorithm;
-	size_t endAsymmetricAlgorithm;
-	if (!byteStringDocument.findPattern(byteStringAsymmetricAlgorithm, startAsymmetricAlgorithm, endAsymmetricAlgorithm))
-		return false;
-	// find symmetric algorithm pattern
-	CString stringSymmetricAlgorithm;
-	stringSymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
-	CrypTool::ByteString byteStringSymmetricAlgorithm;
-	byteStringSymmetricAlgorithm = stringSymmetricAlgorithm;
-	size_t startSymmetricAlgorithm;
-	size_t endSymmetricAlgorithm;
-	if (!byteStringDocument.findPattern(byteStringSymmetricAlgorithm, startSymmetricAlgorithm, endSymmetricAlgorithm))
-		return false;
-	// find length of encrypted session key pattern
-	CString stringEncryptedSessionKeyLength;
-	stringEncryptedSessionKeyLength.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
-	CrypTool::ByteString byteStringEncryptedSessionKeyLength;
-	byteStringEncryptedSessionKeyLength = stringEncryptedSessionKeyLength;
-	size_t startEncryptedSessionKeyLength;
-	size_t endEncryptedSessionKeyLength;
-	if (!byteStringDocument.findPattern(byteStringEncryptedSessionKeyLength, startEncryptedSessionKeyLength, endEncryptedSessionKeyLength))
-		return false;
-	// find encrypted session key
-	CString stringEncryptedSessionKey;
-	stringEncryptedSessionKey.LoadString(IDS_STRING_HYBRID_ENC_KEY);
-	CrypTool::ByteString byteStringEncryptedSessionKey;
-	byteStringEncryptedSessionKey = stringEncryptedSessionKey;
-	size_t startEncryptedSessionKey;
-	size_t endEncryptedSessionKey;
-	if (!byteStringDocument.findPattern(byteStringEncryptedSessionKey, startEncryptedSessionKey, endEncryptedSessionKey))
-		return false;
-	// find cipher text pattern
-	CString stringCipherText;
-	stringCipherText.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
-	CrypTool::ByteString byteStringCipherText;
-	byteStringCipherText = stringCipherText;
-	size_t startCipherText;
-	size_t endCipherText;
-	if (!byteStringDocument.findPattern(byteStringCipherText, startCipherText, endCipherText))
-		return false;
-
-	// if we reach this point, we do have a valid hybrid-encrypted document; however, 
-	// we still need to extract some information: the certificate serial number of the 
-	// receiver, the encrypted session key, and the actual cipher text of the document; 
-	// in order to extract this information, we rely on the previously extracted start 
-	// and end indices (see function calls above)
-
-	// extract certificate serial number
-	CrypTool::ByteString byteStringSerial;
-	if (!byteStringDocument.extractPattern(endReceiver, startAsymmetricAlgorithm, byteStringSerial))
-		return false;
-	m_selectedCertificateSerial = atol(byteStringSerial.toString());
-	// extract encrypted session key
-	if (!byteStringDocument.extractPattern(endEncryptedSessionKey, startCipherText, m_byteStringSymmetricKeyEncrypted))
-		return false;
-	// extract cipher text
-	if (!byteStringDocument.extractPattern(endCipherText, byteStringDocument.getByteLength(), m_byteStringCipherText))
-		return false;
-
-	return true;
 }
 
 int CDlgHybridDecryptionDemo::UpdateDataDisplay() {

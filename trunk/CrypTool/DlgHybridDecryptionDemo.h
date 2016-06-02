@@ -30,6 +30,9 @@ class CDlgHybridDecryptionDemo : public CDialog {
 public:
 	CDlgHybridDecryptionDemo(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent = NULL);
 	virtual ~CDlgHybridDecryptionDemo();
+public:
+	static bool isDocumentHybridEncrypted(const CString &_documentFileName);
+	static bool parseHybridEncryptedDocument(const CString &_documentFileName, long &_serial, CrypTool::ByteString &_sessionKeyEncrypted, CrypTool::ByteString &_cipherText);
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);
@@ -38,8 +41,6 @@ protected:
 	afx_msg void OnCancel();
 	afx_msg void OnButtonContinue();
 	afx_msg void OnButtonShowCertificate();
-private:
-	bool extractHybridEncryptionDataFromDocument();
 private:
 	CString m_documentFileName;
 	CString m_documentTitle;

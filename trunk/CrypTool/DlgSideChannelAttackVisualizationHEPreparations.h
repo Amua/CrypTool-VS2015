@@ -18,60 +18,32 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONS_H__B0302F79_94ED_424B_90BF_A85DA006AC34__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONS_H__B0302F79_94ED_424B_90BF_A85DA006AC34__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONS_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONS_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEPreparations.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEPreparations 
-
-// wegen init-Modes
 #include "DlgSideChannelAttackVisualizationHE.h"
-// wegen CertStruktur
 #include "DlgHybridEncryptionDemo.h"
 
-
-class CDlgSideChannelAttackVisualizationHEPreparations : public CDialog
-{
-	bool useExistingHybEncFile;
-
-// Konstruktion
+class CDlgSideChannelAttackVisualizationHEPreparations : public CDialog {
+	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_PREPARATIONS };
+public:
+	CDlgSideChannelAttackVisualizationHEPreparations(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEPreparations();
+public:
+	void setInitFile(CString);
+	void setInitFileTitle(CString);
+	void setInitMode(int);
 public:
 	bool isExistingHybEncFileUsed() { return useExistingHybEncFile; };
 	CString getOriginalSessionKey();
 	CString getFinalHybEncFile();
-	void setInitFile(CString);
-	void setInitFileTitle(CString);
-	void setInitMode(int);
-	CDlgSideChannelAttackVisualizationHEPreparations(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEPreparations)
-	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_PREPARATIONS };
-		// HINWEIS: Der Klassen-Assistent fügt hier Datenelemente ein
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEPreparations)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
 protected:
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEPreparations)
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
 	virtual void OnOK();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+protected:
+	bool useExistingHybEncFile;
 private:
 	CString originalSessionKey;
 	CString certFilename;
@@ -79,9 +51,8 @@ private:
 	CString initFile;
 	CString initFileTitle;
 	int initMode;
+
+	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONS_H__B0302F79_94ED_424B_90BF_A85DA006AC34__INCLUDED_
+#endif

@@ -18,76 +18,56 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEPreparationsRequest1.cpp : implementation file
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEPreparationsRequest1.h"
 
-// CDlgSideChannelAttackVisualizationHEPreparationsRequest1 dialog
+CDlgSideChannelAttackVisualizationHEPreparationsRequest1::CDlgSideChannelAttackVisualizationHEPreparationsRequest1(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHEPreparationsRequest1::IDD, pParent),
+	radioChoice1(false),
+	radioChoice2(false) {
 
-IMPLEMENT_DYNCREATE(CDlgSideChannelAttackVisualizationHEPreparationsRequest1, CDialog)
-
-CDlgSideChannelAttackVisualizationHEPreparationsRequest1::CDlgSideChannelAttackVisualizationHEPreparationsRequest1(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEPreparationsRequest1::IDD, pParent)
-	, radioChoice1(false)
-	, radioChoice2(false)
-{
 }
 
-CDlgSideChannelAttackVisualizationHEPreparationsRequest1::~CDlgSideChannelAttackVisualizationHEPreparationsRequest1()
-{
+CDlgSideChannelAttackVisualizationHEPreparationsRequest1::~CDlgSideChannelAttackVisualizationHEPreparationsRequest1() {
+
 }
 
-void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-}
-
-BOOL CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnInitDialog()
-{
+BOOL CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnInitDialog() {
+	CDialog::OnInitDialog();
 	// check first radio button initially
 	CheckRadioButton(IDC_RADIO_CHOICE_1, IDC_RADIO_CHOICE_2, IDC_RADIO_CHOICE_1);
 	// set booleans accordingly for later usage (after dialog is closed)
-	this->radioChoice1 = true;
-	this->radioChoice2 = false;
-
-	CDialog::OnInitDialog();
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	radioChoice1 = true;
+	radioChoice2 = false;
+	return TRUE;
 }
 
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEPreparationsRequest1, CDialog)
-	ON_BN_CLICKED(IDOK, OnBnClickedOk)
-	ON_BN_CLICKED(IDCANCEL, OnBnClickedCancel)
-	ON_BN_CLICKED(IDC_RADIO_CHOICE_1, OnBnClickedRadioChoice1)
-	ON_BN_CLICKED(IDC_RADIO_CHOICE_2, OnBnClickedRadioChoice2)
-END_MESSAGE_MAP()
+void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedRadioChoice1() {
+	CheckRadioButton(IDC_RADIO_CHOICE_1, IDC_RADIO_CHOICE_2, IDC_RADIO_CHOICE_1);
+	radioChoice1 = true;
+	radioChoice2 = false;
+}
 
-// CDlgSideChannelAttackVisualizationHEPreparationsRequest1 message handlers
+void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedRadioChoice2() {
+	CheckRadioButton(IDC_RADIO_CHOICE_1, IDC_RADIO_CHOICE_2, IDC_RADIO_CHOICE_2);
+	radioChoice1 = false;
+	radioChoice2 = true;
+}
 
-
-void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedOk()
-{
+void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedOK() {
 	CDialog::OnOK();
 }
 
-void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedCancel()
-{
+void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedCancel() {
 	CDialog::OnCancel();
 }
 
-void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedRadioChoice1()
-{
-	CheckRadioButton(IDC_RADIO_CHOICE_1, IDC_RADIO_CHOICE_2, IDC_RADIO_CHOICE_1);
-	this->radioChoice1 = true;
-	this->radioChoice2 = false;
-}
-
-void CDlgSideChannelAttackVisualizationHEPreparationsRequest1::OnBnClickedRadioChoice2()
-{
-	CheckRadioButton(IDC_RADIO_CHOICE_1, IDC_RADIO_CHOICE_2, IDC_RADIO_CHOICE_2);
-	this->radioChoice1 = false;
-	this->radioChoice2 = true;
-}
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEPreparationsRequest1, CDialog)
+	ON_BN_CLICKED(IDC_RADIO_CHOICE_1, OnBnClickedRadioChoice1)
+	ON_BN_CLICKED(IDC_RADIO_CHOICE_2, OnBnClickedRadioChoice2)
+	ON_BN_CLICKED(IDOK, OnBnClickedOK)
+	ON_BN_CLICKED(IDCANCEL, OnBnClickedCancel)
+END_MESSAGE_MAP()

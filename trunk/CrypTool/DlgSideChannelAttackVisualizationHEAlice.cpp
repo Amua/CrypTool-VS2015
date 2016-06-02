@@ -18,11 +18,10 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEAlice.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEAlice.h"
 
 #ifdef _DEBUG
@@ -31,64 +30,39 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEAlice 
-
-
-CDlgSideChannelAttackVisualizationHEAlice::CDlgSideChannelAttackVisualizationHEAlice(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEAlice::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEAlice)
-	m_OriginalSessionKey = _T("");
-	//}}AFX_DATA_INIT
-
-	// Beziehung zu Vaterdialog herstellen
-	this->parent = pParent;
+CDlgSideChannelAttackVisualizationHEAlice::CDlgSideChannelAttackVisualizationHEAlice(CWnd* pParent) : 
+	CDialog(CDlgSideChannelAttackVisualizationHEAlice::IDD, pParent) {
+	
 }
 
+CDlgSideChannelAttackVisualizationHEAlice::~CDlgSideChannelAttackVisualizationHEAlice() {
 
-void CDlgSideChannelAttackVisualizationHEAlice::DoDataExchange(CDataExchange* pDX)
-{
+}
+
+BOOL CDlgSideChannelAttackVisualizationHEAlice::OnInitDialog() {
+	CDialog::OnInitDialog();
+	updateDisplay();
+	return TRUE;
+}
+
+void CDlgSideChannelAttackVisualizationHEAlice::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEAlice)
 	DDX_Control(pDX, IDC_LIST_TASKS, m_ControlTasks);
 	DDX_Text(pDX, IDC_EDIT_ORIGINALSESSIONKEY, m_OriginalSessionKey);
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEAlice, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEAlice)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEAlice 
-
-BOOL CDlgSideChannelAttackVisualizationHEAlice::OnInitDialog() 
-{
-	CDialog::OnInitDialog();
-	
-	// ** TODO **
-		
-	// Ansicht aktualisieren
-	updateDisplay();
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
+void CDlgSideChannelAttackVisualizationHEAlice::OnOK() {
+	CDialog::OnOK();
 }
 
-
-// Diese Funktion aktualisiert die angezeigten Daten unter Rücksichtnahme
-// des internen Status des Objekts 
-void CDlgSideChannelAttackVisualizationHEAlice::updateDisplay()
-{
+void CDlgSideChannelAttackVisualizationHEAlice::updateDisplay() {
 	// inits
 	m_ControlTasks.ResetContent();
 	m_OriginalSessionKey = "";
 		
 	// *** AKTUELLEN ZEIGER AUF SCA-OBJEKT HOLEN ***
-	SCA_Client *alice = ((CDlgSideChannelAttackVisualizationHE*)parent)->getSCAClient();
+	ASSERT(GetParent());
+	SCA_Client *alice = ((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAClient();
 
 	// Status holen
 	SCA_ClientStatusInfo status = alice->getStatusInfo();
@@ -144,3 +118,7 @@ void CDlgSideChannelAttackVisualizationHEAlice::updateDisplay()
 
 	UpdateData(false);
 }
+
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEAlice, CDialog)
+	ON_BN_CLICKED(IDOK, OnOK)
+END_MESSAGE_MAP()

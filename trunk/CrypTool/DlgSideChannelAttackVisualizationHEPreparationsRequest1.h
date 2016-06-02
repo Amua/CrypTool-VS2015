@@ -21,33 +21,26 @@
 #ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONSREQUEST1_H_
 #define _DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONSREQUEST1_H_
 
-// CDlgSideChannelAttackVisualizationHEPreparationsRequest1 dialog
-
-class CDlgSideChannelAttackVisualizationHEPreparationsRequest1 : public CDialog
-{
-	DECLARE_DYNCREATE(CDlgSideChannelAttackVisualizationHEPreparationsRequest1)
-
-public:
-	CDlgSideChannelAttackVisualizationHEPreparationsRequest1(CWnd* pParent = NULL);   // standard constructor
-	virtual ~CDlgSideChannelAttackVisualizationHEPreparationsRequest1();
-
-
-// Dialog Data
+class CDlgSideChannelAttackVisualizationHEPreparationsRequest1 : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_PREPARATIONS_REQUEST_1 };
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual BOOL OnInitDialog();
-
-	DECLARE_MESSAGE_MAP()
-	
 public:
+	CDlgSideChannelAttackVisualizationHEPreparationsRequest1(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEPreparationsRequest1();
+public:
+	bool getRadioChoice1() const { return radioChoice1; }
+	bool getRadioChoice2() const { return radioChoice2; }
+protected:
+	virtual BOOL OnInitDialog();
+protected:
+	virtual void OnBnClickedRadioChoice1();
+	virtual void OnBnClickedRadioChoice2();
+	virtual void OnBnClickedOK();
+	virtual void OnBnClickedCancel();
+protected:
 	bool radioChoice1;
 	bool radioChoice2;
-	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedCancel();
-	afx_msg void OnBnClickedRadioChoice1();
-	afx_msg void OnBnClickedRadioChoice2();
+
+	DECLARE_MESSAGE_MAP()
 };
 
 #endif

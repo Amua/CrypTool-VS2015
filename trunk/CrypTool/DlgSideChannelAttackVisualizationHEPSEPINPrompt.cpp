@@ -18,11 +18,10 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEPSEPINPrompt.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEPSEPINPrompt.h"
 
 #ifdef _DEBUG
@@ -31,33 +30,16 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEPSEPINPrompt 
+CDlgSideChannelAttackVisualizationHEPSEPINPrompt::CDlgSideChannelAttackVisualizationHEPSEPINPrompt(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHEPSEPINPrompt::IDD, pParent) {
 
-
-CDlgSideChannelAttackVisualizationHEPSEPINPrompt::CDlgSideChannelAttackVisualizationHEPSEPINPrompt(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEPSEPINPrompt::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEPSEPINPrompt)
-	m_pin = _T("");
-	//}}AFX_DATA_INIT
 }
 
+CDlgSideChannelAttackVisualizationHEPSEPINPrompt::~CDlgSideChannelAttackVisualizationHEPSEPINPrompt() {
 
-void CDlgSideChannelAttackVisualizationHEPSEPINPrompt::DoDataExchange(CDataExchange* pDX)
-{
+}
+
+void CDlgSideChannelAttackVisualizationHEPSEPINPrompt::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEPSEPINPrompt)
 	DDX_Text(pDX, IDC_PIN, m_pin);
-	//}}AFX_DATA_MAP
 }
-
-
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEPSEPINPrompt, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEPSEPINPrompt)
-		// HINWEIS: Der Klassen-Assistent fügt hier Zuordnungsmakros für Nachrichten ein
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEPSEPINPrompt 

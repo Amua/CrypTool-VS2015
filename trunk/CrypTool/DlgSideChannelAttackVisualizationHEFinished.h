@@ -18,49 +18,18 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEFINISHED_H__45F5E227_1A7F_43E0_B576_577FCE8D2984__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEFINISHED_H__45F5E227_1A7F_43E0_B576_577FCE8D2984__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEFINISHED_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEFINISHED_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEFinished.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEFinished 
-
-class CDlgSideChannelAttackVisualizationHEFinished : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSideChannelAttackVisualizationHEFinished(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEFinished)
+class CDlgSideChannelAttackVisualizationHEFinished : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_FINISHED };
-		// HINWEIS: Der Klassen-Assistent fügt hier Datenelemente ein
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEFinished)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSideChannelAttackVisualizationHEFinished(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEFinished();
 protected:
+	virtual void OnOK();
 
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEFinished)
-		// HINWEIS: Der Klassen-Assistent fügt hier Member-Funktionen ein
-	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEFINISHED_H__45F5E227_1A7F_43E0_B576_577FCE8D2984__INCLUDED_
+#endif

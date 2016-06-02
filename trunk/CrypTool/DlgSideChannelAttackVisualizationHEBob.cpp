@@ -18,12 +18,11 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEBob.cpp: Implementierungsdatei
-//
 
 #include "stdafx.h"
 #include "CrypToolApp.h"
 #include "DlgSideChannelAttackVisualizationHEBob.h"
+
 #include "CrypToolTools.h"
 
 #ifdef _DEBUG
@@ -32,74 +31,64 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEBob 
-
-
-CDlgSideChannelAttackVisualizationHEBob::CDlgSideChannelAttackVisualizationHEBob(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEBob::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEBob)
-	//}}AFX_DATA_INIT
-
-	// Beziehung zu Vaterdialog herstellen
-	this->parent = pParent;
-}
-
-
-void CDlgSideChannelAttackVisualizationHEBob::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEBob)
-	DDX_Control(pDX, IDC_LIST_TASKS, m_ControlTasks);
-	DDX_Control(pDX, IDC_LIST_RECEIVEDSESSIONKEYS, m_ListReceivedSessionKeys);
-	DDX_Text(pDX, IDC_EDIT_KEYWORD, keyword);
-	//}}AFX_DATA_MAP
-}
-
-
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEBob, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEBob)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEBob 
-
-BOOL CDlgSideChannelAttackVisualizationHEBob::OnInitDialog() 
-{
-	CDialog::OnInitDialog();
+CDlgSideChannelAttackVisualizationHEBob::CDlgSideChannelAttackVisualizationHEBob(CWnd* pParent)
+	: CDialog(CDlgSideChannelAttackVisualizationHEBob::IDD, pParent) {
 	
+}
+
+CDlgSideChannelAttackVisualizationHEBob::~CDlgSideChannelAttackVisualizationHEBob() {
+
+}
+
+BOOL CDlgSideChannelAttackVisualizationHEBob::OnInitDialog() {
+	CDialog::OnInitDialog();
 	// load the keyword from the registry
-	if(CT_OPEN_REGISTRY_SETTINGS( KEY_READ, IDS_REGISTRY_SETTINGS, "SideChannelAttack" ) == ERROR_SUCCESS ) {
+	if (CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, "SideChannelAttack") == ERROR_SUCCESS) {
 		unsigned long u_length = 1024;
 		char c_SCA_keyWord[1025];
-      LoadString(AfxGetInstanceHandle(), IDS_SCA_KEYWORD, c_SCA_keyWord, STR_LAENGE_STRING_TABLE);
-      CT_READ_REGISTRY_DEFAULT( c_SCA_keyWord, "Keyword", c_SCA_keyWord, u_length );
+		LoadString(AfxGetInstanceHandle(), IDS_SCA_KEYWORD, c_SCA_keyWord, STR_LAENGE_STRING_TABLE);
+		CT_READ_REGISTRY_DEFAULT(c_SCA_keyWord, "Keyword", c_SCA_keyWord, u_length);
 		keyword = c_SCA_keyWord;
-      if ( !keyword.GetLength() ) 
-			keyword.LoadStringA( IDS_SCA_KEYWORD );
+		if (!keyword.GetLength())
+			keyword.LoadStringA(IDS_SCA_KEYWORD);
 		CT_CLOSE_REGISTRY();
 		UpdateData(FALSE);
 	}
-
-	// Anzeige aktualisieren
 	updateDisplay();
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
+	return TRUE;
 }
 
-// Diese Funktion aktualisiert die angezeigten Daten unter Rücksichtnahme
-// des internen Status des Objekts 
-void CDlgSideChannelAttackVisualizationHEBob::updateDisplay()
-{
+void CDlgSideChannelAttackVisualizationHEBob::DoDataExchange(CDataExchange* pDX) {
+	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST_TASKS, m_ControlTasks);
+	DDX_Control(pDX, IDC_LIST_RECEIVEDSESSIONKEYS, m_ListReceivedSessionKeys);
+	DDX_Text(pDX, IDC_EDIT_KEYWORD, keyword);
+}
+
+void CDlgSideChannelAttackVisualizationHEBob::OnOK() {
+	UpdateData(true);
+
+	// store the keyword in the registry
+	if (CT_OPEN_REGISTRY_SETTINGS(KEY_WRITE, IDS_REGISTRY_SETTINGS, "SideChannelAttack") == ERROR_SUCCESS) {
+		if (keyword == "")
+			keyword.LoadStringA(IDS_SCA_KEYWORD);
+		CT_WRITE_REGISTRY(keyword, "Keyword");
+		CT_CLOSE_REGISTRY();
+	}
+
+	UpdateData(false);
+
+	CDialog::OnOK();
+}
+
+void CDlgSideChannelAttackVisualizationHEBob::updateDisplay() {
 	// inits
 	char temp[STR_LAENGE_STRING_TABLE+20];
 	m_ControlTasks.ResetContent();
 		
 	// AKTUELLEN Zeiger auf entsprechendes SCA-Objekt holen
-	SCA_Server *bob = (SCA_Server*)((CDlgSideChannelAttackVisualizationHE*)parent)->getSCAServer();
+	ASSERT(GetParent());
+	SCA_Server *bob = (SCA_Server*)((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAServer();
 	
 	// *** TASK-TABELLE MIT INFOS FÜLLEN ***
 	if(bob->getNumberOfReceptions())
@@ -192,19 +181,6 @@ void CDlgSideChannelAttackVisualizationHEBob::updateDisplay()
 	UpdateData(false);
 }
 
-void CDlgSideChannelAttackVisualizationHEBob::OnOK()
-{
-	UpdateData(true);
-
-	// store the keyword in the registry
-	if(CT_OPEN_REGISTRY_SETTINGS( KEY_WRITE, IDS_REGISTRY_SETTINGS, "SideChannelAttack" ) == ERROR_SUCCESS ) {
-		if(keyword == "") 
-			keyword.LoadStringA( IDS_SCA_KEYWORD );
-		CT_WRITE_REGISTRY(keyword, "Keyword");
-		CT_CLOSE_REGISTRY();
-	}
-
-	UpdateData(false);
-
-	CDialog::OnOK();
-}
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEBob, CDialog)
+	ON_BN_CLICKED(IDOK, OnOK)
+END_MESSAGE_MAP()

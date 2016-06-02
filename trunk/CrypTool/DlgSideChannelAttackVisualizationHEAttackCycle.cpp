@@ -18,11 +18,10 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEAttackCycle.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEAttackCycle.h"
 
 #ifdef _DEBUG
@@ -31,37 +30,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEAttackCycle 
-
-
-CDlgSideChannelAttackVisualizationHEAttackCycle::CDlgSideChannelAttackVisualizationHEAttackCycle(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEAttackCycle::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEAttackCycle)
-		// HINWEIS: Der Klassen-Assistent fügt hier Elementinitialisierung ein
-	//}}AFX_DATA_INIT
+CDlgSideChannelAttackVisualizationHEAttackCycle::CDlgSideChannelAttackVisualizationHEAttackCycle(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHEAttackCycle::IDD, pParent) {
+	
 }
 
+CDlgSideChannelAttackVisualizationHEAttackCycle::~CDlgSideChannelAttackVisualizationHEAttackCycle() {
 
-void CDlgSideChannelAttackVisualizationHEAttackCycle::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEAttackCycle)
-		// HINWEIS: Der Klassen-Assistent fügt hier DDX- und DDV-Aufrufe ein
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEAttackCycle, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEAttackCycle)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEAttackCycle 
-
-void CDlgSideChannelAttackVisualizationHEAttackCycle::OnOK() 
-{
+void CDlgSideChannelAttackVisualizationHEAttackCycle::OnOK() {
 	CDialog::OnOK();	
 }
+
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEAttackCycle, CDialog)
+	ON_BN_CLICKED(IDOK, OnOK)
+END_MESSAGE_MAP()

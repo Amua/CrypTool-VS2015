@@ -18,49 +18,18 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEATTACKCYCLE_H__132F75EC_3281_46E1_BF4D_DCB168E6DEE7__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEATTACKCYCLE_H__132F75EC_3281_46E1_BF4D_DCB168E6DEE7__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEATTACKCYCLE_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEATTACKCYCLE_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEAttackCycle.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEAttackCycle 
-
-class CDlgSideChannelAttackVisualizationHEAttackCycle : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSideChannelAttackVisualizationHEAttackCycle(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEAttackCycle)
+class CDlgSideChannelAttackVisualizationHEAttackCycle : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_ATTACKCYCLE };
-		// HINWEIS: Der Klassen-Assistent fügt hier Datenelemente ein
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEAttackCycle)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSideChannelAttackVisualizationHEAttackCycle(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEAttackCycle();
 protected:
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEAttackCycle)
 	virtual void OnOK();
-	//}}AFX_MSG
+
 	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEATTACKCYCLE_H__132F75EC_3281_46E1_BF4D_DCB168E6DEE7__INCLUDED_
+#endif

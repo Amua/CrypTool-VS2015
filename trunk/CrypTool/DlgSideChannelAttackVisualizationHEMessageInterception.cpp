@@ -18,11 +18,10 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEMessageInterception.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEMessageInterception.h"
 
 #ifdef _DEBUG
@@ -31,33 +30,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEMessageInterception 
-
-
-CDlgSideChannelAttackVisualizationHEMessageInterception::CDlgSideChannelAttackVisualizationHEMessageInterception(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEMessageInterception::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEMessageInterception)
-		// HINWEIS: Der Klassen-Assistent fügt hier Elementinitialisierung ein
-	//}}AFX_DATA_INIT
+CDlgSideChannelAttackVisualizationHEMessageInterception::CDlgSideChannelAttackVisualizationHEMessageInterception(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHEMessageInterception::IDD, pParent) {
+	
 }
 
+CDlgSideChannelAttackVisualizationHEMessageInterception::~CDlgSideChannelAttackVisualizationHEMessageInterception() {
 
-void CDlgSideChannelAttackVisualizationHEMessageInterception::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEMessageInterception)
-		// HINWEIS: Der Klassen-Assistent fügt hier DDX- und DDV-Aufrufe ein
-	//}}AFX_DATA_MAP
 }
 
+void CDlgSideChannelAttackVisualizationHEMessageInterception::OnOK() {
+	CDialog::OnOK();
+}
 
 BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEMessageInterception, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEMessageInterception)
-		// HINWEIS: Der Klassen-Assistent fügt hier Zuordnungsmakros für Nachrichten ein
-	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDOK, OnOK)
 END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEMessageInterception 

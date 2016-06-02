@@ -18,11 +18,10 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEFinished.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEFinished.h"
 
 #ifdef _DEBUG
@@ -31,33 +30,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEFinished 
-
-
-CDlgSideChannelAttackVisualizationHEFinished::CDlgSideChannelAttackVisualizationHEFinished(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEFinished::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEFinished)
-		// HINWEIS: Der Klassen-Assistent fügt hier Elementinitialisierung ein
-	//}}AFX_DATA_INIT
+CDlgSideChannelAttackVisualizationHEFinished::CDlgSideChannelAttackVisualizationHEFinished(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHEFinished::IDD, pParent) {
+	
 }
 
+CDlgSideChannelAttackVisualizationHEFinished::~CDlgSideChannelAttackVisualizationHEFinished() {
 
-void CDlgSideChannelAttackVisualizationHEFinished::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEFinished)
-		// HINWEIS: Der Klassen-Assistent fügt hier DDX- und DDV-Aufrufe ein
-	//}}AFX_DATA_MAP
 }
 
+void CDlgSideChannelAttackVisualizationHEFinished::OnOK() {
+	CDialog::OnOK();
+}
 
 BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEFinished, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEFinished)
-		// HINWEIS: Der Klassen-Assistent fügt hier Zuordnungsmakros für Nachrichten ein
-	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDOK, OnOK)
 END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEFinished 

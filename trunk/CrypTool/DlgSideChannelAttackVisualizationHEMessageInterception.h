@@ -18,49 +18,18 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEMESSAGEINTERCEPTION_H__AA2A44F1_D5CD_41BE_852E_E7A3B2A50819__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEMESSAGEINTERCEPTION_H__AA2A44F1_D5CD_41BE_852E_E7A3B2A50819__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEMESSAGEINTERCEPTION_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEMESSAGEINTERCEPTION_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEMessageInterception.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEMessageInterception 
-
-class CDlgSideChannelAttackVisualizationHEMessageInterception : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSideChannelAttackVisualizationHEMessageInterception(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEMessageInterception)
+class CDlgSideChannelAttackVisualizationHEMessageInterception : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_MESSAGEINTERCEPTION };
-		// HINWEIS: Der Klassen-Assistent fügt hier Datenelemente ein
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEMessageInterception)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSideChannelAttackVisualizationHEMessageInterception(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEMessageInterception();
 protected:
+	virtual void OnOK();
 
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEMessageInterception)
-		// HINWEIS: Der Klassen-Assistent fügt hier Member-Funktionen ein
-	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEMESSAGEINTERCEPTION_H__AA2A44F1_D5CD_41BE_852E_E7A3B2A50819__INCLUDED_
+#endif

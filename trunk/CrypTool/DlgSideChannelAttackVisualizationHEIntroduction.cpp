@@ -18,11 +18,10 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEIntroduction.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEIntroduction.h"
 
 #ifdef _DEBUG
@@ -31,33 +30,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEIntroduction 
-
-
-CDlgSideChannelAttackVisualizationHEIntroduction::CDlgSideChannelAttackVisualizationHEIntroduction(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEIntroduction::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEIntroduction)
-		// HINWEIS: Der Klassen-Assistent fügt hier Elementinitialisierung ein
-	//}}AFX_DATA_INIT
+CDlgSideChannelAttackVisualizationHEIntroduction::CDlgSideChannelAttackVisualizationHEIntroduction(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHEIntroduction::IDD, pParent) {
+	
 }
 
+CDlgSideChannelAttackVisualizationHEIntroduction::~CDlgSideChannelAttackVisualizationHEIntroduction() {
 
-void CDlgSideChannelAttackVisualizationHEIntroduction::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEIntroduction)
-		// HINWEIS: Der Klassen-Assistent fügt hier DDX- und DDV-Aufrufe ein
-	//}}AFX_DATA_MAP
 }
 
+void CDlgSideChannelAttackVisualizationHEIntroduction::OnOK() {
+	CDialog::OnOK();
+}
 
 BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEIntroduction, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEIntroduction)
-		// HINWEIS: Der Klassen-Assistent fügt hier Zuordnungsmakros für Nachrichten ein
-	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDOK, OnOK)
 END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEIntroduction 

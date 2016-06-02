@@ -21,33 +21,29 @@
 #ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONSREQUEST3_H_
 #define _DLGSIDECHANNELATTACKVISUALIZATIONHEPREPARATIONSREQUEST3_H_
 
-// CDlgSideChannelAttackVisualizationHEPreparationsRequest3 dialog
-
-class CDlgSideChannelAttackVisualizationHEPreparationsRequest3 : public CDialog
-{
-	DECLARE_DYNCREATE(CDlgSideChannelAttackVisualizationHEPreparationsRequest3)
-
-public:
-	CDlgSideChannelAttackVisualizationHEPreparationsRequest3(CWnd* pParent = NULL);   // standard constructor
-	virtual ~CDlgSideChannelAttackVisualizationHEPreparationsRequest3();
-
-// Dialog Data
+class CDlgSideChannelAttackVisualizationHEPreparationsRequest3 : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_PREPARATIONS_REQUEST_3 };
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual BOOL OnInitDialog();
-
-	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedCancel();
-	afx_msg void OnBnClickedRadioChoice1();
-	afx_msg void OnBnClickedRadioChoice2();
-	afx_msg void OnBnClickedRadioChoice3();
+	CDlgSideChannelAttackVisualizationHEPreparationsRequest3(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEPreparationsRequest3();
+public:
+	bool getRadioChoice1() const { return radioChoice1; }
+	bool getRadioChoice2() const { return radioChoice2; }
+	bool getRadioChoice3() const { return radioChoice3; }
+protected:
+	virtual BOOL OnInitDialog();
+protected:
+	virtual void OnBnClickedRadioChoice1();
+	virtual void OnBnClickedRadioChoice2();
+	virtual void OnBnClickedRadioChoice3();
+	virtual void OnBnClickedOK();
+	virtual void OnBnClickedCancel();
+protected:
 	bool radioChoice1;
 	bool radioChoice2;
 	bool radioChoice3;
+
+	DECLARE_MESSAGE_MAP()
 };
 
 #endif

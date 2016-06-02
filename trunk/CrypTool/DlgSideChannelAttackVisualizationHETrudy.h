@@ -18,63 +18,35 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHETRUDY_H__EE3B5F11_61DC_460C_A8AA_47BD9DCD0C62__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHETRUDY_H__EE3B5F11_61DC_460C_A8AA_47BD9DCD0C62__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHETrudy.h : Header-Datei
-//
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHETRUDY_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHETRUDY_H_
 
 #include "DlgSideChannelAttackVisualizationHE.h"
 #include "SideChannelAttack.h"
 #include "PictureEx.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHETrudy 
-
-class CDlgSideChannelAttackVisualizationHETrudy : public CDialog
-{
-// Konstruktion
-public:
-	void updateDisplay();
-	CDlgSideChannelAttackVisualizationHETrudy(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHETrudy)
+class CDlgSideChannelAttackVisualizationHETrudy : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_TRUDY };
-	CListBox	m_ControlTasks;
-	CListCtrl	m_ListModifiedSessionKeys;
+public:
+	CDlgSideChannelAttackVisualizationHETrudy(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHETrudy();
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
+	virtual void OnOK();
+protected:
+	void updateDisplay();
+protected:
+	CListBox m_ControlTasks;
+	CListCtrl m_ListModifiedSessionKeys;
 	CString	m_DeterminedSessionKey;
 	CString	m_InterceptedEncryptedSessionKey;
 	CString	m_ComputedMessage;
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHETrudy)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
-protected:
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHETrudy)
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
 private:
-	CWnd* parent;
 	int significantBits;
-public:
-	afx_msg void OnBnClickedOk();
+
+	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHETRUDY_H__EE3B5F11_61DC_460C_A8AA_47BD9DCD0C62__INCLUDED_
+#endif

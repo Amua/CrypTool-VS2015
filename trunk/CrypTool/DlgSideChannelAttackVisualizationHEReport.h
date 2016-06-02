@@ -18,49 +18,14 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEREPORT_H__FEC28F94_9F75_4F87_ACD8_C61588479ADF__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEREPORT_H__FEC28F94_9F75_4F87_ACD8_C61588479ADF__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEREPORT_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEREPORT_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEReport.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEReport 
-
-class CDlgSideChannelAttackVisualizationHEReport : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSideChannelAttackVisualizationHEReport(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEReport)
+class CDlgSideChannelAttackVisualizationHEReport : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_REPORT };
-		// HINWEIS: Der Klassen-Assistent fügt hier Datenelemente ein
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEReport)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
-protected:
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEReport)
-		// HINWEIS: Der Klassen-Assistent fügt hier Member-Funktionen ein
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+public:
+	CDlgSideChannelAttackVisualizationHEReport(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEReport();
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEREPORT_H__FEC28F94_9F75_4F87_ACD8_C61588479ADF__INCLUDED_
+#endif

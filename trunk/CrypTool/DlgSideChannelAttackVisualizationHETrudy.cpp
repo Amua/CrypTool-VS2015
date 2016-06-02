@@ -18,14 +18,13 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHETrudy.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHETrudy.h"
+
 #include "CrypToolTools.h"
-#include ".\dlgsidechannelattackvisualizationhetrudy.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,83 +32,53 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHETrudy 
-
-
-CDlgSideChannelAttackVisualizationHETrudy::CDlgSideChannelAttackVisualizationHETrudy(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHETrudy::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHETrudy)
+CDlgSideChannelAttackVisualizationHETrudy::CDlgSideChannelAttackVisualizationHETrudy(CWnd* pParent) : 
+	CDialog(CDlgSideChannelAttackVisualizationHETrudy::IDD, pParent) {
+	
 	m_DeterminedSessionKey = _T("");
 	m_InterceptedEncryptedSessionKey = _T("");
 	m_ComputedMessage = _T("");
-	//}}AFX_DATA_INIT
-
-	// Beziehung zu Vaterdialog herstellen
-	this->parent = pParent;
-
-	// die signifikante Bitzahl ermitteln
-	// DEFAULT-WERT: 128 Bit
-	if ( CT_OPEN_REGISTRY_SETTINGS( KEY_ALL_ACCESS, IDS_REGISTRY_SETTINGS, "SideChannelAttack" ) == ERROR_SUCCESS )
-	{
+	
+	// determine number of significant bits (default: 128)
+	if (CT_OPEN_REGISTRY_SETTINGS( KEY_ALL_ACCESS, IDS_REGISTRY_SETTINGS, "SideChannelAttack" ) == ERROR_SUCCESS) {
 		unsigned long u_significantBits = 128;
 		CT_READ_REGISTRY_DEFAULT(u_significantBits, "BitlengthSecret", u_significantBits);
 		significantBits = u_significantBits;
 		if(!significantBits) throw SCA_Error(E_SCA_INTERNAL_ERROR);
 		CT_CLOSE_REGISTRY();
 	}
-	else
-	{
-		// FIXME
+	else {
+		significantBits = 128;
 	}
 }
 
+CDlgSideChannelAttackVisualizationHETrudy::~CDlgSideChannelAttackVisualizationHETrudy() {
 
-void CDlgSideChannelAttackVisualizationHETrudy::DoDataExchange(CDataExchange* pDX)
-{
+}
+
+BOOL CDlgSideChannelAttackVisualizationHETrudy::OnInitDialog() {
+	CDialog::OnInitDialog();
+	updateDisplay();
+	return TRUE;
+}
+
+void CDlgSideChannelAttackVisualizationHETrudy::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHETrudy)
 	DDX_Control(pDX, IDC_LIST_TASKS, m_ControlTasks);
 	DDX_Control(pDX, IDC_LIST_MODIFIEDSESSIONKEYS, m_ListModifiedSessionKeys);
 	DDX_Text(pDX, IDC_EDIT_DETERMINEDSESSIONKEY, m_DeterminedSessionKey);
 	DDX_Text(pDX, IDC_EDIT_INTERCEPTEDENCRYPTEDSESSIONKEY, m_InterceptedEncryptedSessionKey);
 	DDX_Text(pDX, IDC_EDIT_COMPUTEDMESSAGE, m_ComputedMessage);
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHETrudy, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHETrudy)
-	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(IDOK, OnBnClickedOk)
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHETrudy 
-
-BOOL CDlgSideChannelAttackVisualizationHETrudy::OnInitDialog() 
-{
-	CDialog::OnInitDialog();
-	
-	// ** TODO **
-	
-	updateDisplay();
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
-}
-
-// Diese Funktion aktualisiert die angezeigten Daten unter Rücksichtnahme
-// des internen Status des Objekts 
-void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay()
-{
+void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay() {
 	// inits
 	char temp[STR_LAENGE_STRING_TABLE+20];
 	m_ControlTasks.ResetContent();
 		
 	// AKTUELLEN Zeiger auf entsprechendes SCA-Objekt holen
-	const SCA_Attacker *trudy = ((CDlgSideChannelAttackVisualizationHE*)parent)->getSCAAttacker();
+	ASSERT(GetParent());
+	const SCA_Attacker *trudy = ((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAAttacker();
 
 	// *** TASK-TABELLE MIT INFOS FÜLLEN ***
 	if(trudy->hasInterceptedHybridEncryptedFile())
@@ -225,7 +194,8 @@ void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay()
 
 		// Ursprünglich von Alice verschlüsselte Nachricht entschlüsseln und anzeigen
 		// AKTUELLEN Zeiger auf entsprechendes SCA-Objekt holen
-		SCA_Client *alice = ((CDlgSideChannelAttackVisualizationHE*)parent)->getSCAClient();
+		ASSERT(GetParent());
+		SCA_Client *alice = ((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAClient();
 		// Ursprungstext ermitteln
 		OctetString originalCipherText = alice->getHybEncFile().cipherText;
 		// Text entschlüsseln
@@ -252,8 +222,10 @@ void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay()
 	UpdateData(false);
 }
 
-void CDlgSideChannelAttackVisualizationHETrudy::OnBnClickedOk()
-{
-	// TODO: Fügen Sie hier Ihren Kontrollbehandlungscode für die Benachrichtigung ein.
-	OnOK();
+void CDlgSideChannelAttackVisualizationHETrudy::OnOK() {
+	CDialog::OnOK();
 }
+
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHETrudy, CDialog)
+	ON_BN_CLICKED(IDOK, OnOK)
+END_MESSAGE_MAP()

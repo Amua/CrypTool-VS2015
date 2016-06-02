@@ -18,49 +18,18 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDEChannelATTACKVISUALIZATIONHEINTRODUCTION_H__099C84DF_767D_4FA2_B770_EB8C183BFA1C__INCLUDED_)
-#define AFX_DLGSIDEChannelATTACKVISUALIZATIONHEINTRODUCTION_H__099C84DF_767D_4FA2_B770_EB8C183BFA1C__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEINTRODUCTION_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEINTRODUCTION_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEIntroduction.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEIntroduction 
-
-class CDlgSideChannelAttackVisualizationHEIntroduction : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSideChannelAttackVisualizationHEIntroduction(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEIntroduction)
+class CDlgSideChannelAttackVisualizationHEIntroduction : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_INTRODUCTION };
-		// HINWEIS: Der Klassen-Assistent fügt hier Datenelemente ein
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEIntroduction)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSideChannelAttackVisualizationHEIntroduction(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEIntroduction();
 protected:
+	virtual void OnOK();
 
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEIntroduction)
-		// HINWEIS: Der Klassen-Assistent fügt hier Member-Funktionen ein
-	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDEChannelATTACKVISUALIZATIONHEINTRODUCTION_H__099C84DF_767D_4FA2_B770_EB8C183BFA1C__INCLUDED_
+#endif

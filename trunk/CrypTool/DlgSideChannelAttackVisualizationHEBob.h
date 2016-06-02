@@ -18,60 +18,32 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEBOB_H__EDECB37C_3A32_4C5B_BC60_887D4ED2E0FD__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEBOB_H__EDECB37C_3A32_4C5B_BC60_887D4ED2E0FD__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEBob.h : Header-Datei
-//
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEBOB_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEBOB_H_
 
 #include "DlgSideChannelAttackVisualizationHE.h"
 #include "SideChannelAttack.h"
 #include "PictureEx.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEBob 
-
-class CDlgSideChannelAttackVisualizationHEBob : public CDialog
-{
-// Konstruktion
-public:
-	void updateDisplay();
-	CDlgSideChannelAttackVisualizationHEBob(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEBob)
+class CDlgSideChannelAttackVisualizationHEBob : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_BOB };
-	CListBox	m_ControlTasks;
-	CListCtrl	m_ListReceivedSessionKeys;
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEBob)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSideChannelAttackVisualizationHEBob(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEBob();
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
 protected:
 	virtual void OnOK();
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEBob)
-	virtual BOOL OnInitDialog();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-
+protected:
+	void updateDisplay();
+protected:
+	CListBox m_ControlTasks;
+	CListCtrl m_ListReceivedSessionKeys;
 private:
-	CWnd* parent;
 	CString keyword;
+
+	DECLARE_MESSAGE_MAP()
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEBOB_H__EDECB37C_3A32_4C5B_BC60_887D4ED2E0FD__INCLUDED_
+#endif

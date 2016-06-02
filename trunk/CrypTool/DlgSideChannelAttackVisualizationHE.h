@@ -18,16 +18,10 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHE_H__998CA727_553E_497C_A839_A042B3538D85__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHE_H__998CA727_553E_497C_A839_A042B3538D85__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHE_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHE_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHE.h : Header-Datei
-//
-
-// sub-dialogues
+// sub dialogs
 #include "DlgSideChannelAttackVisualizationHEIntroduction.h"
 #include "DlgSideChannelAttackVisualizationHEPreparations.h"
 #include "DlgSideChannelAttackVisualizationHEMessagetransmission.h"
@@ -35,21 +29,18 @@
 #include "DlgSideChannelAttackVisualizationHEAttackcycle.h"
 #include "DlgSideChannelAttackVisualizationHEReport.h"
 #include "DlgSideChannelAttackVisualizationHEPSEPINPrompt.h"
-#include "DlgHybridEncryptionDemo.h"	// Hinzugefügt von der Klassenansicht
-
 #include "DlgSideChannelAttackVisualizationHEFinished.h"
 
 #include "DlgSideChannelAttackVisualizationHEAlice.h"
 #include "DlgSideChannelAttackVisualizationHEBob.h"
 #include "DlgSideChannelAttackVisualizationHETrudy.h"
 
-// Seitenkanalangriff(e)
+#include "DlgHybridEncryptionDemo.h"
+
 #include "SideChannelAttack.h"
 #include "SideChannelAttackButtonControl.h"
 
-// für animierte GIFs
 #include "PictureEx.h"
-
 
 // * INIT MODES *
 #define SCA_MODE_VALID_FILE					1
@@ -73,11 +64,15 @@
 #define SCA_TIMEREVENT_AB_TRANSMISSION		512
 #define SCA_TIMEREVENT_TB_TRANSMISSION		1024
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHE 
-
-class CDlgSideChannelAttackVisualizationHE : public CDialog
-{
+class CDlgSideChannelAttackVisualizationHE : public CDialog {
+	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE };
+public:
+	CDlgSideChannelAttackVisualizationHE(CWnd* pParent = NULL);
+	~CDlgSideChannelAttackVisualizationHE();
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
 	void startAttackCycle();
 	void cancelAttackCycle();
 
@@ -121,13 +116,10 @@ public:
 public:
 	void setLights(int);
 	void setABArrow(int);
-	~CDlgSideChannelAttackVisualizationHE();
+	
 	void CreateErrorMessage(SCA_Error&);
-	CDlgSideChannelAttackVisualizationHE(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHE)
-	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE };
+	
+	
 	CButton	m_AttackControl;
 	CButton	m_ControlButtonAllSteps;
 	CButton	m_ControlButtonNextStep;
@@ -135,17 +127,7 @@ public:
 	CPictureEx	m_ControlABArrow;
 	CPictureEx	m_ControlLights;
 	BOOL	m_bShowInfoDialogues;
-	//}}AFX_DATA
 
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHE)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
 protected:
 
 	// Generierte Nachrichtenzuordnungsfunktionen
@@ -159,7 +141,6 @@ protected:
 	afx_msg void OnAlice();
 	afx_msg void OnBob();
 	afx_msg void OnTrudy();
-	virtual BOOL OnInitDialog();
 	afx_msg void OnClose();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnButtonNextsinglestep();
@@ -178,7 +159,4 @@ protected:
 	COLORREF m_blackcolor;
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHE_H__998CA727_553E_497C_A839_A042B3538D85__INCLUDED_
+#endif

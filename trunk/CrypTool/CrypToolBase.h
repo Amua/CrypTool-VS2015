@@ -184,39 +184,11 @@ namespace CrypTool {
 			}
 			return false;
 		}
-		
-		// this class can be used to convert string-based numbers from one base representation to another; 
-		// the supported base representations are base2 (binary), base8 (octal), base10 (decimal) and 
-		// base16 (hexadecimal); the implementation was inspired by Daniel Gehrigher's work, the code was 
-		// stripped down and adapted to fit our needs for CrypTool; naturally, because this class is 
-		// working on STRING-BASED numbers, conversions can be really time-consuming; this class is 
-		// solely provided for convenience as an abstraction layer on top of some functions dealing 
-		// with OpenSSL's BIGNUM class; if you intend to convert really, really large numbers, then you 
-		// better use a different implementation; don't complain about the speed, you have been warned
-		class StringNumberBaseConverter {
-		public:
-			// this is the only public method of the class: if the specified number cannot be converted 
-			// from its old base representation into the new base representation, the original number 
-			// is returned without being changed
-			static CString convertNumberFromBaseToBase(const CString &_number, const unsigned int _baseSource, const unsigned int _baseTarget);
-		protected:
-			StringNumberBaseConverter(const unsigned int _baseSource, const unsigned int _baseTarget);
-			virtual ~StringNumberBaseConverter();
-		private:
-			const unsigned int m_baseSource;
-			const unsigned int m_baseTarget;
-			const CString m_alphabetSource;
-			const CString m_alphabetTarget;
-		private:
-			bool areAlphabetsValid() const;
-		private:
-			CString convert(const CString &_number) const;
-			CString convert(const CString &_number, const size_t _minimumDigits) const;
-		private:
-			unsigned int divide(CString &_x, const unsigned int _y) const;
-			CString dec2base(const unsigned int _number) const;
-			unsigned int base2dec(const CString &_number) const;
-		};
+
+		// this function converts a string number from one base to another; supported base representations 
+		// are base2 (binary), base8 (octal), base10 (decimal), and base16 (hexadecimal); if the specified 
+		// number cannot be converted for whatever reason, the original number is returned
+		CString convertStringNumberFromBaseToBase(const CString &_number, const unsigned int _baseFrom, const unsigned int _baseTo);
 
 	}
 

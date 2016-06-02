@@ -18,49 +18,20 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEPSEPINPROMPT_H__C7A5452A_8D2D_4408_A983_FC5EE1517D2F__INCLUDED_)
-#define AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEPSEPINPROMPT_H__C7A5452A_8D2D_4408_A983_FC5EE1517D2F__INCLUDED_
+#ifndef _DLGSIDECHANNELATTACKVISUALIZATIONHEPSEPINPROMPT_H_
+#define _DLGSIDECHANNELATTACKVISUALIZATIONHEPSEPINPROMPT_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSideChannelAttackVisualizationHEPSEPINPrompt.h : Header-Datei
-//
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEPSEPINPrompt 
-
-class CDlgSideChannelAttackVisualizationHEPSEPINPrompt : public CDialog
-{
-// Konstruktion
-public:
-	CDlgSideChannelAttackVisualizationHEPSEPINPrompt(CWnd* pParent = NULL);   // Standardkonstruktor
-
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSideChannelAttackVisualizationHEPSEPINPrompt)
+class CDlgSideChannelAttackVisualizationHEPSEPINPrompt : public CDialog {
 	enum { IDD = IDD_SIDECHANNELATTACKVISUALIZATION_HE_PSEPINPROMPT };
-	CString	m_pin;
-	//}}AFX_DATA
-
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSideChannelAttackVisualizationHEPSEPINPrompt)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
+public:
+	CDlgSideChannelAttackVisualizationHEPSEPINPrompt(CWnd* pParent = NULL);
+	virtual ~CDlgSideChannelAttackVisualizationHEPSEPINPrompt();
 protected:
-
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSideChannelAttackVisualizationHEPSEPINPrompt)
-		// HINWEIS: Der Klassen-Assistent fügt hier Member-Funktionen ein
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
+	CString	m_pin;
+public:
+	const CString &getPin() const { return m_pin; }
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIDECHANNELATTACKVISUALIZATIONHEPSEPINPROMPT_H__C7A5452A_8D2D_4408_A983_FC5EE1517D2F__INCLUDED_
+#endif

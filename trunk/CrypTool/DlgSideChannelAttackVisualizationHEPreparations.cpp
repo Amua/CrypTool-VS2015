@@ -18,17 +18,19 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHEPreparations.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHEPreparations.h"
 #include "DlgSideChannelAttackVisualizationHEPreparationsRequest1.h"
 #include "DlgSideChannelAttackVisualizationHEPreparationsRequest2.h"
 #include "DlgSideChannelAttackVisualizationHEPreparationsRequest3.h"
 
+#include "DlgHybridEncryptionDemoSCA.h"
 
+#include "FileTools.h"
+#include "CryptDoc.h"
 #include "KeyFileHandling.h"
 #include "DlgKeyAsymGeneration.h"
 
@@ -38,24 +40,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-extern char *Pfad;
-
-// Hybridverschlüsselungsdialog
-#include "DlgHybridEncryptionDemoSCA.h"
-// für content-name usw
-#include "FileTools.h"
-#include "CryptDoc.h"
-
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHEPreparations 
-
-
-CDlgSideChannelAttackVisualizationHEPreparations::CDlgSideChannelAttackVisualizationHEPreparations(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHEPreparations::IDD, pParent)
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHEPreparations)
-		// HINWEIS: Der Klassen-Assistent fügt hier Elementinitialisierung ein
-	//}}AFX_DATA_INIT
+CDlgSideChannelAttackVisualizationHEPreparations::CDlgSideChannelAttackVisualizationHEPreparations(CWnd* pParent) : 
+	CDialog(CDlgSideChannelAttackVisualizationHEPreparations::IDD, pParent) {
 
 	this->initMode = 0;
 	this->initFile = "";
@@ -64,28 +50,20 @@ CDlgSideChannelAttackVisualizationHEPreparations::CDlgSideChannelAttackVisualiza
 	this->useExistingHybEncFile = false;
 }
 
+CDlgSideChannelAttackVisualizationHEPreparations::~CDlgSideChannelAttackVisualizationHEPreparations() {
 
-void CDlgSideChannelAttackVisualizationHEPreparations::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHEPreparations)
-		// HINWEIS: Der Klassen-Assistent fügt hier DDX- und DDV-Aufrufe ein
-	//}}AFX_DATA_MAP
 }
 
+BOOL CDlgSideChannelAttackVisualizationHEPreparations::OnInitDialog() {
+	CDialog::OnInitDialog();
+	return TRUE;
+}
 
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEPreparations, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHEPreparations)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
+void CDlgSideChannelAttackVisualizationHEPreparations::DoDataExchange(CDataExchange* pDX) {
+	CDialog::DoDataExchange(pDX);
+}
 
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHEPreparations 
-
-
-
-void CDlgSideChannelAttackVisualizationHEPreparations::OnOK() 
-{
+void CDlgSideChannelAttackVisualizationHEPreparations::OnOK() {
 	//CDialog::OnOK();
 	
 	int result = 0;
@@ -101,7 +79,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 		if(dlg.DoModal() == IDOK)
 		{
 			// Fall (a)
-			if(dlg.radioChoice1)
+			if(dlg.getRadioChoice1())
 			{
 				// Benutzer möchte eine Datei wählen und hybridverschlüsseln
 				CDlgHybridEncryptionDemoSCA dlg;
@@ -119,7 +97,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				return;
 			}
 			// Fall (b)
-			if(dlg.radioChoice2)
+			if(dlg.getRadioChoice2())
 			{
 				// ACHTUNG!!! Hier möchte der Benutzer die Hybridverschlüsselung NICHT SELBST durchführen,
 				useExistingHybEncFile = true;
@@ -127,7 +105,9 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_HYBRIDENCRYPTEDFILE_DEFAULT_PSEFILE, pc_str, STR_LAENGE_STRING_TABLE);
 				// Dateinamen setzen (VOLLER PFAD!)
 				finalHybEncFile = "";
+#ifndef _UNSTABLE
 				finalHybEncFile += CString(Pfad);
+#endif
 				finalHybEncFile += CString(pc_str);
 				// Zertifikatsinformationen ermitteln (Name, Vorname, Schlüsseltyp...)
 #ifndef _UNSTABLE
@@ -157,7 +137,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 		if(dlg.DoModal() == IDOK)
 		{
 			// Fall (a)
-			if(dlg.radioChoice1)
+			if(dlg.getRadioChoice1())
 			{
 				CDlgHybridEncryptionDemoSCA dlg(initFile, initFileTitle);
 				if(dlg.DoModal() == IDOK)
@@ -175,7 +155,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				return;
 			}
 			// Fall (b)
-			if(dlg.radioChoice2)
+			if(dlg.getRadioChoice2())
 			{
 				// Benutzer möchte andere Datei wählen und hybridverschlüsseln
 				CDlgHybridEncryptionDemoSCA dlg;
@@ -194,7 +174,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				return;
 			}
 			// Fall (c)
-			if(dlg.radioChoice3)
+			if(dlg.getRadioChoice3())
 			{
 #ifndef _UNSTABLE
 				// ACHTUNG!!! Hier möchte der Benutzer die Hybridverschlüsselung NICHT SELBST durchführen,
@@ -232,7 +212,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 		if(dlg.DoModal() == IDOK)
 		{
 			// Fall (a)
-			if(dlg.radioChoice1)
+			if(dlg.getRadioChoice1())
 			{
 #ifndef _UNSTABLE
 				// Benutzer möchte eine bereits existente und hybridverschlüsselte
@@ -258,7 +238,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				return;
 			}
 			// Fall (b)
-			if(dlg.radioChoice2)
+			if(dlg.getRadioChoice2())
 			{
 				// Benutzer möchte andere Datei wählen und hybridverschlüsseln
 				CDlgHybridEncryptionDemoSCA dlg;
@@ -277,7 +257,7 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 				return;
 			}
 			// Fall (c)
-			if(dlg.radioChoice3)
+			if(dlg.getRadioChoice3())
 			{
 #ifndef _UNSTABLE
 				// ACHTUNG!!! Hier möchte der Benutzer die Hybridverschlüsselung NICHT SELBST durchführen,
@@ -307,28 +287,27 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK()
 	return;
 }
 
-void CDlgSideChannelAttackVisualizationHEPreparations::setInitMode(int i)
-{
+void CDlgSideChannelAttackVisualizationHEPreparations::setInitMode(int i) {
 	initMode = i;
 }
 
 
-void CDlgSideChannelAttackVisualizationHEPreparations::setInitFile(CString i)
-{
+void CDlgSideChannelAttackVisualizationHEPreparations::setInitFile(CString i) {
 	initFile = i;
 }
 
-void CDlgSideChannelAttackVisualizationHEPreparations::setInitFileTitle(CString t)
-{
+void CDlgSideChannelAttackVisualizationHEPreparations::setInitFileTitle(CString t) {
 	initFileTitle = t;
 }
 
-CString CDlgSideChannelAttackVisualizationHEPreparations::getFinalHybEncFile()
-{
+CString CDlgSideChannelAttackVisualizationHEPreparations::getFinalHybEncFile() {
 	return finalHybEncFile;
 }
 
-CString CDlgSideChannelAttackVisualizationHEPreparations::getOriginalSessionKey()
-{
+CString CDlgSideChannelAttackVisualizationHEPreparations::getOriginalSessionKey() {
 	return originalSessionKey;
 }
+
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHEPreparations, CDialog)
+
+END_MESSAGE_MAP()

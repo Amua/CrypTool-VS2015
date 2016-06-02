@@ -18,12 +18,14 @@
 
 **************************************************************************/
 
-// DlgSideChannelAttackVisualizationHE.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
+
 #include "DlgSideChannelAttackVisualizationHE.h"
+
+#include "DlgHybridDecryptionDemo.h"
+
 #include "CrypToolTools.h"
 
 #ifdef _DEBUG
@@ -32,24 +34,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// für Zertifikate
-extern char* CaPseDatei;
-extern char* CaPseVerzeichnis, *PseVerzeichnis;
-#include "DlgKeyAsymGeneration.h"
-// für "find"-Funktion
-#include "AsymmetricEncryption.h"
 #include "FileTools.h"
 #include "CrypToolTools.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSideChannelAttackVisualizationHE 
-
-CDlgSideChannelAttackVisualizationHE::CDlgSideChannelAttackVisualizationHE(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSideChannelAttackVisualizationHE::IDD, pParent), scaBigNumberSettings()
-{
-	//{{AFX_DATA_INIT(CDlgSideChannelAttackVisualizationHE)
+CDlgSideChannelAttackVisualizationHE::CDlgSideChannelAttackVisualizationHE(CWnd* pParent) :
+	CDialog(CDlgSideChannelAttackVisualizationHE::IDD, pParent), scaBigNumberSettings() {
+	
 	m_bShowInfoDialogues = FALSE;
-	//}}AFX_DATA_INIT
 
 	// *** Initialisierungen ***
 	this->initMode = 0;
@@ -66,9 +57,7 @@ CDlgSideChannelAttackVisualizationHE::CDlgSideChannelAttackVisualizationHE(CWnd*
 	this->isHybridEncryptedFileDeclared = false;
 }
 
-CDlgSideChannelAttackVisualizationHE::~CDlgSideChannelAttackVisualizationHE()
-{
-	// Speicher freigeben
+CDlgSideChannelAttackVisualizationHE::~CDlgSideChannelAttackVisualizationHE() {
 	if(scaServer) delete scaServer;
 	if(scaClient) delete scaClient;
 	if(scaAttacker) delete scaAttacker;
@@ -76,10 +65,8 @@ CDlgSideChannelAttackVisualizationHE::~CDlgSideChannelAttackVisualizationHE()
 	hi.free();
 }
 
-void CDlgSideChannelAttackVisualizationHE::DoDataExchange(CDataExchange* pDX)
-{
+void CDlgSideChannelAttackVisualizationHE::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSideChannelAttackVisualizationHE)
 	DDX_Control(pDX, IDC_ATTACKCONTROL, m_AttackControl);
 	DDX_Control(pDX, IDC_BUTTON_ALLREMAININGSTEPS, m_ControlButtonAllSteps);
 	DDX_Control(pDX, IDC_BUTTON_NEXTSINGLESTEP, m_ControlButtonNextStep);
@@ -87,41 +74,10 @@ void CDlgSideChannelAttackVisualizationHE::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_ABARROW, m_ControlABArrow);
 	DDX_Control(pDX, IDC_LIGHTS, m_ControlLights);
 	DDX_Check(pDX, IDC_CHECK_DISABLEHELP, m_bShowInfoDialogues);
-	//}}AFX_DATA_MAP
 }
 
-
-BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHE, CDialog)
-	//{{AFX_MSG_MAP(CDlgSideChannelAttackVisualizationHE)
-	ON_BN_CLICKED(IDC_INTRODUCTION, OnIntroduction)
-	ON_BN_CLICKED(IDC_PREPARATIONS, OnPreparations)
-	ON_BN_CLICKED(IDC_MESSAGETRANSMISSION, OnMessagetransmission)
-	ON_BN_CLICKED(IDC_MESSAGEINTERCEPTION, OnMessageinterception)
-	ON_BN_CLICKED(IDC_ATTACKCYCLE, OnAttackcycle)
-	ON_BN_CLICKED(IDC_REPORT, OnReport)
-	ON_BN_CLICKED(IDC_ALICE, OnAlice)
-	ON_BN_CLICKED(IDC_BOB, OnBob)
-	ON_BN_CLICKED(IDC_TRUDY, OnTrudy)
-	ON_BN_CLICKED(IDCLOSE, OnClose)
-	ON_WM_TIMER()
-	ON_BN_CLICKED(IDC_BUTTON_NEXTSINGLESTEP, OnButtonNextsinglestep)
-	ON_BN_CLICKED(IDC_BUTTON_ALLREMAININGSTEPS, OnButtonAllremainingsteps)
-	ON_BN_CLICKED(IDC_MESSAGERECEPTION, OnMessagereception)
-	ON_BN_CLICKED(IDC_CHECK_DISABLEHELP, OnCheckDisablehelp)
-	ON_WM_PAINT()
-	ON_WM_CTLCOLOR()
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSideChannelAttackVisualizationHE 
-
-
-
-BOOL CDlgSideChannelAttackVisualizationHE::OnInitDialog() 
-{
-	try
-	{
+BOOL CDlgSideChannelAttackVisualizationHE::OnInitDialog() {
+	try {
 		CDialog::OnInitDialog();
 
 		// *** VORWORT ***
@@ -203,35 +159,19 @@ BOOL CDlgSideChannelAttackVisualizationHE::OnInitDialog()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return true; }
 }
 
-// Diese Funktion soll verhindern, dass der Hauptdialog unter verschiedenen
-// Betriebssystemen/Versionen möglichst ähnlich aussieht. Die Funktion hinterlegt
-// ein flächendeckendes, großes Bitmap, dass für eine einheiliche Hintergrundfarbe
-// sorgt.
-void CDlgSideChannelAttackVisualizationHE::OnPaint() 
-{
-
-	CPaintDC dc(this); // device context for painting
-	 CBitmap bmp, *poldbmp;
-     CDC memdc;
-     // Load the bitmap resource
-     bmp.LoadBitmap( IDB_SCA_MAINBACKGROUND );
-     // Create a compatible memory DC
-     memdc.CreateCompatibleDC( &dc );
-     // Select the bitmap into the DC
-     poldbmp = memdc.SelectObject( &bmp );
-     // Copy (BitBlt) bitmap from memory DC to screen DC
-     dc.BitBlt( 0, 0, 981, 658, &memdc, 0, 0, SRCCOPY );
-     memdc.SelectObject( poldbmp );
-         // Do not call CDialog::OnPaint() for painting messages
+void CDlgSideChannelAttackVisualizationHE::OnPaint() {
+	CPaintDC dc(this);
+	CBitmap bmp, *poldbmp;
+	CDC memdc;
+	bmp.LoadBitmap(IDB_SCA_MAINBACKGROUND);
+	memdc.CreateCompatibleDC(&dc);
+	poldbmp = memdc.SelectObject(&bmp);
+	dc.BitBlt(0, 0, 981, 658, &memdc, 0, 0, SRCCOPY);
+	memdc.SelectObject(poldbmp);
 }
 
-
-// Diese Funktion sorgt für korrekte Hintergrundfarben in den Textfeldern (vgl. OnPaint)
-HBRUSH CDlgSideChannelAttackVisualizationHE::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) 
-{
+HBRUSH CDlgSideChannelAttackVisualizationHE::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
 	HBRUSH hbr;
-
-	// ***********
 	switch (nCtlColor) 
 	{ 
 		case CTLCOLOR_MSGBOX: 
@@ -252,135 +192,62 @@ HBRUSH CDlgSideChannelAttackVisualizationHE::OnCtlColor(CDC* pDC, CWnd* pWnd, UI
 			case IDCLOSE:
 			case IDC_CHECK_DISABLEHELP:
 			case IDOK:
-			// put your own CONTROL ID here    
-			pDC->SetBkColor(m_greycolor); // change the background color
-			pDC->SetTextColor(m_blackcolor); // change the text color			
-			hbr = (HBRUSH) m_greybrush; //  apply the brush
-			break; 
-        
-			// otherwise do default handling of OnCtlColor
+				pDC->SetBkColor(m_greycolor);
+				pDC->SetTextColor(m_blackcolor);
+				hbr = (HBRUSH)(m_greybrush);
+				break;
 			default:    
-			hbr= CDialog::OnCtlColor(pDC,pWnd,nCtlColor); 
-			break;  
-		}  
-		
-		break; 
-   
-		// otherwise do default handling of OnCtlColor
-		default:  
-		hbr=CDialog::OnCtlColor(pDC,pWnd,nCtlColor); 
+				hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor); 
+			break;
+		}
+		break;
+	default:  
+		hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor); 
 	}
-	// ***********
-	
-	// TODO: Anderen Pinsel zurückgeben, falls Standard nicht verwendet werden soll
 	return hbr;
 }
 
-
-
-void CDlgSideChannelAttackVisualizationHE::updateGUI(int b)
-{
-	try
-	{
-		// Zunächst muss die Buttonstruktur aktualisiert werden
-		this->pButtonControl->PerformAction(b);
-		
+void CDlgSideChannelAttackVisualizationHE::updateGUI(int b) {
+	try {
+		pButtonControl->PerformAction(b);
 		UpdateData(false);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-// Diese Funktion setzt lediglich den Dateipfad, 
-// unter dem eine hybridverschlüsselte Datei gesucht wird.
-void CDlgSideChannelAttackVisualizationHE::setEncryptedFile(const char *file)
-{
-#ifndef _UNSTABLE
+void CDlgSideChannelAttackVisualizationHE::setEncryptedFile(const char *file) {
 	try
 	{
-		this->initFile = file;
-		// Nur dann eine Datei als deklariert angeben, wenn sie NICHT LEER ist
-		OctetString *text = theApp.SecudeLib.aux_file2OctetString(file);
-		if (!text)
-			this->isFileDeclared = false;
-		else
-			this->isFileDeclared = true;
+		initFile = file;
+		// set file as declared only if it's not empty
+		CrypTool::ByteString byteStringTemp;
+		byteStringTemp.readFromFile(file);
+		isFileDeclared = (byteStringTemp.getByteLength() > 0);
 	}
 	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
-#endif
 }
 
-void CDlgSideChannelAttackVisualizationHE::setHybridEncryptedFileInfo(HybridEncryptedFileInfo &_hi)
-{
-	try
-	{
+void CDlgSideChannelAttackVisualizationHE::setHybridEncryptedFileInfo(HybridEncryptedFileInfo &_hi) {
+	try {
 		this->hi = _hi;
 		this->isHybridEncryptedFileDeclared = true;
 	}
 	catch(SCA_Error &e) { CreateErrorMessage(e); return; };
 }
 
-void CDlgSideChannelAttackVisualizationHE::setInitFileTitle(const char *title)
-{
-	try
-	{
+void CDlgSideChannelAttackVisualizationHE::setInitFileTitle(const char *title) {
+	try {
 		this->initFileTitle = title;
 	}
 	catch(SCA_Error &e) { CreateErrorMessage(e); return; };	
 }
 
-// Diese Funktion überprüft, ob die übergebene Datei (Pfad wird übergeben) 
-// hybridverschlüsselt wurde. (nötig für Seitenkanalangriffs-Dialog)
-bool CDlgSideChannelAttackVisualizationHE::isDocumentHybridEncrypted(const char *infile)
-{
-#ifndef _UNSTABLE
-	try
-	{
-		// Variablen für find-Funktionen	
-		int start = 0;
-		int end = 0;
-		
-		// Dokument in Octet-String umwandeln
-		OctetString *document = theApp.SecudeLib.aux_file2OctetString(infile);
-		// falls Speicherallokierung fehlerhaft: return false...
-		if(!document) throw SCA_Error(E_SCA_MEMORY_ALLOCATION);
-
-		// Zunächst die Datei nach bestimmten Mustern/Strings durchsuchen; sind diese
-		// NICHT vorhanden, so handelt es sich nicht um eine Datei, die erfolgreich
-		// hybridverschlüsselt wurde.
-		if	(
-				!find(document, IDS_STRING_HYBRID_RECIEVER, start, end) ||
-				!find(document, IDS_STRING_HYBRID_LENGTH_ENC_KEY, start, end) ||
-				!find(document, IDS_STRING_HYBRID_ENC_KEY, start, end) ||
-				!find(document, IDS_STRING_HYBRID_SYM_METHOD, start, end) ||
-				!find(document, IDS_STRING_HYBRID_ASYM_METHOD, start, end) ||
-				!find(document, IDS_STRING_HYBRID_CIPHERTEXT, start, end)
-			)
-		{
-			// es handelt sich offensichtlich NICHT um eine hybridverschlüsselte Datei,
-			// deshalb Speicher freigeben und false zurückgeben.
-			theApp.SecudeLib.aux_free_OctetString(&document);
-			return false;
-		}
-
-		return true;
-	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
-	catch(SCA_Error& e) { CreateErrorMessage(e); return false; }
-#endif
-	return false;
+bool CDlgSideChannelAttackVisualizationHE::isDocumentHybridEncrypted(const char *infile) {
+	return CDlgHybridDecryptionDemo::isDocumentHybridEncrypted(infile);
 }
 
-
-
-// ------------------
-// ***** STEP 1 *****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnIntroduction() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnIntroduction() {
 	try
 	{
 		if(this->m_bShowInfoDialogues)
@@ -418,13 +285,7 @@ void CDlgSideChannelAttackVisualizationHE::OnIntroduction()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-// ------------------
-// ***** STEP 2 *****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnPreparations() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnPreparations() {
 	try
 	{
 		// forward decs
@@ -516,13 +377,7 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-// ------------------
-// ***** STEP 3 *****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnMessagetransmission() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnMessagetransmission() {
 	try
 	{
 		if(this->m_bShowInfoDialogues)
@@ -557,11 +412,7 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagetransmission()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-// ------------------
-// **** NEW STEP ****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnMessagereception() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
 #ifndef _UNSTABLE
 	try
 	{
@@ -586,7 +437,15 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagereception()
 			}
 
 			// Falls der Benutzer OK gedrückt hat, mit den weiteren Vorbereitungen fortfahren...
-			pin = prompt.m_pin;
+			pin = prompt.getPin();
+
+			// try to acquire the private key (in decimal format) using the provided PIN
+
+			//
+			// ***TODO/FIXME***
+			//
+
+
 
 			// PSE öffnen		
 			PSE PseHandle;
@@ -647,11 +506,7 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagereception()
 #endif
 }
 
-// ------------------
-// ***** STEP 4 *****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnMessageinterception() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnMessageinterception() {
 	try
 	{
 		if(this->m_bShowInfoDialogues)
@@ -682,13 +537,7 @@ void CDlgSideChannelAttackVisualizationHE::OnMessageinterception()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-// ------------------
-// ***** STEP 5 *****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnAttackcycle() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnAttackcycle() {
 	try
 	{
 		// ACHTUNG
@@ -796,13 +645,7 @@ void CDlgSideChannelAttackVisualizationHE::OnAttackcycle()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-// ------------------
-// ***** STEP 6 *****
-// ------------------
-void CDlgSideChannelAttackVisualizationHE::OnReport() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnReport() {
 	try
 	{
 		// wg. möglichen Inkosistenzen das Erstellen des Reports
@@ -842,10 +685,7 @@ void CDlgSideChannelAttackVisualizationHE::OnReport()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-void CDlgSideChannelAttackVisualizationHE::OnAlice() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnAlice() {
 	try
 	{
 		// Statusinformationen über Alice einblenden
@@ -856,10 +696,7 @@ void CDlgSideChannelAttackVisualizationHE::OnAlice()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-void CDlgSideChannelAttackVisualizationHE::OnBob() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnBob() {
 	try
 	{
 		// Statusinformationen über Bob einblenden
@@ -870,10 +707,7 @@ void CDlgSideChannelAttackVisualizationHE::OnBob()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-
-
-void CDlgSideChannelAttackVisualizationHE::OnTrudy() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnTrudy() {
 	try
 	{
 		// Statusinformationen über Trudy einblenden
@@ -884,10 +718,7 @@ void CDlgSideChannelAttackVisualizationHE::OnTrudy()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-// Diese Funktion wird aufgerufen, wenn eine Ausnahme (Exception) geworfen wurde;
-// eine entsprechende Fehlermeldung, die der Benutzer verstehen kann, wird angezeigt
-void CDlgSideChannelAttackVisualizationHE::CreateErrorMessage(SCA_Error &e)
-{
+void CDlgSideChannelAttackVisualizationHE::CreateErrorMessage(SCA_Error &e) {
 	int errorCode = e.getErrorCode();
 
 	if(errorCode == E_SCA_INTERNAL_ERROR)
@@ -939,13 +770,7 @@ void CDlgSideChannelAttackVisualizationHE::CreateErrorMessage(SCA_Error &e)
 	return;
 }
 
-// Diese Funktion weist der Ampel im Hauptdialog je nach Bedarf drei verschiedene
-// Animationen zu: 
-//	1: Statisches GIF (Ampel zeigt nichts an)
-//	2: Dynamisches GIF (Ampel zeigt GRÜN an)
-//	3: Dynamisches GIF (Ampel zeigt ROT an)
-void CDlgSideChannelAttackVisualizationHE::setLights(int _mode)
-{
+void CDlgSideChannelAttackVisualizationHE::setLights(int _mode) {
 	// NORMAL
 	if(_mode == SCA_LIGHTS_NORMAL)
 	{
@@ -972,16 +797,7 @@ void CDlgSideChannelAttackVisualizationHE::setLights(int _mode)
 	}
 }
 
-// Diese Funktion weist dem Übertragungskanal im Hauptdialog verschiedene
-// Animationen zu:
-//	1: Statisches GIF (es wird ausser dem Kanal nichts angezeigt)
-//	2: Dynamisches GIF (Alice überträgt Nachricht an Bob)
-//	3: Dynamisches GIF (Trudy fängt Nachricht ab)
-//	4: Dynamisches GIF (Entschlüsselung auf Serverseite erfolgreich)
-//	5: Dynamisches GIF (Entschlüsselung auf Serverseite erfolglos)
-//	6: Dynamisches GIF (Trudy überträgt Nachricht an Bob)
-void CDlgSideChannelAttackVisualizationHE::setABArrow(int _mode)
-{
+void CDlgSideChannelAttackVisualizationHE::setABArrow(int _mode) {
 	// NORMAL
 	if(_mode == SCA_ABARROW_NORMAL)
 	{
@@ -1032,16 +848,11 @@ void CDlgSideChannelAttackVisualizationHE::setABArrow(int _mode)
 	}
 }
 
-void CDlgSideChannelAttackVisualizationHE::OnClose() 
-{
-//   _CrtDumpMemoryLeaks();
-	EndDialog(0);	
+void CDlgSideChannelAttackVisualizationHE::OnClose() {
+	EndDialog(IDCLOSE);	
 }
 
-// Diese Funktion wird aufgerufen, wenn ein Timer zu Ende gelaufen ist;
-// über den Parameter kann der Auslöser ermittelt und entsprechend reagiert werden
-void CDlgSideChannelAttackVisualizationHE::OnTimer(UINT nIDEvent) 
-{
+void CDlgSideChannelAttackVisualizationHE::OnTimer(UINT nIDEvent) {
 	// TRANSMISSION from ALICE to BOB
 	if(nIDEvent == SCA_TIMEREVENT_AB_TRANSMISSION)
 	{
@@ -1091,8 +902,7 @@ void CDlgSideChannelAttackVisualizationHE::OnTimer(UINT nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
-void CDlgSideChannelAttackVisualizationHE::startAttackCycle()
-{
+void CDlgSideChannelAttackVisualizationHE::startAttackCycle() {
 	// Buttons einblenden
 	m_ControlButtonNextStep.EnableWindow(true);
 	m_ControlButtonNextStep.ShowWindow(SW_SHOW);
@@ -1105,11 +915,9 @@ void CDlgSideChannelAttackVisualizationHE::startAttackCycle()
 
 	// Fokus auf "nächster Schritt" Button
 	m_ControlButtonNextStep.SetFocus();
-	
 }
 
-void CDlgSideChannelAttackVisualizationHE::cancelAttackCycle()
-{
+void CDlgSideChannelAttackVisualizationHE::cancelAttackCycle() {
 	// Buttons ausblenden
 	m_ControlButtonNextStep.EnableWindow(false);
 	m_ControlButtonNextStep.ShowWindow(SW_HIDE);
@@ -1121,8 +929,7 @@ void CDlgSideChannelAttackVisualizationHE::cancelAttackCycle()
 	m_AttackControl.ShowWindow(SW_HIDE);
 }
 
-void CDlgSideChannelAttackVisualizationHE::OnButtonNextsinglestep() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnButtonNextsinglestep() {
 	try {
 		if(!scaAttacker->isDone())
 		{
@@ -1184,8 +991,7 @@ void CDlgSideChannelAttackVisualizationHE::OnButtonNextsinglestep()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-void CDlgSideChannelAttackVisualizationHE::OnButtonAllremainingsteps() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnButtonAllremainingsteps() {
 	try {
 		SHOW_HOUR_GLASS
 		while(!scaAttacker->isDone())
@@ -1239,8 +1045,7 @@ void CDlgSideChannelAttackVisualizationHE::OnButtonAllremainingsteps()
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
-void CDlgSideChannelAttackVisualizationHE::OnCheckDisablehelp() 
-{
+void CDlgSideChannelAttackVisualizationHE::OnCheckDisablehelp() {
 	UpdateData(true);
 
 	if ( CT_OPEN_REGISTRY_SETTINGS( KEY_WRITE, IDS_REGISTRY_SETTINGS ) == ERROR_SUCCESS )
@@ -1252,5 +1057,24 @@ void CDlgSideChannelAttackVisualizationHE::OnCheckDisablehelp()
 	{
 		// FIXME
 	}
-
 }
+
+BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHE, CDialog)
+	ON_BN_CLICKED(IDC_INTRODUCTION, OnIntroduction)
+	ON_BN_CLICKED(IDC_PREPARATIONS, OnPreparations)
+	ON_BN_CLICKED(IDC_MESSAGETRANSMISSION, OnMessagetransmission)
+	ON_BN_CLICKED(IDC_MESSAGEINTERCEPTION, OnMessageinterception)
+	ON_BN_CLICKED(IDC_ATTACKCYCLE, OnAttackcycle)
+	ON_BN_CLICKED(IDC_REPORT, OnReport)
+	ON_BN_CLICKED(IDC_ALICE, OnAlice)
+	ON_BN_CLICKED(IDC_BOB, OnBob)
+	ON_BN_CLICKED(IDC_TRUDY, OnTrudy)
+	ON_BN_CLICKED(IDCLOSE, OnClose)
+	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BUTTON_NEXTSINGLESTEP, OnButtonNextsinglestep)
+	ON_BN_CLICKED(IDC_BUTTON_ALLREMAININGSTEPS, OnButtonAllremainingsteps)
+	ON_BN_CLICKED(IDC_MESSAGERECEPTION, OnMessagereception)
+	ON_BN_CLICKED(IDC_CHECK_DISABLEHELP, OnCheckDisablehelp)
+	ON_WM_PAINT()
+	ON_WM_CTLCOLOR()
+END_MESSAGE_MAP()
