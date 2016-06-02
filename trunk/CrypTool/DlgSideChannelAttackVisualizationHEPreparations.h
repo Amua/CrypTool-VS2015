@@ -35,8 +35,9 @@ public:
 	void setInitMode(int);
 public:
 	bool isExistingHybEncFileUsed() { return useExistingHybEncFile; };
-	CString getOriginalSessionKey();
 	CString getFinalHybEncFile();
+	long getCertificateSerial() const { return certificateSerial; }
+	CString getOriginalSessionKey();
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);

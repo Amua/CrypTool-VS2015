@@ -299,7 +299,6 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations() {
 		dlg.setInitFileTitle(initFileTitle);
 		if(dlg.DoModal() == IDOK)
 		{
-#ifndef _UNSTABLE
 			// Steuerelemente für Angriff "ausblenden"
 			cancelAttackCycle();			
 			// Pfeil zwischen Alice und Bob (AB) auf "normal" stellen
@@ -307,38 +306,12 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations() {
 			// an dieser Stelle wird unter <targetFile> der Pfad zur hybridverschlüsselten
 			// Datei angegeben, auf die der Angriff ausgeführt werden soll.
 			targetFile = dlg.getFinalHybEncFile();
-			// Zertifikatsinformationen (NAME, VORNAME, KEYTYPE, ZEIT d. Erstellung) in Struktur
-			// Speichern (unbedingt nötig zur Ermittlung der PSE-Datei)
-			certInfo = dlg.getCertInfo();
-			// *** Namen der PSE-Datei ermitteln *** (Angriffsziel)
-			certFilename = generateCertFilename(certInfo.firstname, certInfo.lastname, certInfo.keytype, certInfo.time, certInfo.keyid);
-			// nötiges Verzeichnisprefix anhängen und somit vollständigen Namen ermitteln
-			CString certFilenamePrefixed = (CString)PseVerzeichnis+((CString)"/") + certFilename;
-			certFilename = certFilenamePrefixed;
+			// acquire certificate serial
+			certificateSerial = dlg.getCertificateSerial();
+			// set server exponent e and server modulus n
+			CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyE(certificateSerial, 10, serverPublicKey);
+			CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyN(certificateSerial, 10, serverModulus);
 
-         // Öffentlicher Schlüssel (e,N) von Bob
-         char *publicKeyTemp = new char[4097]; // FIXME HK: MEMORY FOR HEX STRING REPRESENTATION UP to 16K RSA MODULI
-         char *modulusTemp   = new char[4097];
-
-			// Schlüssel von Bob ohne PIN holen (kommt im HEX-Format)
-			getPublicKey(certInfo.firstname, certInfo.lastname, certInfo.time, publicKeyTemp, modulusTemp);
-			// Konvertierung in Dezimalformat
-			CString numberTemp;
-			// öffentlichen Schlüssel konvertieren
-			numberTemp = publicKeyTemp;
-			BaseRepr(numberTemp, 16, 10);
-			strcpy(publicKeyTemp, (char*)(LPCTSTR)numberTemp);
-			// Modulus konvertieren
-			numberTemp = modulusTemp;
-			BaseRepr(numberTemp, 16, 10);
-			strcpy(modulusTemp, (char*)(LPCTSTR)numberTemp);
-			// öffentlichen Schlüssel (e UND n) setzen
-			serverPublicKey = publicKeyTemp;
-			serverModulus = modulusTemp;
-
-         delete []publicKeyTemp;
-         delete []modulusTemp;
-			
 			// RESET
 			scaClient->cancelTransmission();
 			scaServer->cancelReceptions();
@@ -369,7 +342,6 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations() {
 
 			// Anzeige aktualisieren (NUR bei Druck auf Ok)
 			updateGUI(1);
-#endif
 		 }
 		
 	}
@@ -413,7 +385,6 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagetransmission() {
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
-#ifndef _UNSTABLE
 	try
 	{
 	
@@ -440,26 +411,9 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
 			pin = prompt.getPin();
 
 			// try to acquire the private key (in decimal format) using the provided PIN
-
-			//
-			// ***TODO/FIXME***
-			//
-
-
-
-			// PSE öffnen		
-			PSE PseHandle;
-			PseHandle = theApp.SecudeLib.af_open((char*)(LPCTSTR)certFilename, NULL, (char*)(LPCTSTR)pin, NULL);
-			if(PseHandle==NULL && theApp.SecudeLib.LASTERROR==EPIN)
-			{
+			if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPrivateKeyD(certificateSerial, pin, 10, serverPrivateKey)) {
 				// ERROR: falsche PIN, in Endlosschleife weitermachen
-				LoadString(AfxGetInstanceHandle(),IDS_SCA_PSE_WRONG_PIN,pc_str,STR_LAENGE_STRING_TABLE);
-				MessageBox(pc_str, "CrypTool", MB_OK);
-			}
-			else if(PseHandle==NULL && theApp.SecudeLib.LASTERROR!=EPIN)
-			{
-				// ERROR: anderer Fehler [NICHT EPIN], in Endlosschleife weitermachen
-				LoadString(AfxGetInstanceHandle(), IDS_SCA_PSE_OTHER_ERROR, pc_str, STR_LAENGE_STRING_TABLE);
+				LoadString(AfxGetInstanceHandle(), IDS_SCA_PSE_WRONG_PIN, pc_str, STR_LAENGE_STRING_TABLE);
 				MessageBox(pc_str, "CrypTool", MB_OK);
 			}
 			else
@@ -476,21 +430,6 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
 		scaAttacker->cancelAttack();
 		m_ControlAttackProgress.SetPos(0);
 
-		// Private Key aus dem Zertifikat des Servers holen
-		CPSEDemo demo;
-		if(!demo.AccessPSE((char*)(LPCTSTR)pin, certFilename))
-		{
-			// ERROR
-			LoadString(AfxGetInstanceHandle(), IDS_SCA_PSE_PIN_EXTRACTION_ERROR, pc_str, STR_LAENGE_STRING_TABLE);
-			MessageBox(pc_str, "CrypTool", MB_OK);
-			return;
-		}
-		else
-		{
-			// öffentlichen und privaten Schlüssel "holen"
-			demo.getRSAPrivateKey(serverPrivateKey);
-		}
-
 		// *** BOB ***
 		scaServer->setPrivateKey((char*)(LPCTSTR)serverPrivateKey);
 		scaServer->setPSEData((char*)(LPCTSTR)certFilename, (char*)(LPCTSTR)pin);
@@ -503,7 +442,6 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
 	}
 	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
-#endif
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnMessageinterception() {

@@ -84,6 +84,7 @@ protected:
 	CString targetFile;
 	int initMode;
 	bool isFileDeclared;
+	long certificateSerial;
 
 	// SCA
 	SCA_Server *scaServer;
