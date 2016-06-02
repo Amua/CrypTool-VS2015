@@ -44,13 +44,13 @@ protected:
 	virtual void OnOK();
 protected:
 	bool useExistingHybEncFile;
-private:
-	CString originalSessionKey;
-	CString certFilename;
-	CString finalHybEncFile;
+	int initMode;
 	CString initFile;
 	CString initFileTitle;
-	int initMode;
+	CString finalHybEncFile;
+private:
+	long certificateSerial;
+	CString originalSessionKey;
 
 	DECLARE_MESSAGE_MAP()
 };

@@ -34,9 +34,9 @@ public:
 	virtual ~CDlgHybridEncryptionDemo();
 public:
 	CrypTool::ByteString getByteStringPlainText() const { return m_byteStringPlainText; }
-	CrypTool::ByteString getByteStringCipherText() const { m_byteStringCipherText; }
-	CrypTool::ByteString getByteStringSymmetricKey() const { m_byteStringSymmetricKey; }
-	CrypTool::ByteString getByteStringSymmetricKeyEncrypted() { m_byteStringSymmetricKeyEncrypted; }
+	CrypTool::ByteString getByteStringCipherText() const { return m_byteStringCipherText; }
+	CrypTool::ByteString getByteStringSymmetricKey() const { return m_byteStringSymmetricKey; }
+	CrypTool::ByteString getByteStringSymmetricKeyEncrypted() { return m_byteStringSymmetricKeyEncrypted; }
 	long getSelectedCertificateSerial() const { return m_selectedCertificateSerial; }
 	CString getDocumentFileNameResult() const { return m_documentFileNameResult; }
 protected:
