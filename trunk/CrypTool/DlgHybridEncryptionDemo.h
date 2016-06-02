@@ -32,6 +32,13 @@ class CDlgHybridEncryptionDemo : public CDialog {
 public:
 	CDlgHybridEncryptionDemo(const CString &_documentFileName = "", const CString &_documentTitle = "", CWnd* pParent = NULL);
 	virtual ~CDlgHybridEncryptionDemo();
+public:
+	CrypTool::ByteString getByteStringPlainText() const { return m_byteStringPlainText; }
+	CrypTool::ByteString getByteStringCipherText() const { m_byteStringCipherText; }
+	CrypTool::ByteString getByteStringSymmetricKey() const { m_byteStringSymmetricKey; }
+	CrypTool::ByteString getByteStringSymmetricKeyEncrypted() { m_byteStringSymmetricKeyEncrypted; }
+	long getSelectedCertificateSerial() const { return m_selectedCertificateSerial; }
+	CString getDocumentFileNameResult() const { return m_documentFileNameResult; }
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);
@@ -58,6 +65,8 @@ protected:
 	CrypTool::ByteString m_byteStringSymmetricKeyEncrypted;
 protected:
 	long m_selectedCertificateSerial;
+protected:
+	CString m_documentFileNameResult;
 protected:
 	bool DateiOeffnen(const CString &DateiPfadName);
 	void EnDisButtons();

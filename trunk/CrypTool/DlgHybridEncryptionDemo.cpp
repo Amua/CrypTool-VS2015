@@ -42,7 +42,8 @@ CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(const CString &_documentFileN
 	CDialog(CDlgHybridEncryptionDemo::IDD, pParent),
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle),
-	m_selectedCertificateSerial(0) {
+	m_selectedCertificateSerial(0),
+	m_documentFileNameResult("") {
 	for (int i = 0; i<11; i++) {
 		m_ButtonStatus[i] = inactive;
 		m_ActionPerformed[i] = false;
@@ -344,14 +345,14 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 	byteStringResult += m_byteStringCipherText;
 
 	// create a file for the result (with the .hex suffix)
-	const CString fileNameResult = CrypTool::Utilities::createTemporaryFile(".hex");
+	m_documentFileNameResult = CrypTool::Utilities::createTemporaryFile(".hex");
 	// write result byte string to temporary file
-	byteStringResult.writeToFile(fileNameResult);
+	byteStringResult.writeToFile(m_documentFileNameResult);
 
 	HIDE_HOUR_GLASS
 
 	// open result file in new document
-	CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileNameResult);
+	CAppDocument *document = theApp.OpenDocumentFileNoMRU(m_documentFileNameResult);
 	if (document) {
 		// create a meaningful title
 		CString receiverName;
@@ -361,7 +362,6 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 			document->SetTitle(title);
 		}
 	}
-	remove(fileNameResult);
 	CDialog::OnOK();
 }
 
