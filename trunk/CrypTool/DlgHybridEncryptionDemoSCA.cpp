@@ -80,7 +80,6 @@ void CDlgHybridEncryptionDemoSCA::OnButtonEncDocumentSym() {
 			m_byteStringPlainText.writeToFile(m_documentFileName);
 		}
 	}
-
 	// invoke base class implementation after SCA-specific behavior has been handled
 	CDlgHybridEncryptionDemo::OnButtonEncDocumentSym();
 }

@@ -75,32 +75,39 @@ protected:
 protected:
 	void startAttackCycle();
 	void cancelAttackCycle();
+protected:
+	const size_t significantBits;
+	BOOL showInfoDialogs;
+protected:
+	SCA_Server *scaServer;
+	SCA_Client *scaClient;
+	SCA_Attacker *scaAttacker;
+protected:
+	BitmapButtonControl *pButtonControl;
+protected:
+	HybridEncryptedFile hybridEncryptedFile;
+protected:
+	void generateReport(SCA_Client *_scaClient, SCA_Server *_scaServer, SCA_Attacker *_scaAttacker, const CString &_fileName);
 
-	HybridEncryptedFileInfo hi;
+
+
+
+
+
 	bool isHybridEncryptedFileDeclared;
 	CString certFilename;
 	CString initFile;
 	CString initFileTitle;
-	CString targetFile;
 	int initMode;
 	bool isFileDeclared;
-	long certificateSerial;
-
-	// SCA
-	SCA_Server *scaServer;
-	SCA_Client *scaClient;
-	SCA_Attacker *scaAttacker;
 
 	// aktueller Status der Visualisierung
 	int currentStep;
 	// Update der grafischen Oberfläche
 	void updateGUI(int);
 
-	// Button-Abhängigkeiten
-	BitmapButtonControl *pButtonControl;
-
+	
 public:
-	void setHybridEncryptedFileInfo(HybridEncryptedFileInfo&);
 
 	bool isDocumentHybridEncrypted(const char*);
 	void setEncryptedFile(const char*);
@@ -111,7 +118,7 @@ public:
 	SCA_Client *getSCAClient() { return scaClient; };
 	SCA_Attacker *getSCAAttacker() { return scaAttacker; };
 
-   c_scaBigNumberSettings scaBigNumberSettings; // FIXME HK: Ensure enough memory for Big numbers
+   //c_scaBigNumberSettings scaBigNumberSettings; // FIXME HK: Ensure enough memory for Big numbers
 
 // Konstruktion
 public:
@@ -127,7 +134,7 @@ public:
 	CProgressCtrl	m_ControlAttackProgress;
 	CPictureEx	m_ControlABArrow;
 	CPictureEx	m_ControlLights;
-	BOOL	m_bShowInfoDialogues;
+	
 
 protected:
 

@@ -43,8 +43,6 @@ protected:
 	CString	m_DeterminedSessionKey;
 	CString	m_InterceptedEncryptedSessionKey;
 	CString	m_ComputedMessage;
-private:
-	int significantBits;
 
 	DECLARE_MESSAGE_MAP()
 };

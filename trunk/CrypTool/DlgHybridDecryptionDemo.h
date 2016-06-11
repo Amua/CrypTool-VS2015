@@ -45,6 +45,8 @@ private:
 	CString m_documentFileName;
 	CString m_documentTitle;
 private:
+	const size_t m_byteLengthSessionKey;
+private:
 	CrypTool::ByteString m_byteStringPlainText;
 	CrypTool::ByteString m_byteStringCipherText;
 	CrypTool::ByteString m_byteStringSymmetricKey;

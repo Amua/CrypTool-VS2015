@@ -43,17 +43,7 @@ CDlgSideChannelAttackVisualizationHEBob::~CDlgSideChannelAttackVisualizationHEBo
 BOOL CDlgSideChannelAttackVisualizationHEBob::OnInitDialog() {
 	CDialog::OnInitDialog();
 	// load the keyword from the registry
-	if (CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, "SideChannelAttack") == ERROR_SUCCESS) {
-		unsigned long u_length = 1024;
-		char c_SCA_keyWord[1025];
-		LoadString(AfxGetInstanceHandle(), IDS_SCA_KEYWORD, c_SCA_keyWord, STR_LAENGE_STRING_TABLE);
-		CT_READ_REGISTRY_DEFAULT(c_SCA_keyWord, "Keyword", c_SCA_keyWord, u_length);
-		keyword = c_SCA_keyWord;
-		if (!keyword.GetLength())
-			keyword.LoadStringA(IDS_SCA_KEYWORD);
-		CT_CLOSE_REGISTRY();
-		UpdateData(FALSE);
-	}
+	CrypTool::Utilities::registryReadStringDefault("SideChannelAttack", "Keyword", IDS_SCA_KEYWORD, keyword);
 	updateDisplay();
 	return TRUE;
 }
@@ -67,17 +57,9 @@ void CDlgSideChannelAttackVisualizationHEBob::DoDataExchange(CDataExchange* pDX)
 
 void CDlgSideChannelAttackVisualizationHEBob::OnOK() {
 	UpdateData(true);
-
-	// store the keyword in the registry
-	if (CT_OPEN_REGISTRY_SETTINGS(KEY_WRITE, IDS_REGISTRY_SETTINGS, "SideChannelAttack") == ERROR_SUCCESS) {
-		if (keyword == "")
-			keyword.LoadStringA(IDS_SCA_KEYWORD);
-		CT_WRITE_REGISTRY(keyword, "Keyword");
-		CT_CLOSE_REGISTRY();
-	}
-
+	// store the current keyword in the registry
+	CrypTool::Utilities::registryWriteString("SideChannelAttack", "Keyword", keyword);
 	UpdateData(false);
-
 	CDialog::OnOK();
 }
 
@@ -91,46 +73,39 @@ void CDlgSideChannelAttackVisualizationHEBob::updateDisplay() {
 	SCA_Server *bob = (SCA_Server*)((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAServer();
 	
 	// *** TASK-TABELLE MIT INFOS FÜLLEN ***
-	if(bob->getNumberOfReceptions())
-	{
+	if(bob->getResponses().size() > 0) {
 		// ** Wie viele Nachrichten hat Bob bisher empfangen? **
 		// Unterscheidung zwischen Singular und Plural
 		// (vgl. DlgSideChannelAttackVisualizationHEAlice::updateDisplay)
-		if(bob->getNumberOfReceptions() == 1)
-		{
+		if(bob->getResponses().size() == 1) {
 			LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_RECEIVEDMESSAGE, pc_str, STR_LAENGE_STRING_TABLE);
 			m_ControlTasks.AddString(pc_str);
 		}
-		else if(bob->getNumberOfReceptions() > 1)
-		{
+		else if(bob->getResponses().size() > 1) {
 			LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_RECEIVEDMESSAGES, pc_str, STR_LAENGE_STRING_TABLE);
-			sprintf(temp, pc_str, bob->getNumberOfReceptions());
+			sprintf(temp, pc_str, bob->getResponses().size());
 			m_ControlTasks.AddString(temp);
 		}
 			
 		// ** Wie viele positive Antworten hat Bob gegeben ? **
 		// ** (oder: wie viele Nachrichten konnte Bob erfolgreich entschlüsseln ? **
 		// Unterscheidung zwischen Singular und Plural (s.o.)
-		if(bob->getNumberOfReceptions() == 1 && bob->getNumberOfPositiveResponses() == 1)
-		{
+		if(bob->getResponses().size() == 1 && bob->getNumberOfPositiveResponses() == 1) {
 			LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_SUCCESSRESPONSE, pc_str, STR_LAENGE_STRING_TABLE);
 			m_ControlTasks.AddString(pc_str);
 		}
-		else if(bob->getNumberOfReceptions() == 1 && bob->getNumberOfPositiveResponses() == 0)
-		{
+		else if(bob->getResponses().size() == 1 && bob->getNumberOfPositiveResponses() == 0) {
 			LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_FAILURERESPONSE, pc_str, STR_LAENGE_STRING_TABLE);
 			m_ControlTasks.AddString(pc_str);
 
 		}
-		else if(bob->getNumberOfPositiveResponses() > 1)
-		{
+		else if(bob->getNumberOfPositiveResponses() > 1) {
 			LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_SUCCESSRESPONSES, pc_str, STR_LAENGE_STRING_TABLE);
-			sprintf(temp, pc_str, bob->getNumberOfPositiveResponses(), bob->getNumberOfReceptions());
+			sprintf(temp, pc_str, bob->getNumberOfPositiveResponses(), bob->getResponses().size());
 			m_ControlTasks.AddString(temp);
 		}
 	}
-	else
-	{
+	else {
 		// Bob hat bisher keinerlei Nachrichten empfangen
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_RECEIVEDNOMESSAGES, temp, STR_LAENGE_STRING_TABLE);
 		m_ControlTasks.AddString(temp);
@@ -153,29 +128,23 @@ void CDlgSideChannelAttackVisualizationHEBob::updateDisplay() {
 	m_ListReceivedSessionKeys.DeleteAllItems();
 
 	// Tabelle mit Informationen füllen...
-	char number[5];
-	OctetString *o;
-	bool b;
-	char hexstring[65];   // FIXME HK: BUFFER FOR UP TO 256 BIT AES KEYS 
-	char boolstring[128]; // "sucessful" || "not sucessful"
+	CString number;
+	CrypTool::ByteString sessionKey;
+	bool response;
+	CString boolString;
 
-	for(int i=0; i<bob->getNumberOfReceptions(); i++)
-	{
-		// Informationen holen
-		o = bob->getFormerSessionKey(i);
-		b = bob->getFormerResponse(i);
-		
-		// laufende Nummer ermitteln (_nicht_ 0-indiziert, daher i+1 anstatt i)
-		itoa((i+1), number, 10);
-		// Antworttext ermitteln
-		if(b) LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_ANSWER_SUCCESS, boolstring, STR_LAENGE_STRING_TABLE);
-		else LoadString(AfxGetInstanceHandle(), IDS_SCA_SERVER_ANSWER_FAILURE, boolstring, STR_LAENGE_STRING_TABLE);
-		// Hexstring ermitteln
-		convertOctetStringToHexString(o, hexstring);
+	for(size_t i=0; i<bob->getResponses().size(); i++) {
+		// note: sequence number is not zero-based
+		number.Format("%d", i + 1);
+		// acquire session key and response
+		sessionKey = bob->getReceivedHybridEncryptedFiles().at(i).sessionKey.toString(16);
+		response = bob->getResponses().at(i);
+		if (response) boolString.Format(IDS_SCA_SERVER_ANSWER_SUCCESS);
+		else boolString.Format(IDS_SCA_SERVER_ANSWER_FAILURE);
 		// Zeile füllen
 		m_ListReceivedSessionKeys.InsertItem(i, number);
-		m_ListReceivedSessionKeys.SetItemText(i,1, boolstring);
-		m_ListReceivedSessionKeys.SetItemText(i,2, hexstring);
+		m_ListReceivedSessionKeys.SetItemText(i,1, boolString);
+		m_ListReceivedSessionKeys.SetItemText(i, 2, sessionKey.toString());
 	}
 
 	UpdateData(false);

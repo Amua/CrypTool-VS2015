@@ -64,22 +64,17 @@ void CDlgSideChannelAttackVisualizationHEAlice::updateDisplay() {
 	ASSERT(GetParent());
 	SCA_Client *alice = ((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAClient();
 
-	// Status holen
-	SCA_ClientStatusInfo status = alice->getStatusInfo();
-
 	// *** TASK-TABELLE MIT INFOS FÜLLEN ***
 	// wenn noch gar keine hybridverschlüsselte Datei gewählt wurde,
 	// entsprechende Nachricht erzeugen, Anzeige aktualisieren und return
-	if(!status.isHybEncFileDefined)
-	{
+	if(alice->getHybridEncryptedFile().isReset()) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_CLIENT_NOHYBENCFILEDEFINED, pc_str, STR_LAENGE_STRING_TABLE);
 		m_ControlTasks.AddString(pc_str);
 		UpdateData(false);
 		return;
 	}
 	// wurde die hybridverschlüsselte DATEI VON ALICE ERSTELLT...
-	if(status.hasCreatedMessage)
-	{
+	if(!alice->getHybridEncryptedFile().sessionKey.isNull()) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_CLIENT_CREATEDMESSAGE, pc_str, STR_LAENGE_STRING_TABLE);	
 		m_ControlTasks.AddString(pc_str);
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_CLIENT_CHOSESESSIONKEY, pc_str, STR_LAENGE_STRING_TABLE);
@@ -98,17 +93,14 @@ void CDlgSideChannelAttackVisualizationHEAlice::updateDisplay() {
 		m_ControlTasks.AddString(pc_str);
 	}
 	// wurde die hybridverschlüsselte Datei schon übertragen?
-	if(status.hasTransmittedMessage)
-	{
+	if(!alice->getTransmittedHybridEncryptedFile().isReset()) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_CLIENT_TRANSMITTEDHYBENCFILE, pc_str, STR_LAENGE_STRING_TABLE);
 		m_ControlTasks.AddString(pc_str);
 	}
 
-
 	// *** ÜBRIGE FELDER FÜLLEN ***
-	if(status.hasCreatedMessage)
-	{
-		m_OriginalSessionKey = alice->getSessionKey().c_str();
+	if(!alice->getHybridEncryptedFile().sessionKey.isNull()) {
+		m_OriginalSessionKey = alice->getSessionKey().toString();
 	}
 	else
 	{

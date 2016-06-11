@@ -38,6 +38,7 @@ CDlgHybridDecryptionDemo::CDlgHybridDecryptionDemo(const CString &_documentFileN
 	CDialog(CDlgHybridDecryptionDemo::IDD, pParent),
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle),
+	m_byteLengthSessionKey(16),
 	m_selectedCertificateSerial(0),
 	m_selectedCertificatePassword(""),
 	step(0) {
@@ -287,11 +288,15 @@ int CDlgHybridDecryptionDemo::UpdateDataDisplay() {
 		UpdateData(true);
 	}
 	else if (step == 3) {
-		// here we try to decrypt the encrypted session key
+		// here we try to decrypt the encrypted session key (NO PADDING!)
 		SHOW_HOUR_GLASS
-		CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt operation(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_DECRYPTION);
-		operation.executeOnByteStrings(m_byteStringSymmetricKeyEncrypted, m_selectedCertificateSerial, m_selectedCertificatePassword, m_byteStringSymmetricKey);
+		const bool padding = false;
+		CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt operation(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_DECRYPTION, padding);
+		const bool result = operation.executeOnByteStrings(m_byteStringSymmetricKeyEncrypted, m_selectedCertificateSerial, m_selectedCertificatePassword, m_byteStringSymmetricKey);
 		HIDE_HOUR_GLASS
+		// truncate session key to appropriate size (depends on the padding option)
+		if (padding) m_byteStringSymmetricKey.truncateRight(m_byteLengthSessionKey);
+		else m_byteStringSymmetricKey.truncateLeft(m_byteLengthSessionKey);
 		// update user interface
 		CString temp;
 		temp.Format(IDS_STRING_HYBRID_DEC_MSG6);

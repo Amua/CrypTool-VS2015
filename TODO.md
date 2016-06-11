@@ -24,6 +24,8 @@ This document contains the most important TODOs for the project.
 - finish refactoring symmetric cryptography: MARS, RC6, Serpent, Twofish, DESX (supported by OpenSSL!), DESL, DESXL
 - finish refactoring asymmetric cryptography: improve error checking and user notification (i.e. when entering a wrong private key password, etc...)
 - implement replacement for Secude's PSE: finish "CertificateStore" implementation (adhere to OpenSSL CLI output for parameter display, honor custom CrypTool certificate extensions for PKCS#12 import/export, etc...)
+- fix side-channel attack implementation: internally, everything Secude-related has been replaced with new byte-string-based implementations, but the attack doesn't work correctly yet, and for some reason it's prone to crashing
+- add user feedback for symmetric decryption: if the user enters a wrong key, nothing happens (at least nothing the user can see) because internally OpenSSL throws an error due to padding-related errors; one option would be to simply display an error message, another would be to also dump the (partial) result of the failed decryption process
 
 ## Resources
 

@@ -38,31 +38,27 @@ static char THIS_FILE[] = __FILE__;
 #include "CrypToolTools.h"
 
 CDlgSideChannelAttackVisualizationHE::CDlgSideChannelAttackVisualizationHE(CWnd* pParent) :
-	CDialog(CDlgSideChannelAttackVisualizationHE::IDD, pParent), scaBigNumberSettings() {
-	
-	m_bShowInfoDialogues = FALSE;
-
-	// *** Initialisierungen ***
+	CDialog(CDlgSideChannelAttackVisualizationHE::IDD, pParent),
+	significantBits(128),
+	showInfoDialogs(false),
+	scaClient(0),
+	scaServer(0),
+	scaAttacker(0),
+	pButtonControl(0) {
+	// initialization
 	this->initMode = 0;
 	this->initFile = "";
 	this->isFileDeclared = false;
-	this->targetFile = "";
 	this->certFilename = "";
-	this->scaServer = 0;
-	this->scaClient = 0;
-	this->scaAttacker = 0;
 	this->currentStep = 0;
-	this->pButtonControl = 0;
-	hi.init();
 	this->isHybridEncryptedFileDeclared = false;
 }
 
 CDlgSideChannelAttackVisualizationHE::~CDlgSideChannelAttackVisualizationHE() {
-	if(scaServer) delete scaServer;
-	if(scaClient) delete scaClient;
-	if(scaAttacker) delete scaAttacker;
-	if(pButtonControl) delete pButtonControl;
-	hi.free();
+	delete scaClient;
+	delete scaServer;
+	delete scaAttacker;
+	delete pButtonControl;
 }
 
 void CDlgSideChannelAttackVisualizationHE::DoDataExchange(CDataExchange* pDX) {
@@ -73,89 +69,40 @@ void CDlgSideChannelAttackVisualizationHE::DoDataExchange(CDataExchange* pDX) {
 	DDX_Control(pDX, IDC_PROGRESS_ATTACK, m_ControlAttackProgress);
 	DDX_Control(pDX, IDC_ABARROW, m_ControlABArrow);
 	DDX_Control(pDX, IDC_LIGHTS, m_ControlLights);
-	DDX_Check(pDX, IDC_CHECK_DISABLEHELP, m_bShowInfoDialogues);
+	DDX_Check(pDX, IDC_CHECK_DISABLEHELP, showInfoDialogs);
 }
 
 BOOL CDlgSideChannelAttackVisualizationHE::OnInitDialog() {
 	try {
 		CDialog::OnInitDialog();
-
-		// *** VORWORT ***
-		// Es gibt drei mögliche Szenarien zu Beginn des Dialogs:
-		//	(1) - KEINE Datei geöffnet/fokussiert
-		//	(2) - GÜLTIGE hybridverschlüsselte Datei geöffnet/fokussiert
-		//  (3) - ANDERE (keine gültige)  hybridverschlüsselte Datei geöffnet/fokussiert
-		// Anhand dieser Szenarien wird der "Startmodus" des Dialogs bestimmt, d.h.
-		// welche zusätzlichen Aktionen (Schlüsselerstellung usw.) im Vorfeld des
-		// Seitenkanalangriffs nötig sind
-
-		// *** (1) ***
-		// Der Benutzer hat vorher KEINE Datei angewählt, die als Ausgangsbasis für den
-		// Seitenkanalangriff dienen könnte.
-		if(!isFileDeclared)
-			initMode = initMode | SCA_MODE_NO_FILE;		
-		// *** (3) ***
-		// Der Benutzer hat eine Datei focussiert, die KEINEN hybridverschlüsselten
-		// Text beinhaltet. Somit muss entsprechend reagiert werden:
-		else if(isFileDeclared && !isDocumentHybridEncrypted(initFile))
+		// set init mode (one of three options)
+		if (!isFileDeclared) {
+			initMode = initMode | SCA_MODE_NO_FILE;
+		}
+		else if (isFileDeclared && !isDocumentHybridEncrypted(initFile)) {
 			initMode = initMode | SCA_MODE_INVALID_FILE;
-		// *** (2) ***
-		// An dieser Stelle hat der Anwender eine hybridverschlüsselte Datei angegeben
-		// und kann nun mit der Durchführung des Seitenkanalangriffs auf die besagte Datei beginnen
-		else
+		}
+		else {
 			initMode = initMode | SCA_MODE_VALID_FILE;
-		
-		// Button-Kontrolle erstellen
+		}
+		// query registry
+		CrypTool::Utilities::registryReadNumberDefault("SideChannelAttack", "ShowInfoDialogs", 1, showInfoDialogs);
+		// create button control
 		pButtonControl = new SideChannelAttackBitmapButtonControl(this);
-		if(!pButtonControl) throw SCA_Error(E_SCA_MEMORY_ALLOCATION);
-
-		// Ampel auf "normal" stellen
+		// initialize user interface colors
+		m_greycolor= 0x00C0C0C0;
+		m_greybrush.CreateSolidBrush(m_greycolor);
+		m_blackcolor= RGB(0,0,0);
+		m_blackbrush.CreateSolidBrush(m_blackcolor);
+		// update user interface
 		setLights(SCA_LIGHTS_NORMAL);
-		// Pfeil zwischen Alice und Bob (AB) auf "normal" stellen
 		setABArrow(SCA_ABARROW_NORMAL);
-
-		// Fortschrittsanzeige für den Angriff initialisieren
-		// Obergrenze: [signifikante Bits] + 2
-		// DEFAULT-WERT: 128 Bit
-
-
-		if ( CT_OPEN_REGISTRY_SETTINGS( KEY_ALL_ACCESS, IDS_REGISTRY_SETTINGS, "SideChannelAttack" ) == ERROR_SUCCESS )
-		{
-			unsigned long u_significantBits = 128;
-			CT_READ_REGISTRY_DEFAULT(u_significantBits, "BitlengthSecret", u_significantBits);
-			if(!u_significantBits) throw SCA_Error(E_SCA_INTERNAL_ERROR);
-			m_ControlAttackProgress.SetRange(0,(short)(u_significantBits+2));
-			m_ControlAttackProgress.SetStep(1);
-			m_ControlAttackProgress.SetPos(0);
-
-			unsigned long u_flag_bShowInfoDialogues = (unsigned long)TRUE;
-			CT_READ_REGISTRY_DEFAULT(u_flag_bShowInfoDialogues, "BitlengthSecret", u_flag_bShowInfoDialogues);
-			this->m_bShowInfoDialogues = u_flag_bShowInfoDialogues;
-
-			CT_CLOSE_REGISTRY();
-		}
-		else
-		{
-			// FIXME
-		}
-
-		// Buttons für Angriffssteuerung ausblenden
+		m_ControlAttackProgress.SetRange((short)(0), (short)(significantBits + 2));
+		m_ControlAttackProgress.SetStep(1);
 		cancelAttackCycle();
-
-		// Informationsdialoge anzeigen? (schnellere Bedienung bei Bedarf)
-
-		// Farben für Textfelder etc. festlegen
-		this->m_greycolor=0x00C0C0C0; // RGB(0x00C0C0C0/*198,195,198*/);	// Standard-Grau
-		this->m_greybrush.CreateSolidBrush(m_greycolor);
-		this->m_blackcolor=RGB(0,0,0); // Schwarz
-		this->m_blackbrush.CreateSolidBrush(m_blackcolor);
-
 		UpdateData(false);
-		
-		return FALSE;  // return TRUE unless you set the focus to a control
-					  // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
+		return TRUE;
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return true; }
 }
 
@@ -216,24 +163,14 @@ void CDlgSideChannelAttackVisualizationHE::updateGUI(int b) {
 }
 
 void CDlgSideChannelAttackVisualizationHE::setEncryptedFile(const char *file) {
-	try
-	{
+	try {
 		initFile = file;
 		// set file as declared only if it's not empty
 		CrypTool::ByteString byteStringTemp;
 		byteStringTemp.readFromFile(file);
 		isFileDeclared = (byteStringTemp.getByteLength() > 0);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
-}
-
-void CDlgSideChannelAttackVisualizationHE::setHybridEncryptedFileInfo(HybridEncryptedFileInfo &_hi) {
-	try {
-		this->hi = _hi;
-		this->isHybridEncryptedFileDeclared = true;
-	}
-	catch(SCA_Error &e) { CreateErrorMessage(e); return; };
 }
 
 void CDlgSideChannelAttackVisualizationHE::setInitFileTitle(const char *title) {
@@ -248,541 +185,412 @@ bool CDlgSideChannelAttackVisualizationHE::isDocumentHybridEncrypted(const char 
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnIntroduction() {
-	try
-	{
-		if(this->m_bShowInfoDialogues)
-		{
-			// Einführungsdialog anzeigen [weiter nichts]
+	try {
+		if (showInfoDialogs) {
 			CDlgSideChannelAttackVisualizationHEIntroduction dlg;
-
-			if(dlg.DoModal() != IDOK)
+			if (dlg.DoModal() != IDOK) {
 				return;
+			}
 		}
-
-		// Steuerelemente für Angriff "ausblenden"
-		cancelAttackCycle();
-		// RESET
-		m_ControlAttackProgress.SetPos(0);
-		// Pfeil zwischen Alice und Bob (AB) auf "normal" stellen
-		setABArrow(SCA_ABARROW_NORMAL);
-		
-		// ** Akteure erstellen **
-		// Falls zuvor bereits Akteure erstellt wurden, müssen diese gelöscht werden
-		if(scaServer) delete scaServer;
-		scaServer = new SCA_Server();
-		if(!scaServer) throw SCA_Error(E_SCA_MEMORY_ALLOCATION);
-		if(scaClient) delete scaClient;
+		// query registry
+		CString keyword;
+		CrypTool::Utilities::registryReadStringDefault("SideChannelAttack", "Keyword", IDS_SCA_KEYWORD, keyword);
+		// delete old actors if necessary
+		if (scaClient) delete scaClient;
+		if (scaServer) delete scaServer;
+		if (scaAttacker) delete scaAttacker;
+		// create new actors
 		scaClient = new SCA_Client();
-		if(!scaClient) throw SCA_Error(E_SCA_MEMORY_ALLOCATION);
-		if(scaAttacker) delete scaAttacker;
-		scaAttacker = new SCA_Attacker();
-		if(!scaAttacker) throw SCA_Error(E_SCA_MEMORY_ALLOCATION);
-
-		// Anzeige aktualisieren (NUR bei Druck auf Ok)
+		scaServer = new SCA_Server(significantBits, keyword);
+		scaAttacker = new SCA_Attacker(significantBits);
+		// update user interface
+		m_ControlAttackProgress.SetPos(0);
+		cancelAttackCycle();
+		setABArrow(SCA_ABARROW_NORMAL);
 		updateGUI(0);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnPreparations() {
-	try
-	{
-		// forward decs
-		CString serverPublicKey;
-		CString serverModulus;
-		
-		// Vorbereitungsdialog anzeigen und "einstellen" (initMode, initFile)
+	try {
+		// initialize and display preparations dialog
 		CDlgSideChannelAttackVisualizationHEPreparations dlg;
 		dlg.setInitMode(initMode);
 		dlg.setInitFile(initFile);
 		dlg.setInitFileTitle(initFileTitle);
-		if(dlg.DoModal() == IDOK)
-		{
-			// Steuerelemente für Angriff "ausblenden"
-			cancelAttackCycle();			
-			// Pfeil zwischen Alice und Bob (AB) auf "normal" stellen
-			setABArrow(SCA_ABARROW_NORMAL);
-			// an dieser Stelle wird unter <targetFile> der Pfad zur hybridverschlüsselten
-			// Datei angegeben, auf die der Angriff ausgeführt werden soll.
-			targetFile = dlg.getFinalHybEncFile();
-			// acquire certificate serial
-			certificateSerial = dlg.getCertificateSerial();
-			// set server exponent e and server modulus n
-			CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyE(certificateSerial, 10, serverPublicKey);
-			CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyN(certificateSerial, 10, serverModulus);
-
-			// RESET
-			scaClient->cancelTransmission();
-			scaServer->cancelReceptions();
-			scaAttacker->cancelInterception();
-			scaAttacker->cancelAttack();
-			m_ControlAttackProgress.SetPos(0);
-
-			// *** ACHTUNG ***
-			// An dieser Stelle befindet sich der Pfad zur hybridverschlüsselten Datei in <certFilename>
-			// und die benötigten Variablen für e,d,N sind gesetzt
-			
-			// Struktur mit Informationen aus hybridverschlüsselter Datei füllen
-			extractHybridEncryptedFileInformation((char*)(LPCTSTR)targetFile, hi);
-
-			// *** ALICE ***
-			// Entweder hat Alice die hybridverschlüsselte Datei SELBST erstellt, oder
-			// die hybridverschlüsselte Datei existierte bereits zu Beginn der
-			// Visualisierung und Alice schickt diese lediglich an Bob.
-			if(dlg.isExistingHybEncFileUsed()) scaClient->useExistingHybEncFile(hi);
-			else scaClient->useCreatedHybEncFile(hi, (char*)(LPCTSTR)dlg.getOriginalSessionKey());
-			// *** BOB ***
-			// Initialisierung der für die RSA-Entschlüsselung nötigen Parameter
-			scaServer->setPublicKey((char*)(LPCTSTR)serverPublicKey);
-			scaServer->setModulus((char*)(LPCTSTR)serverModulus);
-			// *** TRUDY ***
-			// Trudy besorgt sich den öffentlichen Schlüssel von Bob
-			scaAttacker->setTargetPublicKey((char*)(LPCTSTR)serverPublicKey, (char*)(LPCTSTR)serverModulus);
-
-			// Anzeige aktualisieren (NUR bei Druck auf Ok)
-			updateGUI(1);
-		 }
-		
+		if (dlg.DoModal() != IDOK) {
+			return;
+		}
+		// try to parse the hybrid-encrypted document and extract the certificate 
+		// serial number, the encrypted session key, and the cipher text; put all 
+		// this information into the "hybridEncryptedFile" structure
+		if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(dlg.getFinalHybEncFile(), hybridEncryptedFile.certificateSerial, hybridEncryptedFile.sessionKeyEncrypted, hybridEncryptedFile.cipherText)) {
+			throw SCA_Error(E_SCA_HYBENCFILE_EXTRACTION);
+		}
+		// depending on whether the user executed the hybrid encryption himself 
+		// or relied on a document encrypted by someone else, the session key 
+		// needs to be specified as well; note: the session key is initialized 
+		// either way, but in the latter case the session key is set to zero 
+		// because the user has no knowledge of the key
+		if (dlg.isExistingHybEncFileUsed()) hybridEncryptedFile.sessionKey.reset();
+		else hybridEncryptedFile.sessionKey = dlg.getOriginalSessionKey();
+		// try to acquire server exponent e and server modulus n
+		CString stringPublicKeyE;
+		CString stringPublicKeyN;
+		if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyE(hybridEncryptedFile.certificateSerial, 10, stringPublicKeyE)) {
+			throw SCA_Error(E_SCA_INTERNAL_ERROR);
+		}
+		if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPublicKeyN(hybridEncryptedFile.certificateSerial, 10, stringPublicKeyN)) {
+			throw SCA_Error(E_SCA_INTERNAL_ERROR);
+		}
+		CrypTool::ByteString e;
+		CrypTool::ByteString n;
+		e = stringPublicKeyE;
+		n = stringPublicKeyN;
+		// reset all involved parties
+		scaClient->resetTransmittedHybridEncryptedFile();
+		scaServer->resetReceivedHybridEncryptedFiles();
+		scaAttacker->resetInterceptedHybridEncryptedFile();
+		scaAttacker->resetAttack();
+		// update all involved parties
+		scaClient->setHybridEncryptedFile(hybridEncryptedFile);
+		scaServer->setPublicKey(e, n);
+		scaAttacker->setPublicKey(e, n);
+		// update user interface
+		m_ControlAttackProgress.SetPos(0);
+		cancelAttackCycle();
+		setABArrow(SCA_ABARROW_NORMAL);
+		updateGUI(1);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnMessagetransmission() {
-	try
-	{
-		if(this->m_bShowInfoDialogues)
-		{
-			// Informationsdialog anzeigen
-			CDlgSideChannelAttackVisualizationHEMessageTransmission dlg;	
-
-			if(dlg.DoModal() != IDOK)
+	try {
+		if (showInfoDialogs) {
+			CDlgSideChannelAttackVisualizationHEMessageTransmission dlg;
+			if (dlg.DoModal() != IDOK) {
 				return;
+			}
 		}
-
-		// Steuerelemente für Angriff "ausblenden"
-		cancelAttackCycle();
-		// RESET
-		scaClient->cancelTransmission();
-		scaServer->cancelReceptions();
-		scaAttacker->cancelInterception();
-		scaAttacker->cancelAttack();
+		// reset all involved parties
+		scaClient->resetTransmittedHybridEncryptedFile();
+		scaServer->resetReceivedHybridEncryptedFiles();
+		scaAttacker->resetInterceptedHybridEncryptedFile();
+		scaAttacker->resetAttack();
+		// update user interface
 		m_ControlAttackProgress.SetPos(0);
-
-		// Pfeil zwischen Alice und Bob (AB) auf "Nachricht übertragen" stellen
+		cancelAttackCycle();
 		setABArrow(SCA_ABARROW_TRANSMISSION);
-		
-		// Timer für Animationsabläufe setzen (siehe Funktion OnTimer)
-		if(!SetTimer(SCA_TIMEREVENT_AB_TRANSMISSION, 50, 0))
+		if (!SetTimer(SCA_TIMEREVENT_AB_TRANSMISSION, 50, 0)) {
 			throw SCA_Error(E_SCA_TIMER_NOT_AVAILABLE);
-
-		// Anzeige aktualisieren (nur bei Druck auf Ok)
+		}
 		updateGUI(2);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
-	try
-	{
-	
-		CString pin;
-		CString serverPrivateKey;
-
-		// PSE-PIN-Abfrage (für Zugang zu privatem Schlüssel)
-		while(1)
-		{
-			// PIN-Eingabedialog erstellen
-			CDlgSideChannelAttackVisualizationHEPSEPINPrompt prompt;
-
-			// Falls der Benutzer ABBRECHEN gedrückt hat, keine weiteren Aktionen durchführen, d.h.
-			// die SCHLEIFE VERLASSEN und dem Benutzer eine entsprechende Nachricht zukommen lassen, dass
-			// ohne die eingegebene PIN eine Angriffsvisualisierung unmöglich ist
-			if(prompt.DoModal() == IDCANCEL)
-			{
+	try {
+		// temporary variables
+		CString password;
+		CString stringPrivateKeyD;
+		// prompt user to enter the password for the private key of the certificate
+		while(1) {
+			AfxMessageBox("CRYPTOOL_BASE: this 'pse' description is outdated");
+			CDlgSideChannelAttackVisualizationHEPSEPINPrompt dlg;
+			if (dlg.DoModal() != IDOK) {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_PSE_IS_NEEDED, pc_str, STR_LAENGE_STRING_TABLE);
 				MessageBox(pc_str, "CrypTool", MB_OK);
 				return;
 			}
-
-			// Falls der Benutzer OK gedrückt hat, mit den weiteren Vorbereitungen fortfahren...
-			pin = prompt.getPin();
-
-			// try to acquire the private key (in decimal format) using the provided PIN
-			if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPrivateKeyD(certificateSerial, pin, 10, serverPrivateKey)) {
-				// ERROR: falsche PIN, in Endlosschleife weitermachen
+			// assign the password entered by the user
+			password = dlg.getPin();
+			// try to acquire the private key (in decimal format) using the provided password
+			if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringRSAPrivateKeyD(hybridEncryptedFile.certificateSerial, password, 10, stringPrivateKeyD)) {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_PSE_WRONG_PIN, pc_str, STR_LAENGE_STRING_TABLE);
 				MessageBox(pc_str, "CrypTool", MB_OK);
 			}
-			else
-			{
-				// ALLES OK: PIN korrekt, Endlosschleife verlassen und somit mit Vorbereitungen fortfahren
+			else {
 				break;
 			}
 		}
-
-		// RESET
-		scaClient->cancelTransmission();
-		scaServer->cancelReceptions();
-		scaAttacker->cancelInterception();
-		scaAttacker->cancelAttack();
+		// reset all involved parties
+		scaClient->resetTransmittedHybridEncryptedFile();
+		scaServer->resetReceivedHybridEncryptedFiles();
+		scaAttacker->resetInterceptedHybridEncryptedFile();
+		scaAttacker->resetAttack();
+		// update all involved parties
+		CrypTool::ByteString d;
+		d = stringPrivateKeyD;
+		scaServer->setPrivateKey(d, password);
+		// execute the actual message transmission between client and server
+		scaClient->transmitHybridEncryptedFile();
+		scaServer->receiveHybridEncryptedFile(scaClient->getTransmittedHybridEncryptedFile());
+		// update user interface
 		m_ControlAttackProgress.SetPos(0);
-
-		// *** BOB ***
-		scaServer->setPrivateKey((char*)(LPCTSTR)serverPrivateKey);
-		scaServer->setPSEData((char*)(LPCTSTR)certFilename, (char*)(LPCTSTR)pin);
-
-		// Nachricht ÜBERTRAGEN/EMPFANGEN
-		scaServer->receiveHybridEncryptedFile(scaClient->transmitHybEncFile());
-
-		// Anzeige aktualisieren (nur bei Druck auf Ok)
 		updateGUI(9);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnMessageinterception() {
-	try
-	{
-		if(this->m_bShowInfoDialogues)
-		{
-			// Informationsdialog anzeigen
+	try {
+		if (showInfoDialogs) {
 			CDlgSideChannelAttackVisualizationHEMessageInterception dlg;
-
-			if(dlg.DoModal() != IDOK)
+			if (dlg.DoModal() != IDOK) {
 				return;
+			}
 		}
-		
-		// RESET
-		scaAttacker->cancelInterception();
-		scaAttacker->cancelAttack();
+		// reset all involved parties
+		scaServer->resetReceivedModifiedHybridEncryptedFiles();
+		scaAttacker->resetInterceptedHybridEncryptedFile();
+		scaAttacker->resetAttack();
+		// update all involved parties
+		scaAttacker->setInterceptedHybridEncryptedFile(scaClient->getTransmittedHybridEncryptedFile());
+		// update user interface
 		m_ControlAttackProgress.SetPos(0);
-		// Steuerelemente für Angriff "ausblenden"
 		cancelAttackCycle();
-
-		// Pfeil zwischen Alice und Bob (AB) auf "Nachricht abfangen" stellen
 		setABArrow(SCA_ABARROW_INTERCEPTION);
-		// Nachricht ABFANGEN
-		scaAttacker->interceptHybridEncryptedFile(scaClient->getHybEncFile());
-
-		// Anzeige aktualisieren
 		updateGUI(3);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnAttackcycle() {
-	try
-	{
-		// ACHTUNG
-		// Abfangen, falls es sich um einen NULLSCHLÜSSEL handelt, da der 
-		// Angriff dann nicht möglich ist (Folge: Endlosschleife/Speicherloch)
-		if(isNullKey(&hi.sessionKeyEncrypted))
-		{
-			LoadString(AfxGetInstanceHandle(), IDS_SCA_SESSIONKEYISNULL, pc_str, STR_LAENGE_STRING_TABLE);
-			MessageBox(pc_str, "CrypTool", MB_OK);
+	try {
+		// ATTENTION: the attack does not work for session keys which are null
+		if (hybridEncryptedFile.sessionKeyEncrypted.isNull()) {
+			CString message;
+			message.Format(IDS_SCA_SESSIONKEYISNULL);
+			MessageBox(message, "CrypTool", MB_OK);
 			return;
 		}
-
-		if(this->m_bShowInfoDialogues)
-		{
-		
-			// Informationsdialog anzeigen
+		// show info dialog
+		if (showInfoDialogs) {
 			CDlgSideChannelAttackVisualizationHEAttackCycle dlg;
-
-			if(dlg.DoModal() != IDOK)
+			if (dlg.DoModal() != IDOK) {
 				return;
+			}
 		}
-
-		// Anzeige BEREITS HIER aktualisieren, damit roter Button
-		// nicht den Anwender ablenkt
-		updateGUI(4);
-
-		// Pfeil zwischen Alice und Bob (AB) auf "normal" stellen
-		setABArrow(SCA_ABARROW_NORMAL);
-
-		// RESET
-		scaAttacker->cancelAttack();
-		scaServer->cancelAttackerReceptions();
+		// this variable decides whether the attack is executed in single-step mode 
+		// or if all steps are executed at once; the default is single-step mode, 
+		// and the user is only asked if info dialogs are active
+		int singleStepMode = IDYES;
+		// now fire up a dialog to ask the user if desired
+		if (showInfoDialogs) {
+			CString message;
+			message.Format(IDS_SCA_ASKFORATTACKMODE);
+			singleStepMode = AfxMessageBox(message, MB_YESNO);
+		}
+		// reset all involved parties
+		scaServer->resetReceivedModifiedHybridEncryptedFiles();
+		scaAttacker->resetAttack();
+		// update user interface
 		m_ControlAttackProgress.SetPos(0);
 		cancelAttackCycle();
-
-		if(this->m_bShowInfoDialogues)
-		{
-			// Anwender fragen, ob er den Angriff
-			//  a) IM EINZELSCHRITTMODUS oder
-			//  b) IN EINEM EINZIGEN DURCHLAUF
-			// durchführen möchte
-			LoadString(AfxGetInstanceHandle(), IDS_SCA_ASKFORATTACKMODE, pc_str, STR_LAENGE_STRING_TABLE);
-			const int singleStepMode = AfxMessageBox(pc_str, MB_YESNO);
-
-			// EINZELSCHRITTMODUS
-			if(singleStepMode == IDYES)
-			{
-				startAttackCycle();
-				return;
-			}
-			// EIN EINZIGER DURCHLAUF
-			else
-			{
-				SHOW_HOUR_GLASS
-				while(!scaAttacker->isDone())
-				{
-					HybridEncryptedFileInfo hif = scaAttacker->nextHybridEncryptedFile();
-					if(scaAttacker->isDone()) break;
-					bool response = scaServer->receiveHybridEncryptedFile(hif);
-					scaAttacker->processServerResponse(response);
-
-					// Fortschrittsanzeige "updaten"
-					m_ControlAttackProgress.StepIt();
+		setABArrow(SCA_ABARROW_NORMAL);
+		updateGUI(4);
+		// if we're in single-step mode, we simply start the attack cycle and return
+		if (singleStepMode == IDYES) {
+			startAttackCycle();
+			return;
+		}
+		// otherwise we execute all attack steps at once
+		else {
+			SHOW_HOUR_GLASS
+			while (!scaAttacker->isDone()) {
+				const HybridEncryptedFile nextHybridEncryptedFile = scaAttacker->createNextHybridEncryptedFile();
+				if (scaAttacker->isDone()) {
+					break;
 				}
-				HIDE_HOUR_GLASS
+				const bool response = scaServer->receiveHybridEncryptedFile(nextHybridEncryptedFile);
+				scaAttacker->processServerResponse(response);
+				// update user interface
+				m_ControlAttackProgress.StepIt();
 			}
-		
+			HIDE_HOUR_GLASS
 			// in case ALL answers by the server were negative, obviously the attack failed;
 			// the reason probably is the fact that the keyword ("Alice" by default) was not
 			// part of the file that was attacked
-			if(scaServer->getNumberOfPositiveResponses() == 0) {
+			if (scaServer->getNumberOfPositiveResponses() == 0) {
 				// first of all, get the current keyword from the registry
 				CString keyword;
-				if ( theApp.localRegistry.Open(HKEY_CURRENT_USER, "Software\\CrypTool\\Settings",KEY_READ) == ERROR_SUCCESS )
-				{
-					unsigned long u_length = 1024;
-					char c_SCA_keyWord[1025];
-					if (ERROR_SUCCESS == theApp.localRegistry.QueryValue(c_SCA_keyWord, "SCA_Keyword", &u_length) )			
-						keyword = c_SCA_keyWord;
-					else
-						keyword.LoadStringA( IDS_SCA_KEYWORD );
-				}
-				// if we can't access the registry, we default to the keyword "Alice"
-				else {
-					keyword.LoadStringA( IDS_SCA_KEYWORD );
-				}
+				CrypTool::Utilities::registryReadStringDefault("SideChannelAttack", "Keyword", IDS_SCA_KEYWORD, keyword);
 				// now let the user know why the attack probably failed
-				LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACK_FAILED_BECAUSE_OF_MISSING_KEYWORD, pc_str, STR_LAENGE_STRING_TABLE);
-            CString message;
+				CString message;
+				message.Format(IDS_SCA_ATTACK_FAILED_BECAUSE_OF_MISSING_KEYWORD, keyword);
 				MessageBox(message, "CrypTool");
 			}
 			// notify user that the attack was successful
 			else {
-				CDlgSideChannelAttackVisualizationHEFinished fin;
-				fin.DoModal();
+				CDlgSideChannelAttackVisualizationHEFinished dlg;
+				dlg.DoModal();
 			}
 		}
-		else
-		{
-			startAttackCycle();
-			return;
-		}
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnReport() {
-	try
-	{
-		// wg. möglichen Inkosistenzen das Erstellen des Reports
-		// erst NACH BEENDIGUNG des Angriffs zulassen!
-		if(!scaAttacker->isDone())
-		{
-			LoadString(AfxGetInstanceHandle(), IDS_SCA_REPORTNOTYETGENERATED, pc_str, STR_LAENGE_STRING_TABLE);
-			MessageBox(pc_str, "CrypTool");
+	try {
+		// to avoid inconsistencies during report generation, 
+		// do not let the user generate the report until the 
+		// attack is completed
+		if (!scaAttacker->isDone()) {
+			CString message;
+			message.Format(IDS_SCA_REPORTNOTYETGENERATED);
+			MessageBox(message, "CrypTool");
 			return;
 		}
-
-		if(this->m_bShowInfoDialogues)
-		{
-			// Informationsdialog anzeigen
+		// show info dialog
+		if (showInfoDialogs) {
 			CDlgSideChannelAttackVisualizationHEReport dlg;
-
-			if(dlg.DoModal() != IDOK)
+			if (dlg.DoModal() != IDOK) {
 				return;
+			}
 		}
-
-		// REPORT GENERIEREN
-		// =================
-	
-		char filename[CRYPTOOL_PATH_LENGTH];
-		GetTmpName(filename, "cry", ".txt");
-		generateSCAReport(scaClient, scaServer, scaAttacker, filename);
-		CAppDocument *NewDoc = theApp.OpenDocumentFileNoMRU(filename);
-
-		// Message-Box über erfolgreichen Verlauf der Logtexterzeugung einblenden
-		LoadString(AfxGetInstanceHandle(), IDS_SCA_REPORTGENERATED, pc_str, STR_LAENGE_STRING_TABLE);
-		MessageBox(pc_str, "CrypTool");
-		
-		// Anzeige aktualisieren
+		// generate the report
+		const CString fileName = CrypTool::Utilities::createTemporaryFile(".txt");
+		generateReport(scaClient, scaServer, scaAttacker, fileName);
+		CAppDocument *document = theApp.OpenDocumentFileNoMRU(fileName);
+		// notify user about successful generation
+		CString message;
+		message.Format(IDS_SCA_REPORTGENERATED);
+		MessageBox(message, "CrypTool");
+		// update user interface
 		updateGUI(5);
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnAlice() {
-	try
-	{
-		// Statusinformationen über Alice einblenden
+	try {
 		CDlgSideChannelAttackVisualizationHEAlice dlg(this);
 		dlg.DoModal();
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnBob() {
-	try
-	{
-		// Statusinformationen über Bob einblenden
+	try {
 		CDlgSideChannelAttackVisualizationHEBob dlg(this);
 		dlg.DoModal();
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnTrudy() {
-	try
-	{
-		// Statusinformationen über Trudy einblenden
+	try {
 		CDlgSideChannelAttackVisualizationHETrudy dlg(this);
 		dlg.DoModal();
 	}
-	// Exceptions auffangen und entsprechende Fehlermeldungen erzeugen
 	catch(SCA_Error& e) { CreateErrorMessage(e); return; }
 }
 
 void CDlgSideChannelAttackVisualizationHE::CreateErrorMessage(SCA_Error &e) {
 	int errorCode = e.getErrorCode();
-
-	if(errorCode == E_SCA_INTERNAL_ERROR)
-	{
+	// handle exception codes
+	if (errorCode == E_SCA_INTERNAL_ERROR) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_INTERNAL_ERROR, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONWARNING);
 		return;
 	}
-	if(errorCode == E_SCA_MEMORY_ALLOCATION)
-	{
+	if (errorCode == E_SCA_MEMORY_ALLOCATION) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_MEMORY_ALLOCATION, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONWARNING);
 		return;
 	}
-	if(errorCode == E_SCA_HYBENCFILE_EXTRACTION)
-	{
+	if (errorCode == E_SCA_HYBENCFILE_EXTRACTION) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_HYBENCFILE_EXTRACTION, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONWARNING);
 		return;
 	}
-	if(errorCode == E_SCA_ATTACK_CONDITIONS_NOT_MET)
-	{
+	if (errorCode == E_SCA_ATTACK_CONDITIONS_NOT_MET) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_ATTACK_CONDITIONS_NOT_MET, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONINFORMATION);
 		return;
 	}
-	if(errorCode == E_SCA_MIRACL_ERROR)
-	{
+	if (errorCode == E_SCA_MIRACL_ERROR) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_MIRACL_ERROR, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONWARNING);
 		return;
 	}
-	if(errorCode == E_SCA_WRONG_PSE_PIN)
-	{
+	if (errorCode == E_SCA_WRONG_PSE_PIN) {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_WRONG_PIN, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONINFORMATION);
 		return;
 	}	
-	if(errorCode == E_SCA_TIMER_NOT_AVAILABLE)
+	if (errorCode == E_SCA_TIMER_NOT_AVAILABLE)
 	{
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_E_TIMER_NOT_AVAILABLE, pc_str, STR_LAENGE_STRING_TABLE);
 		MessageBox(pc_str, "CrypTool", MB_ICONINFORMATION);
 		return;
 	}
-
-	// an dieser Stelle ist ein "unbekannter" Fehler ausgeworfen worden!
+	// handle unknown exception codes
 	LoadString(AfxGetInstanceHandle(), IDS_SCA_E_UNKNOWN_ERROR, pc_str, STR_LAENGE_STRING_TABLE);
 	MessageBox(pc_str, "CrypTool", MB_ICONWARNING);
 	return;
 }
 
 void CDlgSideChannelAttackVisualizationHE::setLights(int _mode) {
-	// NORMAL
-	if(_mode == SCA_LIGHTS_NORMAL)
-	{
-		this->m_ControlLights.UnLoad();
-		this->m_ControlLights.Load(MAKEINTRESOURCE(IDR_SCA_LIGHTS_NORMAL), _T("GIF"));
-		this->m_ControlLights.Stop();
-		this->m_ControlLights.Draw();
+	if (_mode == SCA_LIGHTS_NORMAL) {
+		m_ControlLights.UnLoad();
+		m_ControlLights.Load(MAKEINTRESOURCE(IDR_SCA_LIGHTS_NORMAL), _T("GIF"));
+		m_ControlLights.Stop();
+		m_ControlLights.Draw();
 	}
-	// GRÜN
-	if(_mode == SCA_LIGHTS_GREEN)
-	{
-		this->m_ControlLights.UnLoad();
-		this->m_ControlLights.Load(MAKEINTRESOURCE(IDR_SCA_LIGHTS_GREEN), _T("GIF"));
-		this->m_ControlLights.Stop();
-		this->m_ControlLights.Draw();
+	if (_mode == SCA_LIGHTS_GREEN) {
+		m_ControlLights.UnLoad();
+		m_ControlLights.Load(MAKEINTRESOURCE(IDR_SCA_LIGHTS_GREEN), _T("GIF"));
+		m_ControlLights.Stop();
+		m_ControlLights.Draw();
 	}
-	// ROT
-	if(_mode == SCA_LIGHTS_RED)
-	{
-		this->m_ControlLights.UnLoad();
-		this->m_ControlLights.Load(MAKEINTRESOURCE(IDR_SCA_LIGHTS_RED), _T("GIF"));
-		this->m_ControlLights.Stop();
-		this->m_ControlLights.Draw();
+	if (_mode == SCA_LIGHTS_RED) {
+		m_ControlLights.UnLoad();
+		m_ControlLights.Load(MAKEINTRESOURCE(IDR_SCA_LIGHTS_RED), _T("GIF"));
+		m_ControlLights.Stop();
+		m_ControlLights.Draw();
 	}
 }
 
 void CDlgSideChannelAttackVisualizationHE::setABArrow(int _mode) {
-	// NORMAL
-	if(_mode == SCA_ABARROW_NORMAL)
-	{
-		this->m_ControlABArrow.UnLoad();
-		this->m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWSTATIC), _T("GIF"));
-		this->m_ControlABArrow.Stop();
-		this->m_ControlABArrow.Draw();
+	if (_mode == SCA_ABARROW_NORMAL) {
+		m_ControlABArrow.UnLoad();
+		m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWSTATIC), _T("GIF"));
+		m_ControlABArrow.Stop();
+		m_ControlABArrow.Draw();
 	}
-	// NACHRICHT WIRD ÜBERTRAGEN
-	if(_mode == SCA_ABARROW_TRANSMISSION)
-	{
-		this->m_ControlABArrow.UnLoad();
-		this->m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWTRANSMISSION), _T("GIF"));
-		this->m_ControlABArrow.Stop();
-		this->m_ControlABArrow.Draw();
+	if (_mode == SCA_ABARROW_TRANSMISSION) {
+		m_ControlABArrow.UnLoad();
+		m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWTRANSMISSION), _T("GIF"));
+		m_ControlABArrow.Stop();
+		m_ControlABArrow.Draw();
 	}
-	// NACHRICHT WIRD ABGEFANGEN
-	if(_mode == SCA_ABARROW_INTERCEPTION)
-	{
-		this->m_ControlABArrow.UnLoad();
-		this->m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWINTERCEPTION), _T("GIF"));
-		this->m_ControlABArrow.Stop();
-		this->m_ControlABArrow.Draw();
+	if (_mode == SCA_ABARROW_INTERCEPTION) {
+		m_ControlABArrow.UnLoad();
+		m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWINTERCEPTION), _T("GIF"));
+		m_ControlABArrow.Stop();
+		m_ControlABArrow.Draw();
 	}
-	// ANTWORT DES SERVERS: Fehlerhafte Entschlüsselung
-	if(_mode == SCA_ABARROW_FAILURE)
-	{
-		this->m_ControlABArrow.UnLoad();
-		this->m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWFAILURE), _T("GIF"));
-		this->m_ControlABArrow.Stop();
-		this->m_ControlABArrow.Draw();
+	if (_mode == SCA_ABARROW_FAILURE) {
+		m_ControlABArrow.UnLoad();
+		m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWFAILURE), _T("GIF"));
+		m_ControlABArrow.Stop();
+		m_ControlABArrow.Draw();
 	}
-	// ANTWORT DES SERVERS: Erfolgreiche Entschlüsselung
-	if(_mode == SCA_ABARROW_SUCCESS)
-	{
-		this->m_ControlABArrow.UnLoad();
-		this->m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWSUCCESS), _T("GIF"));
-		this->m_ControlABArrow.Stop();
-		this->m_ControlABArrow.Draw();
+	if (_mode == SCA_ABARROW_SUCCESS) {
+		m_ControlABArrow.UnLoad();
+		m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWSUCCESS), _T("GIF"));
+		m_ControlABArrow.Stop();
+		m_ControlABArrow.Draw();
 	}
-	// TRUDY (!!!) überträgt Nachricht an Bob
-	if(_mode == SCA_ABARROW_TRANSMISSION_TRUDYBOB)
-	{
-		this->m_ControlABArrow.UnLoad();
-		this->m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWTRANSMISSION_TRUDYBOB), _T("GIF"));
-		this->m_ControlABArrow.Stop();
-		this->m_ControlABArrow.Draw();
+	if (_mode == SCA_ABARROW_TRANSMISSION_TRUDYBOB) {
+		m_ControlABArrow.UnLoad();
+		m_ControlABArrow.Load(MAKEINTRESOURCE(IDR_SCA_ABARROWTRANSMISSION_TRUDYBOB), _T("GIF"));
+		m_ControlABArrow.Stop();
+		m_ControlABArrow.Draw();
 	}
 }
 
@@ -792,43 +600,34 @@ void CDlgSideChannelAttackVisualizationHE::OnClose() {
 
 void CDlgSideChannelAttackVisualizationHE::OnTimer(UINT nIDEvent) {
 	// TRANSMISSION from ALICE to BOB
-	if(nIDEvent == SCA_TIMEREVENT_AB_TRANSMISSION)
-	{
-		if(!m_ControlABArrow.IsPlaying())
-		{
+	if (nIDEvent == SCA_TIMEREVENT_AB_TRANSMISSION) {
+		if (!m_ControlABArrow.IsPlaying()) {
 			// Falls Berechnung auf Serverseite noch nicht beendet,
 			// noch KEINE Ampel anzeigen
-			if(scaServer->getNumberOfReceptions() <= 0) 
+			if (scaServer->getReceivedHybridEncryptedFiles().size() <= 0)
 				return;
 			// ansonsten Timer löschen und Ampel anzeigen (s.u.)
 			else
 				KillTimer(SCA_TIMEREVENT_AB_TRANSMISSION);
-			
 			// falls der Server die ERSTE Nachricht entschlüsseln konnte,
 			// die Ampel GRÜN leuchten lassen; andernfalls ROT
-			if(scaServer->getFormerResponse(0))
+			if (scaServer->getResponses().at(0))
 				setLights(SCA_LIGHTS_GREEN);
 			else
 				setLights(SCA_LIGHTS_RED);
 		}
 	}
-
 	// TRANSMISSION from TRUDY to BOB
-	if(nIDEvent == SCA_TIMEREVENT_TB_TRANSMISSION)
-	{
-		if(!m_ControlABArrow.IsPlaying())
-		{
+	if (nIDEvent == SCA_TIMEREVENT_TB_TRANSMISSION) {
+		if (!m_ControlABArrow.IsPlaying()) {
 			KillTimer(SCA_TIMEREVENT_TB_TRANSMISSION);
-
-			if(scaServer->getFormerResponse(scaServer->getNumberOfReceptions()-1))
-			{
+			if (scaServer->getResponses().at(scaServer->getResponses().size() - 1)) {
 				// Positive Antwort signalisieren
 				setLights(SCA_LIGHTS_GREEN);
 				// Antwort GRÜN
 				setABArrow(SCA_ABARROW_SUCCESS);
 			}
-			else
-			{
+			else {
 				// negative Antwort signalisieren
 				setLights(SCA_LIGHTS_RED);
 				// Antwort ROT
@@ -836,93 +635,123 @@ void CDlgSideChannelAttackVisualizationHE::OnTimer(UINT nIDEvent) {
 			}
 		}
 	}
-	
 	CDialog::OnTimer(nIDEvent);
 }
 
 void CDlgSideChannelAttackVisualizationHE::startAttackCycle() {
-	// Buttons einblenden
 	m_ControlButtonNextStep.EnableWindow(true);
 	m_ControlButtonNextStep.ShowWindow(SW_SHOW);
-
 	m_ControlButtonAllSteps.EnableWindow(true);
 	m_ControlButtonAllSteps.ShowWindow(SW_SHOW);
-
 	m_AttackControl.EnableWindow(true);
 	m_AttackControl.ShowWindow(SW_SHOW);
-
-	// Fokus auf "nächster Schritt" Button
 	m_ControlButtonNextStep.SetFocus();
 }
 
 void CDlgSideChannelAttackVisualizationHE::cancelAttackCycle() {
-	// Buttons ausblenden
 	m_ControlButtonNextStep.EnableWindow(false);
 	m_ControlButtonNextStep.ShowWindow(SW_HIDE);
-	
 	m_ControlButtonAllSteps.EnableWindow(false);
 	m_ControlButtonAllSteps.ShowWindow(SW_HIDE);
-
 	m_AttackControl.EnableWindow(false);
 	m_AttackControl.ShowWindow(SW_HIDE);
 }
 
+void CDlgSideChannelAttackVisualizationHE::generateReport(SCA_Client *_scaClient, SCA_Server *_scaServer, SCA_Attacker *_scaAttacker, const CString &_fileName) {
+	CString result;
+	CString temp;
+
+	// *** PREPARATIONS ***
+	temp.Format(IDS_SCA_REPORT_HEADINGPREPARATIONS);
+	result += temp;
+	// differentiate whether Alice has hybrid-encrypted the original file herself or not
+	if (!_scaClient->getSessionKey().isNull()) {
+		temp.Format(IDS_SCA_REPORT_ALICECREATEDMESSAGE);
+		result += temp;
+		temp.Format(IDS_SCA_REPORT_ALICECHOSESESSIONKEY);
+		result += temp;
+		result += _scaClient->getSessionKey().toString();
+		temp.Format(IDS_SCA_REPORT_ALICEENCRYPTEDMESSAGE);
+		result += temp;
+		temp.Format(IDS_SCA_REPORT_ALICECHOSEPUBLICKEY);
+		result += temp;
+		result += _scaServer->getPublicKeyE().toString();
+		temp.Format(IDS_SCA_REPORT_ALICEENCRYPTEDSESSIONKEY);
+		result += temp;
+		result += _scaClient->getTransmittedHybridEncryptedFile().sessionKeyEncrypted.toString();
+		result += "\n";
+	}
+	// at this point Alice has not hybrid-encrypted the file herself
+	else {
+		temp.Format(IDS_SCA_REPORT_ALICETOOKEXISTINGFILE);
+		result += temp;
+	}
+	// *** MESSAGE TRANSMISSION ***
+	temp.Format(IDS_SCA_REPORT_HEADINGMESSAGETRANSMISSION);
+	result += temp;
+	temp.Format(IDS_SCA_REPORT_ALICETRANSMITTEDMESSAGE);
+	result += temp;
+	// *** MESSAGE INTERCEPTION ***
+	temp.Format(IDS_SCA_REPORT_HEADINGMESSAGEINTERCEPTION);
+	result += temp;
+	temp.Format(IDS_SCA_REPORT_TRUDYINTERCEPTEDMESSAGE);
+	result += temp;
+	result += _scaAttacker->getInterceptedHybridEncryptedFile().sessionKeyEncrypted.toString();
+	// *** ATTACK CYCLE ***
+	temp.Format(IDS_SCA_REPORT_HEADINGATTACKCYCLE);
+	result += temp;
+	temp.Format(IDS_SCA_REPORT_TRUDYMODIFIEDSESSIONKEYS);
+	result += temp;
+	temp.Format(IDS_SCA_REPORT_TRUDYREPEATSMODIFICATION, _scaAttacker->getModifiedHybridEncryptedFiles().size());
+	result += temp;
+
+	// write result into specified file
+	CrypTool::ByteString byteStringFile;
+	byteStringFile = result;
+	byteStringFile.writeToFile(_fileName);
+}
+
 void CDlgSideChannelAttackVisualizationHE::OnButtonNextsinglestep() {
 	try {
-		if(!scaAttacker->isDone())
+		if (!scaAttacker->isDone())
 		{
 			SHOW_HOUR_GLASS
-			HybridEncryptedFileInfo hif = scaAttacker->nextHybridEncryptedFile();
-			if(scaAttacker->isDone())
-			{
+			const HybridEncryptedFile nextHybridEncryptedFile = scaAttacker->createNextHybridEncryptedFile();
+			if (scaAttacker->isDone()) {
 				// Steuerelemente für Angriff "ausblenden"
 				cancelAttackCycle();
 				// in case ALL answers by the server were negative, obviously the attack failed;
 				// the reason probably is the fact that the keyword ("Alice" by default) was not
 				// part of the file that was attacked
-				if(scaServer->getNumberOfPositiveResponses() == 0) {
+				if (scaServer->getNumberOfPositiveResponses() == 0) {
 					// first of all, get the current keyword from the registry
 					CString keyword;
-					if ( theApp.localRegistry.Open(HKEY_CURRENT_USER, "Software\\CrypTool\\Settings",KEY_READ) == ERROR_SUCCESS )
-					{
-						unsigned long u_length = 1024;
-						char c_SCA_keyWord[1025];
-						if (ERROR_SUCCESS == theApp.localRegistry.QueryValue(c_SCA_keyWord, "SCA_Keyword", &u_length) )			
-							keyword = c_SCA_keyWord;
-						else
-   						keyword.LoadStringA( IDS_SCA_KEYWORD );
-					}
-					// if we can't access the registry, we default to the keyword "Alice"
-					else {
-						keyword.LoadStringA( IDS_SCA_KEYWORD );
-					}
+					CrypTool::Utilities::registryReadStringDefault("SideChannelAttack", "Keyword", IDS_SCA_KEYWORD, keyword);
 					// now let the user know why the attack probably failed
-               CString message;
-               message.FormatMessage( IDS_SCA_ATTACK_FAILED_BECAUSE_OF_MISSING_KEYWORD, keyword.GetBuffer() );
+					CString message;
+					message.Format(IDS_SCA_ATTACK_FAILED_BECAUSE_OF_MISSING_KEYWORD, keyword);
 					MessageBox(message, "CrypTool");
 				}
 				// notify user that the attack was successful
 				else {
-					CDlgSideChannelAttackVisualizationHEFinished fin;
-					fin.DoModal();
+					CDlgSideChannelAttackVisualizationHEFinished dlg;
+					dlg.DoModal();
 				}
 				// Anzeige aktualisieren
 				updateGUI(4);
 				return;
 			}
-			bool response = scaServer->receiveHybridEncryptedFile(hif);
+			bool response = scaServer->receiveHybridEncryptedFile(nextHybridEncryptedFile);
 			scaAttacker->processServerResponse(response);
-
 			// Fortschrittsanzeige "updaten"
 			m_ControlAttackProgress.StepIt();
-			HIDE_HOUR_GLASS	
-
+			HIDE_HOUR_GLASS
 			// Animation abspielen: Übertragung Trudy->Bob
 			setABArrow(SCA_ABARROW_TRANSMISSION_TRUDYBOB);
-				
 			// Timer für Animationsabläufe setzen (siehe Funktion OnTimer)
-			if(!SetTimer(SCA_TIMEREVENT_TB_TRANSMISSION, 50, 0))
-					throw SCA_Error(E_SCA_TIMER_NOT_AVAILABLE);
+			if (!SetTimer(SCA_TIMEREVENT_TB_TRANSMISSION, 50, 0)) {
+				throw SCA_Error(E_SCA_TIMER_NOT_AVAILABLE);
+			}
 		}
 	}
 	// handle exceptions
@@ -932,48 +761,33 @@ void CDlgSideChannelAttackVisualizationHE::OnButtonNextsinglestep() {
 void CDlgSideChannelAttackVisualizationHE::OnButtonAllremainingsteps() {
 	try {
 		SHOW_HOUR_GLASS
-		while(!scaAttacker->isDone())
-		{
-			HybridEncryptedFileInfo hif = scaAttacker->nextHybridEncryptedFile();
-			if(scaAttacker->isDone()) break;
-			bool response = scaServer->receiveHybridEncryptedFile(hif);
+		while(!scaAttacker->isDone()) {
+			const HybridEncryptedFile nextHybridEncryptedFile = scaAttacker->createNextHybridEncryptedFile();
+			if (scaAttacker->isDone()) break;
+			bool response = scaServer->receiveHybridEncryptedFile(nextHybridEncryptedFile);
 			scaAttacker->processServerResponse(response);
-
 			// Fortschrittsanzeige "updaten"
 			m_ControlAttackProgress.StepIt();
 		}
 		HIDE_HOUR_GLASS
-
 		// Steuerelemente für Angriff "ausblenden"
 		cancelAttackCycle();
 		// in case ALL answers by the server were negative, obviously the attack failed;
 		// the reason probably is the fact that the keyword ("Alice" by default) was not
 		// part of the file that was attacked
-		if(scaServer->getNumberOfPositiveResponses() == 0) {
+		if (scaServer->getNumberOfPositiveResponses() == 0) {
 			// first of all, get the current keyword from the registry
 			CString keyword;
-			if ( theApp.localRegistry.Open(HKEY_CURRENT_USER, "Software\\CrypTool\\Settings",KEY_READ) == ERROR_SUCCESS )
-			{
-				unsigned long u_length = 1024;
-				char c_SCA_keyWord[1025];
-				if (ERROR_SUCCESS == theApp.localRegistry.QueryValue(c_SCA_keyWord, "SCA_Keyword", &u_length) )			
-					keyword = c_SCA_keyWord;
-				else
-					keyword.LoadStringA( IDS_SCA_KEYWORD );
-			}
-			// if we can't access the registry, we default to the keyword "Alice"
-			else {
-				keyword.LoadStringA( IDS_SCA_KEYWORD );
-			}
+			CrypTool::Utilities::registryReadStringDefault("SideChannelAttack", "Keyword", IDS_SCA_KEYWORD, keyword);
 			// now let the user know why the attack probably failed
-         CString message;
-         message.FormatMessage( IDS_SCA_ATTACK_FAILED_BECAUSE_OF_MISSING_KEYWORD, keyword.GetBuffer() );
+			CString message;
+			message.Format(IDS_SCA_ATTACK_FAILED_BECAUSE_OF_MISSING_KEYWORD, keyword);
 			MessageBox(message, "CrypTool");
 		}
 		// notify user that the attack was successful
 		else {
-			CDlgSideChannelAttackVisualizationHEFinished fin;
-			fin.DoModal();
+			CDlgSideChannelAttackVisualizationHEFinished dlg;
+			dlg.DoModal();
 		}
 		// Anzeige aktualisieren
 		updateGUI(4);
@@ -985,16 +799,7 @@ void CDlgSideChannelAttackVisualizationHE::OnButtonAllremainingsteps() {
 
 void CDlgSideChannelAttackVisualizationHE::OnCheckDisablehelp() {
 	UpdateData(true);
-
-	if ( CT_OPEN_REGISTRY_SETTINGS( KEY_WRITE, IDS_REGISTRY_SETTINGS ) == ERROR_SUCCESS )
-	{
-		CT_WRITE_REGISTRY(unsigned long(this->m_bShowInfoDialogues), "SCA_InfoDialogues");
-		CT_CLOSE_REGISTRY();
-	}
-	else
-	{
-		// FIXME
-	}
+	CrypTool::Utilities::registryWriteNumber("SideChannelAttack", "ShowInfoDialogs", (long)(showInfoDialogs));
 }
 
 BEGIN_MESSAGE_MAP(CDlgSideChannelAttackVisualizationHE, CDialog)

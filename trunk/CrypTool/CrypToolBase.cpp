@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "CrypToolBase.h"
 #include "CrypToolApp.h"
+#include "CrypToolTools.h"
 #include "Cryptography.h"
 #include "IntegerArithmetic.h"
 #include "resource.h"
@@ -179,7 +180,23 @@ namespace CrypTool {
 		}
 	}
 
-	void ByteString::truncate(const size_t _byteLength) {
+	void ByteString::truncateLeft(const size_t _byteLength) {
+		if (_byteLength >= byteLength) {
+			return;
+		}
+		else if (_byteLength == 0) {
+			reset();
+		}
+		else {
+			unsigned char *byteDataNew = new unsigned char[_byteLength];
+			std::memcpy(byteDataNew, byteData + (byteLength - _byteLength), byteLength);
+			delete byteData;
+			byteData = byteDataNew;
+			byteLength = _byteLength;
+		}
+	}
+
+	void ByteString::truncateRight(const size_t _byteLength) {
 		if (_byteLength >= byteLength) {
 			return;
 		}
@@ -202,6 +219,30 @@ namespace CrypTool {
 		}
 	}
 
+	void ByteString::addZeroPaddingLeft(const size_t _byteLength) {
+		if (_byteLength > byteLength) {
+			const size_t additionalZeros = _byteLength - byteLength;
+			unsigned char *byteDataNew = new unsigned char[_byteLength];
+			std::memset(byteDataNew, 0, _byteLength);
+			std::memcpy(byteDataNew + additionalZeros, byteData, byteLength);
+			delete byteData;
+			byteData = byteDataNew;
+			byteLength = _byteLength;
+		}
+	}
+
+	void ByteString::addZeroPaddingRight(const size_t _byteLength) {
+		if (_byteLength > byteLength) {
+			const size_t additionalZeros = _byteLength - byteLength;
+			unsigned char *byteDataNew = new unsigned char[_byteLength];
+			std::memcpy(byteDataNew, byteData, byteLength);
+			std::memset(byteDataNew + byteLength, 0, additionalZeros);
+			delete byteData;
+			byteData = byteDataNew;
+			byteLength = _byteLength;
+		}
+	}
+
 	bool ByteString::findPattern(const ByteString &_pattern, size_t &_start, size_t &_end) const {
 		if (getByteLength() < _pattern.getByteLength()) return false;
 		if (_pattern.getByteLength() == 0) return false;
@@ -221,6 +262,15 @@ namespace CrypTool {
 		const size_t patternLength = _end - _start;
 		_pattern.reset(patternLength);
 		std::memcpy(_pattern.getByteData(), getByteDataConst() + _start, patternLength);
+		return true;
+	}
+
+	bool ByteString::isNull() const {
+		for (size_t index = 0; index < getByteLength(); index++) {
+			if (byteData[index] != 0) {
+				return false;
+			}
+		}
 		return true;
 	}
 
@@ -247,6 +297,14 @@ namespace CrypTool {
 		ByteString byteStringNew;
 		byteStringNew.fromString(_string);
 		*this += byteStringNew;
+		return *this;
+	}
+
+	ByteString &ByteString::operator+=(const unsigned char _character) {
+		const ByteString byteStringOld = *this;
+		reset(byteStringOld.byteLength + 1);
+		std::memcpy(byteData, byteStringOld.byteData, byteStringOld.byteLength);
+		std::memcpy(byteData + byteStringOld.byteLength, &_character, 1);
 		return *this;
 	}
 
@@ -320,6 +378,104 @@ namespace CrypTool {
 			return temporaryFileName;
 		}
 
+		bool registryReadString(const CString &_path, const CString &_variable, CString &_value) {
+			bool result = false;
+			_value = "";
+			if (CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, _path) == ERROR_SUCCESS) {
+				unsigned long bufferLength = 4095;
+				char buffer[4096];
+				std::memset(buffer, 0, 4096);
+				if (CT_READ_REGISTRY(buffer, _variable, bufferLength)) {
+					_value = buffer;
+					result = true;
+				}
+				CT_CLOSE_REGISTRY();
+			}
+			return result;
+		}
+
+		bool registryReadStringDefault(const CString &_path, const CString &_variable, const CString &_default, CString &_value) {
+			bool result = registryReadString(_path, _variable, _value);
+			if (!result) {
+				_value = _default;
+			}
+			return result;
+		}
+
+		bool registryReadStringDefault(const CString &_path, const CString &_variable, const unsigned int _default, CString &_value) {
+			bool result = registryReadString(_path, _variable, _value);
+			if (!result) {
+				_value.Format(_default);
+			}
+			return result;
+		}
+
+		bool registryReadNumber(const CString &_path, const CString &_variable, long &_value) {
+			bool result = false;
+			unsigned long value = 0;
+			_value = 0;
+			if (CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, _path) == ERROR_SUCCESS) {
+				if (CT_READ_REGISTRY(value, _variable)) {
+					_value = (long)(value);
+					result = true;
+				}
+				CT_CLOSE_REGISTRY();
+			}
+			return result;
+		}
+
+		bool registryReadNumber(const CString &_path, const CString &_variable, int &_value) {
+			bool result = false;
+			unsigned long value = 0;
+			_value = 0;
+			if (CT_OPEN_REGISTRY_SETTINGS(KEY_READ, IDS_REGISTRY_SETTINGS, _path) == ERROR_SUCCESS) {
+				if (CT_READ_REGISTRY(value, _variable)) {
+					_value = (int)(value);
+					result = true;
+				}
+				CT_CLOSE_REGISTRY();
+			}
+			return result;
+		}
+
+		bool registryReadNumberDefault(const CString &_path, const CString &_variable, const long _default, long &_value) {
+			bool result = registryReadNumber(_path, _variable, _value);
+			if (!result) {
+				_value = _default;
+			}
+			return result;
+		}
+
+		bool registryReadNumberDefault(const CString &_path, const CString &_variable, const int _default, int &_value) {
+			bool result = registryReadNumber(_path, _variable, _value);
+			if (!result) {
+				_value = _default;
+			}
+			return result;
+		}
+
+		bool registryWriteString(const CString &_path, const CString &_variable, const CString &_value) {
+			bool result = false;
+			if (CT_OPEN_REGISTRY_SETTINGS(KEY_WRITE, IDS_REGISTRY_SETTINGS, _path) == ERROR_SUCCESS) {
+				if (CT_WRITE_REGISTRY(_value, _variable)) {
+					result = true;
+				}
+				CT_CLOSE_REGISTRY();
+			}
+			return result;
+		}
+
+		bool registryWriteNumber(const CString &_path, const CString &_variable, const long _value) {
+			bool result = false;
+			if (CT_OPEN_REGISTRY_SETTINGS(KEY_WRITE, IDS_REGISTRY_SETTINGS, _path) == ERROR_SUCCESS) {
+				if (CT_WRITE_REGISTRY(_value, _variable)) {
+					result = true;
+				}
+				CT_CLOSE_REGISTRY();
+			}
+			return result;
+		}
+
 		size_t truncateByteString(ByteString &_byteString, const unsigned int _truncateAtLength, const bool _truncateAtFirstNullByte) {
 			// if the byte string contains null bytes, notify user and truncate it
 			if (_truncateAtFirstNullByte) {
@@ -329,7 +485,7 @@ namespace CrypTool {
 						CString message;
 						message.Format("CRYPTOOL_BASE: null bytes not allowed, string is truncated");
 						AfxMessageBox(message, MB_ICONEXCLAMATION);
-						_byteString.truncate(index);
+						_byteString.truncateRight(index);
 						break;
 					}
 				}
@@ -340,7 +496,7 @@ namespace CrypTool {
 				message.Format("CRYPTOOL_BASE: string length exceeded, string is truncated to %d bytes", _truncateAtLength);
 				AfxMessageBox(message, MB_ICONEXCLAMATION);
 				// truncate the byte string
-				_byteString.truncate(_truncateAtLength);
+				_byteString.truncateRight(_truncateAtLength);
 			}
 			// return the length of the resulting byte string
 			return _byteString.getByteLength();
@@ -688,6 +844,8 @@ namespace CrypTool {
 
 			bool SymmetricOperation::executeOnByteStrings(const ByteString &_byteStringInput, const ByteString &_byteStringKey, ByteString &_byteStringOutput) {
 				using namespace OpenSSL;
+				// reset output byte string
+				_byteStringOutput.reset();
 				// make sure we have a valid operation type
 				if (symmetricOperationType != SYMMETRIC_OPERATION_TYPE_ENCRYPTION && symmetricOperationType != SYMMETRIC_OPERATION_TYPE_DECRYPTION) {
 					return false;
@@ -697,48 +855,29 @@ namespace CrypTool {
 				if (!cipher) {
 					return false;
 				}
-				// acquire iv length, key length, block size
-				const int cipherIvLength = EVP_CIPHER_iv_length(cipher);
-				const int cipherKeyLength = EVP_CIPHER_key_length(cipher);
+				// initialize cipher block size
 				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
-				// create variables for iv, key (all zero bytes)
-				unsigned char *iv = new unsigned char[cipherIvLength];
-				std::memset(iv, 0, cipherIvLength);
-				unsigned char *key = new unsigned char[cipherKeyLength];
-				std::memset(key, 0, cipherKeyLength);
-				// create variables for input, output, final (all zero bytes)
-				unsigned char *input = new unsigned char[_byteStringInput.getByteLength()];
-				std::memset(input, 0, _byteStringInput.getByteLength());
-				unsigned char *output = new unsigned char[_byteStringInput.getByteLength() + cipherBlockSize];
-				std::memset(output, 0, _byteStringInput.getByteLength() + cipherBlockSize);
-				unsigned char *final = new unsigned char[cipherBlockSize];
-				std::memset(final, 0, cipherBlockSize);
-				// initialize variables for input length, output length, final length (all zero)
-				int inputLength = _byteStringInput.getByteLength();
+				// initialize iv variable (all zeros; note that this is insecure)
+				ByteString iv;
+				iv.reset(EVP_CIPHER_iv_length(cipher));
+				// initialize output variable
+				_byteStringOutput.reset(_byteStringInput.getByteLength() + cipherBlockSize);
+				// initialize variables for output length and final length
 				int outputLength = 0;
 				int finalLength = 0;
-				// temporary byte strings for concatenating
-				ByteString byteStringUpdate;
-				ByteString byteStringFinalize;
-				// initialize iv, key, input
-				std::memset(iv, 0, cipherIvLength);
-				std::memcpy(key, _byteStringKey.getByteDataConst(), _byteStringKey.getByteLength());
-				std::memcpy(input, _byteStringInput.getByteDataConst(), _byteStringInput.getByteLength());
-				// encryption/decryption (initialize, update, finalize)
-				ASSERT(fpInitialize(context, cipher, key, iv));
-				ASSERT(fpUpdate(context, output, &outputLength, input, inputLength));
-				byteStringUpdate.fromBuffer(output, outputLength);
-				ASSERT(fpFinalize(context, final, &finalLength));
-				byteStringFinalize.fromBuffer(final, finalLength);
-				// set output byte string
-				_byteStringOutput += byteStringUpdate;
-				_byteStringOutput += byteStringFinalize;
-				// free memory
-				delete iv;
-				delete key;
-				delete input;
-				delete output;
-				delete final;
+				// encryption/decryption (initialize)
+				if (fpInitialize(context, cipher, _byteStringKey.getByteDataConst(), iv.getByteDataConst()) != 1) {
+					return false;
+				}
+				// encryption/decryption (update)
+				if (fpUpdate(context, _byteStringOutput.getByteData(), &outputLength, _byteStringInput.getByteDataConst(), _byteStringInput.getByteLength()) != 1) {
+					return false;
+				}
+				// encryption/decryption (finalize)
+				if (fpFinalize(context, _byteStringOutput.getByteData() + outputLength, &finalLength) != 1) {
+					return false;
+				}
+				_byteStringOutput.truncateRight(outputLength + finalLength);
 				return true;
 			}
 
@@ -764,50 +903,41 @@ namespace CrypTool {
 				if (!fileOutput.Open(_fileNameOutput, CFile::modeCreate | CFile::modeWrite)) {
 					return false;
 				}
-				// the buffer size we're working with (the size of the chunks to be read from the input file)
-				const unsigned int bufferByteLength = 4096;
-				// acquire iv length, key length, block size
-				const int cipherIvLength = EVP_CIPHER_iv_length(cipher);
-				const int cipherKeyLength = EVP_CIPHER_key_length(cipher);
+				// initialize cipher block size
 				const int cipherBlockSize = EVP_CIPHER_block_size(cipher);
-				// create variables for iv, key (all zero bytes)
-				unsigned char *iv = new unsigned char[cipherIvLength];
-				std::memset(iv, 0, cipherIvLength);
-				unsigned char *key = new unsigned char[cipherKeyLength];
-				std::memset(key, 0, cipherKeyLength);
-				// create variables for input, output, final (all zero bytes)
-				unsigned char *input = new unsigned char[bufferByteLength];
-				std::memset(input, 0, bufferByteLength);
-				unsigned char *output = new unsigned char[bufferByteLength + cipherBlockSize];
-				std::memset(output, 0, bufferByteLength + cipherBlockSize);
-				unsigned char *final = new unsigned char[cipherBlockSize];
-				std::memset(final, 0, cipherBlockSize);
-				// initialize variables for input length, output length, final length (all zero)
-				int inputLength = bufferByteLength;
-				int outputLength = 0;
-				int finalLength = 0;
-				// initialize iv, key, input
-				std::memset(iv, 0, cipherIvLength);
-				std::memcpy(key, _byteStringKey.getByteDataConst(), _byteStringKey.getByteLength());
-				// encryption/decryption (initialize);
-				ASSERT(fpInitialize(context, cipher, key, iv));
+				// initialize iv variable (all zeros; note that this is insecure)
+				ByteString iv;
+				iv.reset(EVP_CIPHER_iv_length(cipher));
+				// the input buffer size (the size of the chunks to be read from the input file)
+				const unsigned int inputBufferByteLength = 4096;
+				// the output buffer size
+				const unsigned int outputBufferByteLength = inputBufferByteLength + cipherBlockSize;
+				// create buffer variables
+				ByteString inputBuffer;
+				ByteString outputBuffer;
+				inputBuffer.reset(inputBufferByteLength);
+				outputBuffer.reset(outputBufferByteLength);
+				// encryption/decryption (initialize)
+				if (fpInitialize(context, cipher, _byteStringKey.getByteDataConst(), iv.getByteDataConst()) != 1) {
+					return false;
+				}
 				// initialize some internal variables
 				const ULONGLONG positionStart = 0;
 				const ULONGLONG positionEnd = fileInput.GetLength();
 				ULONGLONG positionCurrent = positionStart;
 				ULONGLONG bytesRead;
-				while (bytesRead = fileInput.Read(input, bufferByteLength)) {
-					ASSERT(fpUpdate(context, output, &outputLength, input, (int)(bytesRead)));
-					fileOutput.Write(output, outputLength);
+				int outputLength = 0;
+				int finalLength = 0;
+				while (bytesRead = fileInput.Read(inputBuffer.getByteData(), inputBufferByteLength)) {
+					if (bytesRead == 0) break;
+					// encryption/decryption (update)
+					if (fpUpdate(context, outputBuffer.getByteData(), &outputLength, inputBuffer.getByteData(), (int)(bytesRead)) != 1) {
+						return false;
+					}
+					fileOutput.Write(outputBuffer.getByteDataConst(), outputLength);
 					positionCurrent += bytesRead;
 					if (_cancelled) {
 						if (*_cancelled) {
-							// free memory
-							delete iv;
-							delete key;
-							delete input;
-							delete output;
-							delete final;
 							return false;
 						}
 					}
@@ -816,14 +946,10 @@ namespace CrypTool {
 					}
 				}
 				// ecryption/decryption (finalize)
-				ASSERT(fpFinalize(context, final, &finalLength));
-				fileOutput.Write(final, finalLength);
-				// free memory
-				delete iv;
-				delete key;
-				delete input;
-				delete output;
-				delete final;
+				if (fpFinalize(context, outputBuffer.getByteData() + positionCurrent, &finalLength) != 1) {
+					return false;
+				}
+				fileOutput.Write(outputBuffer.getByteData() + positionCurrent, finalLength);
 				return true;
 			}
 
@@ -891,9 +1017,10 @@ namespace CrypTool {
 				return asymmetricAlgorithmName;
 			}
 
-			AsymmetricOperationEncryptOrDecrypt::AsymmetricOperationEncryptOrDecrypt(const AsymmetricAlgorithmType _asymmetricAlgorithmType, const AsymmetricOperationType _asymmetricOperationType) :
+			AsymmetricOperationEncryptOrDecrypt::AsymmetricOperationEncryptOrDecrypt(const AsymmetricAlgorithmType _asymmetricAlgorithmType, const AsymmetricOperationType _asymmetricOperationType, const bool _padding) :
 				asymmetricAlgorithmType(_asymmetricAlgorithmType),
-				asymmetricOperationType(_asymmetricOperationType) {
+				asymmetricOperationType(_asymmetricOperationType),
+				padding(_padding) {
 				
 			}
 
@@ -903,6 +1030,8 @@ namespace CrypTool {
 
 			bool AsymmetricOperationEncryptOrDecrypt::executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput) {
 				using namespace OpenSSL;
+				// reset the output byte string
+				_byteStringOutput.reset();
 				// make sure we have a valid operation type
 				if (asymmetricOperationType != ASYMMETRIC_OPERATION_TYPE_ENCRYPTION && asymmetricOperationType != ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
 					return false;
@@ -911,52 +1040,71 @@ namespace CrypTool {
 				bool result = true;
 				// initialize the RSA structure
 				RSA *rsa = RSA_new();
-				// depending on the operation type, try to fetch the public or the private key
+				// try to fetch the public key (encryption)
 				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
 					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicKeyRSA(_serial, &rsa)) {
 						RSA_free(rsa);
 						return false;
 					}
 				}
+				// try to fetch the private key (decryption)
 				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
 					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
 						RSA_free(rsa);
 						return false;
 					}
 				}
+				// the number of bytes left to be encrypted/decrypted (dynamically decreased)
 				int bytesRemaining = (int)(_byteStringInput.getByteLength());
-				const int inputBlockSize = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) - 41 - 1 : RSA_size(rsa);
-				const int outputBlockSize = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) : RSA_size(rsa) - 41 - 1;
+				// some definitions regarding block size: RSA_PKCS1_OAEP_PADDING expects the input and output buffers 
+				// to be smaller than RSA_size(rsa) - 41 and RSA_size(rsa), respectively; RSA_NO_PADDING expects input 
+				// and output buffers to be RSA_size(rsa), while the input must be zero-padded from the left
+				const int inputBlockSizeWithPadding = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) - 41 - 1 : RSA_size(rsa);
+				const int outputBlockSizeWithPadding = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) : RSA_size(rsa) - 41 - 1;
+				const int inputBlockSizeWithoutPadding = RSA_size(rsa);
+				const int outputBlockSizeWithoutPadding = RSA_size(rsa);
+				const int inputBlockSize = padding ? inputBlockSizeWithPadding : inputBlockSizeWithoutPadding;
+				const int outputBlockSize = padding ? outputBlockSizeWithPadding : outputBlockSizeWithoutPadding;
+				// initialize input and output byte strings
 				ByteString input;
 				ByteString output;
 				input.reset(inputBlockSize);
 				output.reset(outputBlockSize);
-				const size_t blockCount = (_byteStringInput.getByteLength() + inputBlockSize - 1) / inputBlockSize;
-				for (size_t blockIndex = 0; blockIndex < blockCount && result == true; blockIndex++) {
+				// repeatedly encrypt/decrypt misusing (!) RSA as long as there are bytes remaining
+				while (bytesRemaining > 0 && result != false) {
+					// calculate the number of bytes we have processed so far
+					const int bytesProcessed = (int)(_byteStringInput.getByteLength()) - bytesRemaining;
+					// zero both input and output byte strings
 					memset(input.getByteData(), 0, inputBlockSize);
 					memset(output.getByteData(), 0, outputBlockSize);
-					const int inputSize = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? (bytesRemaining >= inputBlockSize ? inputBlockSize : bytesRemaining) : (inputBlockSize);
-					memcpy(input.getByteData(), _byteStringInput.getByteDataConst() + blockIndex * inputBlockSize, inputSize);
+					// ATTENTION: for the RSA_PKCS1_OAEP_PADDING mode, we're copying the next chunk of the input 
+					// byte string to the left of the temporary string until we have RSA_size(rsa) - 41 - 1 bytes 
+					// of data, for the RSA_NO_PADDING mode we're taking RSA_size(rsa) - 1 bytes of data and zero 
+					// pad it to the left; the output is concatenated equally for both modes
+					const int inputSizeWithPadding = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? (bytesRemaining >= inputBlockSize ? inputBlockSize : bytesRemaining) : inputBlockSize;
+					const int inputSizeWithoutPadding = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? (bytesRemaining >= inputBlockSize - 1 ? inputBlockSize - 1 : bytesRemaining) : inputBlockSize;
+					const int inputSize = padding ? inputSizeWithPadding : inputSizeWithoutPadding;
+					input = _byteStringInput;
+					input.truncateLeft(input.getByteLength() - bytesProcessed);
+					input.truncateRight(inputBlockSize);
+					input.addZeroPaddingLeft(padding ? input.getByteLength() : inputBlockSize);
+					// encryption/decryption
+					int bytesEncryptedDecrypted = 0;
+					// encryption
 					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-						const int encrypt = RSA_public_encrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
-						if (encrypt == -1) {
-							result = false;
-						}
-						else {
-							bytesRemaining -= inputSize;
-							output.truncate(encrypt);
-							_byteStringOutput += output;
-						}
+						bytesEncryptedDecrypted = RSA_public_encrypt(inputBlockSize, input.getByteDataConst(), output.getByteData(), rsa, padding ? RSA_PKCS1_OAEP_PADDING : RSA_NO_PADDING);
 					}
-					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-						const int decrypt = RSA_private_decrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, RSA_PKCS1_OAEP_PADDING);
-						if (decrypt == -1) {
-							result = false;
-						}
-						else {
-							output.truncate(decrypt);
-							_byteStringOutput += output;
-						}
+					// decryption
+					else {
+						bytesEncryptedDecrypted = RSA_private_decrypt(inputSize, input.getByteDataConst(), output.getByteData(), rsa, padding ? RSA_PKCS1_OAEP_PADDING : RSA_NO_PADDING);
+					}
+					if (bytesEncryptedDecrypted == -1) {
+						result = false;
+					}
+					else {
+						bytesRemaining -= inputSize;
+						output.truncateRight(bytesEncryptedDecrypted);
+						_byteStringOutput += output;
 					}
 				}
 				RSA_free(rsa);
@@ -982,62 +1130,68 @@ namespace CrypTool {
 				}
 				// initialize the RSA structure
 				RSA *rsa = RSA_new();
-				// depending on the operation type, try to fetch the public or the private key
+				// try to fetch the public key (encryption)
 				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
 					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePublicKeyRSA(_serial, &rsa)) {
 						RSA_free(rsa);
 						return false;
 					}
 				}
+				// try to fetch the private key (decryption)
 				if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
 					if (!CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificatePrivateKeyRSA(_serial, _password, &rsa)) {
 						RSA_free(rsa);
 						return false;
 					}
 				}
-				// the buffer size we're working with (the size of the chunks to be read from the input file 
-				// and to be written to the output file), this depends on the used operation type
-				const int inputLength = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) - 41 - 1 : RSA_size(rsa);
-				const int outputLength = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) : RSA_size(rsa) - 41 - 1;
-				// create variables vor input, output
-				unsigned char *input = new unsigned char[inputLength];
-				unsigned char *output = new unsigned char[outputLength];
+				// some definitions regarding block size: RSA_PKCS1_OAEP_PADDING expects the input and output buffers 
+				// to be smaller than RSA_size(rsa) - 41 and RSA_size(rsa), respectively; RSA_NO_PADDING expects input 
+				// and output buffers to be RSA_size(rsa), while the input must be zero-padded from the left
+				const int inputBlockSizeWithPadding = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) - 41 - 1 : RSA_size(rsa);
+				const int outputBlockSizeWithPadding = asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION ? RSA_size(rsa) : RSA_size(rsa) - 41 - 1;
+				const int inputBlockSizeWithoutPadding = RSA_size(rsa);
+				const int outputBlockSizeWithoutPadding = RSA_size(rsa);
+				const int inputBlockSize = padding ? inputBlockSizeWithPadding : inputBlockSizeWithoutPadding;
+				const int outputBlockSize = padding ? outputBlockSizeWithPadding : outputBlockSizeWithoutPadding;
+				// initialize input and output byte strings
+				ByteString input;
+				ByteString output;
+				input.reset(inputBlockSize);
+				output.reset(outputBlockSize);
 				// initialize some internal variables
 				const ULONGLONG positionStart = 0;
 				const ULONGLONG positionEnd = fileInput.GetLength();
 				ULONGLONG positionCurrent = positionStart;
 				ULONGLONG bytesRead;
-				while (bytesRead = fileInput.Read(input, inputLength)) {
-					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
-						const int encrypt = RSA_public_encrypt((int)(bytesRead), input, output, rsa, RSA_PKCS1_OAEP_PADDING);
-						if (encrypt == -1) {
-							RSA_free(rsa);
-							delete input;
-							delete output;
-							return false;
-						}
-						else {
-							fileOutput.Write(output, encrypt);
-						}
+				while (bytesRead = fileInput.Read(input.getByteData(), inputBlockSize)) {
+					if (bytesRead == 0) break;
+					// ATTENTION: for RSA_NO_PADDING, we need to manually adapt the input buffer 
+					// to contain leading zeros until the input size equals the input block size
+					if (bytesRead != inputBlockSize && !padding) {
+						input.addZeroPaddingLeft((size_t)(inputBlockSize - bytesRead));
+						bytesRead = inputBlockSize;
 					}
-					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_DECRYPTION) {
-						const int decrypt = RSA_private_decrypt((int)(bytesRead), input, output, rsa, RSA_PKCS1_OAEP_PADDING);
-						if (decrypt == -1) {
-							RSA_free(rsa);
-							delete input;
-							delete output;
-							return false;
-						}
-						else {
-							fileOutput.Write(output, decrypt);
-						}
+					// encryption/decryption
+					int bytesEncryptedDecrypted = 0;
+					// encryption
+					if (asymmetricOperationType == ASYMMETRIC_OPERATION_TYPE_ENCRYPTION) {
+						bytesEncryptedDecrypted = RSA_public_encrypt((int)(bytesRead), input.getByteDataConst(), output.getByteData(), rsa, padding ? RSA_PKCS1_OAEP_PADDING : RSA_NO_PADDING);
+					}
+					// decryption
+					else {
+						bytesEncryptedDecrypted = RSA_private_decrypt((int)(bytesRead), input.getByteDataConst(), output.getByteData(), rsa, padding ? RSA_PKCS1_OAEP_PADDING : RSA_NO_PADDING);
+					}
+					if (bytesEncryptedDecrypted == -1) {
+						RSA_free(rsa);
+						return false;
+					}
+					else {
+						fileOutput.Write(output.getByteDataConst(), bytesEncryptedDecrypted);
 					}
 					positionCurrent += bytesRead;
 					if (_cancelled) {
 						if (*_cancelled) {
 							RSA_free(rsa);
-							delete input;
-							delete output;
 							return false;
 						}
 					}
@@ -1046,8 +1200,6 @@ namespace CrypTool {
 					}
 				}
 				RSA_free(rsa);
-				delete input;
-				delete output;
 				return true;
 			}
 
@@ -1707,7 +1859,7 @@ namespace CrypTool {
 				byteStringHashValue = byteStringHashValueTemp;
 			}
 			// truncate calculated hash value if necessary
-			byteStringHashValue.truncate(CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType));
+			byteStringHashValue.truncateRight(CrypTool::Cryptography::Hash::getHashAlgorithmByteLength(_hashAlgorithmType));
 			// assign result variable
 			_key = byteStringHashValue;
 			return true;

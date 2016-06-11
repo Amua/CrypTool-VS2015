@@ -34,22 +34,9 @@ static char THIS_FILE[] = __FILE__;
 
 CDlgSideChannelAttackVisualizationHETrudy::CDlgSideChannelAttackVisualizationHETrudy(CWnd* pParent) : 
 	CDialog(CDlgSideChannelAttackVisualizationHETrudy::IDD, pParent) {
-	
 	m_DeterminedSessionKey = _T("");
 	m_InterceptedEncryptedSessionKey = _T("");
 	m_ComputedMessage = _T("");
-	
-	// determine number of significant bits (default: 128)
-	if (CT_OPEN_REGISTRY_SETTINGS( KEY_ALL_ACCESS, IDS_REGISTRY_SETTINGS, "SideChannelAttack" ) == ERROR_SUCCESS) {
-		unsigned long u_significantBits = 128;
-		CT_READ_REGISTRY_DEFAULT(u_significantBits, "BitlengthSecret", u_significantBits);
-		significantBits = u_significantBits;
-		if(!significantBits) throw SCA_Error(E_SCA_INTERNAL_ERROR);
-		CT_CLOSE_REGISTRY();
-	}
-	else {
-		significantBits = 128;
-	}
 }
 
 CDlgSideChannelAttackVisualizationHETrudy::~CDlgSideChannelAttackVisualizationHETrudy() {
@@ -81,8 +68,7 @@ void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay() {
 	const SCA_Attacker *trudy = ((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAAttacker();
 
 	// *** TASK-TABELLE MIT INFOS FÜLLEN ***
-	if(trudy->hasInterceptedHybridEncryptedFile())
-	{
+	if(!trudy->getInterceptedHybridEncryptedFile().isReset()) {
 		// hat Trudy schon die Nachricht von A->B abgefangen?
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_MESSAGEINTERCEPTED,temp,STR_LAENGE_STRING_TABLE);
 		m_ControlTasks.AddString(temp);
@@ -90,59 +76,50 @@ void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay() {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_HASEXTRACTEDDENCSESSIONKEY,temp,STR_LAENGE_STRING_TABLE);
 		m_ControlTasks.AddString(temp);
 
-		if(trudy->getNumberOfModifications())
-		{
+		if(trudy->getModifiedHybridEncryptedFiles().size() > 0) {
 			// ** Wie viele modifizierte Sessionkeys hat Trudy bisher erstellt? **
 			// Unterscheidung zwischen Singular und Plural
 			// IDS_SCA_ATTACKER_MODIFICATIONSMADE_S:
 			//		"Trudy hat 1 modifizierten Sessionkey erstellt"
 			//	IDS_SCA_ATTACKER_MODIFICATIONSMADE
 			//		"Trudy hat n modfizierte Sessionkeys erstellt.
-			if(trudy->getNumberOfModifications() == 1)
-			{
+			if(trudy->getModifiedHybridEncryptedFiles().size() == 1) {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_MODIFICATIONSMADE_S, pc_str, STR_LAENGE_STRING_TABLE);
 				m_ControlTasks.AddString(pc_str);
 			}
-			else
-			{
+			else {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_MODIFICATIONSMADE, pc_str, STR_LAENGE_STRING_TABLE);
-				sprintf(temp, pc_str, trudy->getNumberOfModifications());
+				sprintf(temp, pc_str, trudy->getModifiedHybridEncryptedFiles().size());
 				m_ControlTasks.AddString(temp);
 			}
 	
 			// ** Wie viele SUCCESS-Antworten hat Trudy von Bobs Server erhalten? ** 
 			// Unterscheidung zwischen Singular und Plural (s.o.)
-			if(	trudy->getNumberOfModifications() == 1 &&trudy->getNumberOfPositiveResponses() == 1)
-			{
+			if(	trudy->getModifiedHybridEncryptedFiles().size() == 1 && trudy->getServerResponses().size() == 1) {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_SUCCESSRESPONSE_TRUE, pc_str, STR_LAENGE_STRING_TABLE);
 				m_ControlTasks.AddString(pc_str);
 			}
-			else if(trudy->getNumberOfModifications() == 1 && trudy->getNumberOfPositiveResponses() == 0)
-			{
+			else if(trudy->getModifiedHybridEncryptedFiles().size() == 1 && trudy->getServerResponses().size() == 0) {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_SUCCESSRESPONSE_FALSE, pc_str, STR_LAENGE_STRING_TABLE);
 				m_ControlTasks.AddString(pc_str);
 			}
-			else
-			{
+			else {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_SUCCESSRESPONSES, pc_str, STR_LAENGE_STRING_TABLE);
-				sprintf(temp, pc_str, trudy->getNumberOfPositiveResponses(), trudy->getNumberOfModifications());
+				sprintf(temp, pc_str, trudy->getServerResponses().size(), trudy->getModifiedHybridEncryptedFiles().size());
 				m_ControlTasks.AddString(temp);
 			}
 		}
-		else
-		{
+		else {
 			// Trudy hat noch KEINE modifizierten Session Keys erstellt
 			LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_NOMODIFICATIONSYET, temp ,STR_LAENGE_STRING_TABLE);
 			m_ControlTasks.AddString(temp);
 		}
 	}
-	else
-	{
+	else {
 		// Trudy hat bisher KEINE Nachricht abgefangen
 		LoadString(AfxGetInstanceHandle(),IDS_SCA_ATTACKER_MESSAGENOTINTERCEPTEDYET,temp,STR_LAENGE_STRING_TABLE);
 		m_ControlTasks.AddString(temp);
 	}
-
 	// *** MODIFIZIERTE SESSION KEYS TABELLE FÜLLEN ***
 	// m_listview in Report-Mode initialisieren!!!
 	m_ListModifiedSessionKeys.SetExtendedStyle( LVS_EX_FULLROWSELECT );
@@ -153,72 +130,37 @@ void CDlgSideChannelAttackVisualizationHETrudy::updateDisplay() {
 	// alle vorher vorhandenen Informationen löschen
 	m_ListModifiedSessionKeys.DeleteAllItems();
 	// Tabelle mit Informationen füllen...
-	OctetString o;
-	char hexstring[SCA_MAX_LENGTH_OCTETSTRING+1];
-
-	for(int i=0; i<trudy->getNumberOfModifications(); i++)
-	{
-		// Informationen holen
-		o = trudy->getModifiedChallenge(i);
-		// Hexstring ermitteln
-		convertOctetStringToHexString(&o, hexstring);
-		// Zeile füllen
-		m_ListModifiedSessionKeys.InsertItem(i, hexstring);
+	for (size_t index = 0; index < trudy->getModifiedHybridEncryptedFiles().size(); index++) {
+		m_ListModifiedSessionKeys.InsertItem(index, trudy->getModifiedHybridEncryptedFiles().at(index).sessionKeyEncrypted.toString(16));
 	}
-
 	// *** VERSCHLÜSSELTER SESSION KEY (ORIGINAL) ***
-	if(trudy->hasInterceptedHybridEncryptedFile())
-	{
-		o = trudy->getInterceptedSessionKey();
-		char hexout[SCA_MAX_LENGTH_OCTETSTRING+1];
-		convertOctetStringToHexString(&o, hexout);
-
-		this->m_InterceptedEncryptedSessionKey = hexout;
-
+	if(!trudy->getInterceptedHybridEncryptedFile().isReset()) {
+		m_InterceptedEncryptedSessionKey = trudy->getInterceptedHybridEncryptedFile().sessionKeyEncrypted.toString(16);
 	}
-	else
-	{
+	else {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_SESSIONKEYNOTINTERCEPTEDYET, temp, STR_LAENGE_STRING_TABLE);
 		this->m_InterceptedEncryptedSessionKey = temp;
 	}
-
 	// *** DURCH ANGRIFF ERMITTELTER SESSION KEY ***
-	if(trudy->isDone())
-	{
-		Big s = (char*)trudy->getComputedSecret().c_str();
-		OctetString o;
-		char hexout[SCA_MAX_LENGTH_OCTETSTRING+1];
-		convertBigNumberToOctetString(s,&o,significantBits/8);
-		convertOctetStringToHexString(&o, hexout);
-		this->m_DeterminedSessionKey = hexout;
-
-		// Ursprünglich von Alice verschlüsselte Nachricht entschlüsseln und anzeigen
-		// AKTUELLEN Zeiger auf entsprechendes SCA-Objekt holen
-		ASSERT(GetParent());
-		SCA_Client *alice = ((CDlgSideChannelAttackVisualizationHE*)(GetParent()))->getSCAClient();
-		// Ursprungstext ermitteln
-		OctetString originalCipherText = alice->getHybEncFile().cipherText;
-		// Text entschlüsseln
-		OctetString clearText;
-		// dynamisch Speicher für entschlüsselten Text allokieren
-		clearText.octets = new char[originalCipherText.noctets + 256];
-		clearText.noctets = 0;
-		decryptMessageAES(&originalCipherText, &o, &clearText, significantBits);
-		// Anzeige aktualisieren
-		char *tempBuffer = new char[clearText.noctets+1];
-		memset(tempBuffer, 0, clearText.noctets+1);
-		memcpy(tempBuffer, clearText.octets, clearText.noctets);
-		m_ComputedMessage = tempBuffer;
-		delete tempBuffer;
-      delete []o.octets;
-      delete []clearText.octets;
+	if(trudy->isDone()) {
+		// this variable will hold the plain text
+		CrypTool::ByteString plainText;
+		// acquire calculated session key
+		CrypTool::ByteString calculatedSessionKey;
+		calculatedSessionKey = trudy->getCalculatedSessionKey();
+		// decrypt the cipher text
+		SHOW_HOUR_GLASS
+		CrypTool::Cryptography::Symmetric::SymmetricOperation operationSymmetric(CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES, CrypTool::Cryptography::Symmetric::SYMMETRIC_OPERATION_TYPE_DECRYPTION);
+		operationSymmetric.executeOnByteStrings(trudy->getInterceptedHybridEncryptedFile().cipherText, calculatedSessionKey, plainText);
+		HIDE_HOUR_GLASS
+		// make dertmined session key and plain text visible
+		m_DeterminedSessionKey = calculatedSessionKey.toString(16);
+		m_ComputedMessage = plainText.toString();
 	}
-	else
-	{
+	else {
 		LoadString(AfxGetInstanceHandle(), IDS_SCA_ATTACKER_SESSIONKEYNOTDETERMINEDYET, temp, STR_LAENGE_STRING_TABLE);
 		this->m_DeterminedSessionKey = temp;
 	}
-
 	UpdateData(false);
 }
 

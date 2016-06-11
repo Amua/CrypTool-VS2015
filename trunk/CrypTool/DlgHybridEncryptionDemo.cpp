@@ -42,6 +42,7 @@ CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(const CString &_documentFileN
 	CDialog(CDlgHybridEncryptionDemo::IDD, pParent),
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle),
+	m_byteLengthSessionKey(16),
 	m_selectedCertificateSerial(0),
 	m_documentFileNameResult("") {
 	for (int i = 0; i<11; i++) {
@@ -74,8 +75,8 @@ CDlgHybridEncryptionDemo::CDlgHybridEncryptionDemo(const CString &_documentFileN
 	m_setMatrix[10][5] = true;
 	m_setMatrix[10][6] = true;
 	m_bAuswahlDat = true;
-	// initialize symmetric key to 16 bytes (128 bits)
-	m_byteStringSymmetricKey.reset(16);
+	// initialize symmetric key to specified byte length
+	m_byteStringSymmetricKey.reset(m_byteLengthSessionKey);
 }
 
 CDlgHybridEncryptionDemo::~CDlgHybridEncryptionDemo() {
@@ -156,7 +157,7 @@ void CDlgHybridEncryptionDemo::OnButtonGenSymKey() {
 	m_strEdit = "";
 	m_strTitle="";
 	// generate a random symmetric key
-	m_byteStringSymmetricKey.randomize(m_byteStringSymmetricKey.getByteLength());
+	m_byteStringSymmetricKey.randomize(m_byteLengthSessionKey);
 	SetCondition(1,true);
 	UpdateData(false);
 }
@@ -216,9 +217,10 @@ void CDlgHybridEncryptionDemo::OnButtonEncKeyAsym() {
 	}
 	// update user interface
 	m_ButtonStatus[6] = active_pressed;
-	// execute RSA encryption
+	// execute RSA encryption (NO PADDING!)
 	SHOW_HOUR_GLASS
-	CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt operation(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_ENCRYPTION);
+	const bool padding = false;
+	CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt operation(CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_OPERATION_TYPE_ENCRYPTION, padding);
 	const bool result = operation.executeOnByteStrings(m_byteStringSymmetricKey, m_selectedCertificateSerial, "", m_byteStringSymmetricKeyEncrypted);
 	HIDE_HOUR_GLASS
 	if (!result) return;
@@ -226,7 +228,7 @@ void CDlgHybridEncryptionDemo::OnButtonEncKeyAsym() {
 	SetCondition(6, true);
 	m_strTitle = "";
 	m_strEdit = "";
-	UpdateData(false);
+	UpdateData(false); 
 }
 
 void CDlgHybridEncryptionDemo::OnButtonShowAsymKey() {
@@ -247,15 +249,15 @@ void CDlgHybridEncryptionDemo::OnButtonShowDocument() {
 		int lines, rest;
 
 		linelen = 11 + INFO_TEXT_COLUMNS * 4;
-		lines = (m_iDocSize + INFO_TEXT_COLUMNS - 1) / INFO_TEXT_COLUMNS;
-		rest = (m_iDocSize) % INFO_TEXT_COLUMNS;
+		lines = (m_byteStringPlainText.getByteLength() + INFO_TEXT_COLUMNS - 1) / INFO_TEXT_COLUMNS;
+		rest = (m_byteStringPlainText.getByteLength()) % INFO_TEXT_COLUMNS;
 		destSize = lines * linelen; // - INFO_TEXT_COLUMNS + rest;
 	}
 	char *dest = new char[destSize + 1];
 	SHOW_HOUR_GLASS
-		int err = HexDumpMem(dest, destSize, (unsigned char*)m_byteStringPlainText.getByteData(), m_iDocSize, INFO_TEXT_COLUMNS);
+	int err = HexDumpMem(dest, destSize, (unsigned char*)m_byteStringPlainText.getByteData(), m_byteStringPlainText.getByteLength(), INFO_TEXT_COLUMNS);
 	HIDE_HOUR_GLASS
-		m_strEdit = dest;
+	m_strEdit = dest;
 	delete[]dest;
 	UpdateData(false);
 }
@@ -403,9 +405,8 @@ bool CDlgHybridEncryptionDemo::DateiOeffnen(const CString &DateiPfadName) {
 	if (!m_byteStringPlainText.readFromFile(DateiPfadName)) {
 		return false;
 	}
-	// assign the document size, and return false if empty
-	m_iDocSize = m_byteStringPlainText.getByteLength();
-	if (m_iDocSize == 0) {
+	// return false if plain text is empty
+	if (m_byteStringPlainText.getByteLength() == 0) {
 		return false;
 	}
 	m_bAuswahlDat = false;

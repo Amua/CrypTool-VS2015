@@ -43,21 +43,23 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);
 protected:
-	afx_msg void OnButtonGetDocument();
-	afx_msg void OnButtonGenSymKey();
-	afx_msg void OnButtonShowSymKey();
-	afx_msg void OnButtonEncDocumentSym();
-	afx_msg void OnButtonGetAsymKey();
-	afx_msg void OnButtonEncKeyAsym();
-	afx_msg void OnButtonShowAsymKey();
-	afx_msg void OnButtonShowDocument();
-	afx_msg void OnButtonShowEncDocument();
-	afx_msg void OnButtonShowEncSymKey();
-	afx_msg void OnButtonDatenausgabe();
-	afx_msg void OnPaint();
+	virtual void OnButtonGetDocument();
+	virtual void OnButtonGenSymKey();
+	virtual void OnButtonShowSymKey();
+	virtual void OnButtonEncDocumentSym();
+	virtual void OnButtonGetAsymKey();
+	virtual void OnButtonEncKeyAsym();
+	virtual void OnButtonShowAsymKey();
+	virtual void OnButtonShowDocument();
+	virtual void OnButtonShowEncDocument();
+	virtual void OnButtonShowEncSymKey();
+	virtual void OnButtonDatenausgabe();
+	virtual void OnPaint();
 protected:
 	CString m_documentFileName;
 	CString m_documentTitle;
+protected:
+	const size_t m_byteLengthSessionKey;
 protected:
 	CrypTool::ByteString m_byteStringPlainText;
 	CrypTool::ByteString m_byteStringCipherText;
@@ -80,7 +82,6 @@ protected:
 	bool m_setMatrix[11][11];
 protected:
 	CFont m_font;
-	int m_iDocSize;
 	bool m_bAuswahlDat;
 	CWnd *m_hFocus;
 	CStatic	m_ctrlBG;
