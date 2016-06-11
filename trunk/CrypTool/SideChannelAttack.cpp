@@ -242,7 +242,7 @@ HybridEncryptedFile SCA_Attacker::createNextHybridEncryptedFile() {
 			newChallenge = (z + y + 1);
 			newChallenge = pow(newChallenge, publicKey, modulus);
 			newChallenge = (oldChallenge * newChallenge) % modulus;
-			convertBigToByteString(newChallenge, nextHybridEncryptedFile.sessionKey);
+			convertBigToByteString(newChallenge, nextHybridEncryptedFile.sessionKeyEncrypted);
 			vectorModifiedHybridEncryptedFiles.push_back(nextHybridEncryptedFile);
 			b2 -= 1;
 			return nextHybridEncryptedFile;
