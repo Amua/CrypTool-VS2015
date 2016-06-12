@@ -298,7 +298,6 @@ void CDlgSideChannelAttackVisualizationHE::OnMessagereception() {
 		CString stringPrivateKeyD;
 		// prompt user to enter the password for the private key of the certificate
 		while(1) {
-			AfxMessageBox("CRYPTOOL_BASE: this 'pse' description is outdated");
 			CDlgSideChannelAttackVisualizationHEPSEPINPrompt dlg;
 			if (dlg.DoModal() != IDOK) {
 				LoadString(AfxGetInstanceHandle(), IDS_SCA_PSE_IS_NEEDED, pc_str, STR_LAENGE_STRING_TABLE);
