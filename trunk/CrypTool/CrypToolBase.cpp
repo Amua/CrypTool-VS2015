@@ -1840,6 +1840,49 @@ namespace CrypTool {
 				return SIGNATURE_TYPE_NULL;
 			}
 
+			Asymmetric::AsymmetricAlgorithmType getAsymmetricAlgorithmType(const SignatureType _signatureType) {
+				switch (_signatureType) {
+				case SIGNATURE_TYPE_RSA_MD5:
+				case SIGNATURE_TYPE_RSA_RIPEMD160:
+				case SIGNATURE_TYPE_RSA_SHA:
+				case SIGNATURE_TYPE_RSA_SHA1:
+					return Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA;
+				case SIGNATURE_TYPE_DSA_SHA:
+				case SIGNATURE_TYPE_DSA_SHA1:
+					return Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA;
+				case SIGNATURE_TYPE_ECC_RIPEMD160:
+				case SIGNATURE_TYPE_ECC_SHA1:
+					return Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC;
+				default:
+					break;
+				}
+				return Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL;
+			}
+
+			Hash::HashAlgorithmType getHashAlgorithmType(const SignatureType _signatureType) {
+				switch (_signatureType) {
+				case SIGNATURE_TYPE_RSA_MD5:
+					return Hash::HASH_ALGORITHM_TYPE_MD5;
+				case SIGNATURE_TYPE_RSA_RIPEMD160:
+					return Hash::HASH_ALGORITHM_TYPE_RIPEMD160;
+				case SIGNATURE_TYPE_RSA_SHA:
+					return Hash::HASH_ALGORITHM_TYPE_SHA;
+				case SIGNATURE_TYPE_RSA_SHA1:
+					return Hash::HASH_ALGORITHM_TYPE_SHA1;
+				case SIGNATURE_TYPE_DSA_SHA:
+					return Hash::HASH_ALGORITHM_TYPE_SHA;
+				case SIGNATURE_TYPE_DSA_SHA1:
+					return Hash::HASH_ALGORITHM_TYPE_SHA1;
+				case SIGNATURE_TYPE_ECC_RIPEMD160:
+					return Hash::HASH_ALGORITHM_TYPE_RIPEMD160;
+				case SIGNATURE_TYPE_ECC_SHA1:
+					return Hash::HASH_ALGORITHM_TYPE_SHA1;
+				default:
+					break;
+				}
+				return Hash::HASH_ALGORITHM_TYPE_NULL;
+			}
+
 			OperationSignOrVerify::OperationSignOrVerify(const SignatureType _signatureType, const SignatureOperationType _signatureOperationType) :
 				signatureType(_signatureType),
 				signatureOperationType(_signatureOperationType) {
@@ -1860,6 +1903,13 @@ namespace CrypTool {
 				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
 					return false;
 				}
+				// determine asymmetric algorithm type and hash algorithm type 
+				// based on the signature type set at construction
+				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL || hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
 
 				// TODO/FIXME
 				AfxMessageBox("CRYPTOOL_BASE: implement me");
@@ -1874,6 +1924,13 @@ namespace CrypTool {
 				}
 				// make sure we have a valid signature operation type
 				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
+					return false;
+				}
+				// determine asymmetric algorithm type and hash algorithm type 
+				// based on the signature type set at construction
+				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL || hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
 					return false;
 				}
 

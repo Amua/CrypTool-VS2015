@@ -534,6 +534,14 @@ namespace CrypTool {
 			// specified combination is invalid, SIGNATURE_TYPE_NULL is returned
 			SignatureType getSignatureType(const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const Hash::HashAlgorithmType _hashAlgorithmType);
 
+			// returns the asymmetric algorithm type based on the specified 
+			// signature type, or ASYMMETRIC_ALGORITHM_TYPE_NULL in case of errors
+			Asymmetric::AsymmetricAlgorithmType getAsymmetricAlgorithmType(const SignatureType _signatureType);
+
+			// returns the hash algorithm type based on the specified signature 
+			// type, or HASH_ALGORITHM_TYPE_NULL in case of errors
+			Hash::HashAlgorithmType getHashAlgorithmType(const SignatureType _signatureType);
+
 			// this class provides digital signature operations (sign and verify); the 
 			// file-based operations provide the ability to cancel the operations and 
 			// track their progress when run in a separate thread
