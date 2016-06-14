@@ -1785,6 +1785,77 @@ namespace CrypTool {
 
 		}
 
+		OperationSign::OperationSign(const Hash::HashAlgorithmType _hashAlgorithmType, const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType) :
+			hashAlgorithmType(_hashAlgorithmType),
+			asymmetricAlgorithmType(_asymmetricAlgorithmType) {
+
+		}
+
+		OperationSign::~OperationSign() {
+
+		}
+
+		bool OperationSign::executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput) {
+			// first check if the chosen signature (the combination of hash algorithm type 
+			// and asymmetric algorithm type) is supported; if not, an error message is 
+			// implicitly displayed, therefore we can return false right away
+			if (!isSignatureSupported()) {
+				return false;
+			}
+
+			// TODO/FIXME
+			AfxMessageBox("CRYPTOOL_BASE: implement me");
+			return false;
+		}
+
+		bool OperationSign::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
+			// first check if the chosen signature (the combination of hash algorithm type 
+			// and asymmetric algorithm type) is supported; if not, an error message is 
+			// implicitly displayed, therefore we can return false right away
+			if (!isSignatureSupported()) {
+				return false;
+			}
+
+			// TODO/FIXE
+			AfxMessageBox("CRYPTOOL_BASE: implement me");
+			return false;
+		}
+
+		bool OperationSign::isSignatureSupported() const {
+			// RSA supports: MD5, RIPEMD160, SHA, SHA1
+			if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA) {
+				std::vector<Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_MD5);
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_RIPEMD160);
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA);
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA1);
+				if (Utilities::vectorContains<Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, hashAlgorithmType)) {
+					return true;
+				}
+			}
+			// DSA supports: SHA, SHA1
+			else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA) {
+				std::vector<Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA);
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA1);
+				if (Utilities::vectorContains<Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, hashAlgorithmType)) {
+					return true;
+				}
+			}
+			// ECC supports: RIPEMD160, SHA1
+			else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC) {
+				std::vector<Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_RIPEMD160);
+				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA1);
+				if (Utilities::vectorContains<Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, hashAlgorithmType)) {
+					return true;
+				}
+			}
+			// at this point we need to dump a warning message to the user
+			AfxMessageBox("CRYPTOOL_BASE: combination of hash algorithm and asymmetric algorithm is invalid for digital signature");
+			return false;
+		}
+
 	}
 
 	namespace Functions {

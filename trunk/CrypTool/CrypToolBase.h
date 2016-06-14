@@ -503,6 +503,25 @@ namespace CrypTool {
 
 		}
 
+		// this class provides digital signatures on the supported hash algorithm and 
+		// asymmetric algorithm types; since not all combinations of hash algorithms and 
+		// asymmetric algorithms are valid, an error is thrown if incompatible parameters 
+		// are supplied; the file-based operations provide the ability to cancel the 
+		// operations and track their progress when run in a separate thread
+		class OperationSign {
+		public:
+			OperationSign(const Hash::HashAlgorithmType _hashAlgorithmType, const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType);
+			virtual ~OperationSign();
+		public:
+			bool executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput);
+			bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled = 0, double *_progress = 0);
+		private:
+			const Hash::HashAlgorithmType hashAlgorithmType;
+			const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+		private:
+			bool isSignatureSupported() const;
+		};
+
 	}
 
 	// this namespace encapsulates a variety of high-level functions
