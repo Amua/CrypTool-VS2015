@@ -1785,75 +1785,120 @@ namespace CrypTool {
 
 		}
 
-		OperationSign::OperationSign(const Hash::HashAlgorithmType _hashAlgorithmType, const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType) :
-			hashAlgorithmType(_hashAlgorithmType),
-			asymmetricAlgorithmType(_asymmetricAlgorithmType) {
+		namespace Signature {
 
-		}
+			CString getSignatureName(const SignatureType _signatureType) {
+				CString signatureName = "";
+				switch (_signatureType) {
+				case SIGNATURE_TYPE_RSA_MD5:
+					signatureName = "RSAwithMD5";
+					break;
+				case SIGNATURE_TYPE_RSA_RIPEMD160:
+					signatureName = "RSAwithRIPEMD160";
+					break;
+				case SIGNATURE_TYPE_RSA_SHA:
+					signatureName = "RSAwithSHA";
+					break;
+				case SIGNATURE_TYPE_RSA_SHA1:
+					signatureName = "RSAwithSHA1";
+					break;
+				case SIGNATURE_TYPE_DSA_SHA:
+					signatureName = "DSAwithSHA";
+					break;
+				case SIGNATURE_TYPE_DSA_SHA1:
+					signatureName = "DSAwithSHA1";
+					break;
+				case SIGNATURE_TYPE_ECC_RIPEMD160:
+					signatureName = "ECCwithRIPEMD160";
+					break;
+				case SIGNATURE_TYPE_ECC_SHA1:
+					signatureName = "ECCwithSHA1";
+					break;
+				default:
+					break;
+				}
+				return signatureName;
+			}
 
-		OperationSign::~OperationSign() {
+			SignatureType getSignatureType(const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const Hash::HashAlgorithmType _hashAlgorithmType) {
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_MD5)
+					return SIGNATURE_TYPE_RSA_MD5;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_RIPEMD160)
+					return SIGNATURE_TYPE_RSA_RIPEMD160;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_SHA)
+					return SIGNATURE_TYPE_RSA_SHA;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_SHA1)
+					return SIGNATURE_TYPE_RSA_SHA1;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_SHA)
+					return SIGNATURE_TYPE_DSA_SHA;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_SHA1)
+					return SIGNATURE_TYPE_DSA_SHA1;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_RIPEMD160)
+					return SIGNATURE_TYPE_ECC_RIPEMD160;
+				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_SHA1)
+					return SIGNATURE_TYPE_ECC_SHA1;
+				return SIGNATURE_TYPE_NULL;
+			}
 
-		}
+			OperationSignOrVerify::OperationSignOrVerify(const SignatureType _signatureType, const SignatureOperationType _signatureOperationType) :
+				signatureType(_signatureType),
+				signatureOperationType(_signatureOperationType) {
 
-		bool OperationSign::executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput) {
-			// first check if the chosen signature (the combination of hash algorithm type 
-			// and asymmetric algorithm type) is supported; if not, an error message is 
-			// implicitly displayed, therefore we can return false right away
-			if (!isSignatureSupported()) {
+			}
+
+			OperationSignOrVerify::~OperationSignOrVerify() {
+
+			}
+
+			bool OperationSignOrVerify::executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput) {
+				using namespace OpenSSL;
+				// make sure we have a valid signature type
+				if (!isSignatureTypeValid()) {
+					return false;
+				}
+				// make sure we have a valid signature operation type
+				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
+					return false;
+				}
+
+				// TODO/FIXME
+				AfxMessageBox("CRYPTOOL_BASE: implement me");
 				return false;
 			}
 
-			// TODO/FIXME
-			AfxMessageBox("CRYPTOOL_BASE: implement me");
-			return false;
-		}
+			bool OperationSignOrVerify::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
+				using namespace OpenSSL;
+				// make sure we have a valid signature type
+				if (!isSignatureTypeValid()) {
+					return false;
+				}
+				// make sure we have a valid signature operation type
+				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
+					return false;
+				}
 
-		bool OperationSign::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
-			// first check if the chosen signature (the combination of hash algorithm type 
-			// and asymmetric algorithm type) is supported; if not, an error message is 
-			// implicitly displayed, therefore we can return false right away
-			if (!isSignatureSupported()) {
+				// TODO/FIXME
+				AfxMessageBox("CRYPTOOL_BASE: implement me");
 				return false;
 			}
 
-			// TODO/FIXE
-			AfxMessageBox("CRYPTOOL_BASE: implement me");
-			return false;
-		}
+			bool OperationSignOrVerify::isSignatureTypeValid() const {
+				switch (signatureType) {
+				case SIGNATURE_TYPE_RSA_MD5:
+				case SIGNATURE_TYPE_RSA_RIPEMD160:
+				case SIGNATURE_TYPE_RSA_SHA:
+				case SIGNATURE_TYPE_RSA_SHA1:
+				case SIGNATURE_TYPE_DSA_SHA:
+				case SIGNATURE_TYPE_DSA_SHA1:
+				case SIGNATURE_TYPE_ECC_RIPEMD160:
+				case SIGNATURE_TYPE_ECC_SHA1:
+					return true;
+				default:
+					break;
+				}
+				return false;
+			}
 
-		bool OperationSign::isSignatureSupported() const {
-			// RSA supports: MD5, RIPEMD160, SHA, SHA1
-			if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA) {
-				std::vector<Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_MD5);
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_RIPEMD160);
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA);
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA1);
-				if (Utilities::vectorContains<Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, hashAlgorithmType)) {
-					return true;
-				}
-			}
-			// DSA supports: SHA, SHA1
-			else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA) {
-				std::vector<Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA);
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA1);
-				if (Utilities::vectorContains<Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, hashAlgorithmType)) {
-					return true;
-				}
-			}
-			// ECC supports: RIPEMD160, SHA1
-			else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC) {
-				std::vector<Hash::HashAlgorithmType> vectorHashAlgorithmTypes;
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_RIPEMD160);
-				vectorHashAlgorithmTypes.push_back(Hash::HASH_ALGORITHM_TYPE_SHA1);
-				if (Utilities::vectorContains<Hash::HashAlgorithmType>(vectorHashAlgorithmTypes, hashAlgorithmType)) {
-					return true;
-				}
-			}
-			// at this point we need to dump a warning message to the user
-			AfxMessageBox("CRYPTOOL_BASE: combination of hash algorithm and asymmetric algorithm is invalid for digital signature");
-			return false;
 		}
 
 	}

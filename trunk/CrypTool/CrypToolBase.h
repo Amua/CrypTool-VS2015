@@ -503,24 +503,55 @@ namespace CrypTool {
 
 		}
 
-		// this class provides digital signatures on the supported hash algorithm and 
-		// asymmetric algorithm types; since not all combinations of hash algorithms and 
-		// asymmetric algorithms are valid, an error is thrown if incompatible parameters 
-		// are supplied; the file-based operations provide the ability to cancel the 
-		// operations and track their progress when run in a separate thread
-		class OperationSign {
-		public:
-			OperationSign(const Hash::HashAlgorithmType _hashAlgorithmType, const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType);
-			virtual ~OperationSign();
-		public:
-			bool executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput);
-			bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled = 0, double *_progress = 0);
-		private:
-			const Hash::HashAlgorithmType hashAlgorithmType;
-			const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
-		private:
-			bool isSignatureSupported() const;
-		};
+		// this namespace encapsulates functionality for digital signatures
+		namespace Signature {
+
+			// the supported signature types (combination of asymmetric algorithm and hash algorithm)
+			enum SignatureType {
+				SIGNATURE_TYPE_NULL,
+				SIGNATURE_TYPE_RSA_MD5,
+				SIGNATURE_TYPE_RSA_RIPEMD160,
+				SIGNATURE_TYPE_RSA_SHA,
+				SIGNATURE_TYPE_RSA_SHA1,
+				SIGNATURE_TYPE_DSA_SHA,
+				SIGNATURE_TYPE_DSA_SHA1,
+				SIGNATURE_TYPE_ECC_RIPEMD160,
+				SIGNATURE_TYPE_ECC_SHA1
+			};
+
+			// the supported signature operation types
+			enum SignatureOperationType {
+				SIGNATURE_OPERATION_TYPE_NULL,
+				SIGNATURE_OPERATION_TYPE_SIGN,
+				SIGNATURE_OPERATION_TYPE_VERIFY
+			};
+
+			// this function returns the name of the specified signature type
+			CString getSignatureName(const SignatureType _signatureType);
+
+			// this function returns the proper signature type for the specified 
+			// combination of asymmetric algorithm and hash algorithm; if the 
+			// specified combination is invalid, SIGNATURE_TYPE_NULL is returned
+			SignatureType getSignatureType(const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const Hash::HashAlgorithmType _hashAlgorithmType);
+
+			// this class provides digital signature operations (sign and verify); the 
+			// file-based operations provide the ability to cancel the operations and 
+			// track their progress when run in a separate thread
+			class OperationSignOrVerify {
+			public:
+				OperationSignOrVerify(const SignatureType _signatureType, const SignatureOperationType _signatureOperationType);
+				virtual ~OperationSignOrVerify();
+			public:
+				bool executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput);
+				bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled = 0, double *_progress = 0);
+			private:
+				const SignatureType signatureType;
+				const SignatureOperationType signatureOperationType;
+			private:
+				bool isSignatureTypeValid() const;
+			};
+
+		}
 
 	}
 
