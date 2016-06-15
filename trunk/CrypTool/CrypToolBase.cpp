@@ -605,6 +605,29 @@ namespace CrypTool {
 				return hashAlgorithmByteLength;
 			}
 
+			const OpenSSL::EVP_MD *getMessageDigest(const HashAlgorithmType _hashAlgorithmType) {
+				using namespace OpenSSL;
+				switch (_hashAlgorithmType) {
+				case HASH_ALGORITHM_TYPE_MD4:
+					return EVP_md4();
+				case HASH_ALGORITHM_TYPE_MD5:
+					return EVP_md5();
+				case HASH_ALGORITHM_TYPE_RIPEMD160:
+					return EVP_ripemd160();
+				case HASH_ALGORITHM_TYPE_SHA:
+					return EVP_sha();
+				case HASH_ALGORITHM_TYPE_SHA1:
+					return EVP_sha1();
+				case HASH_ALGORITHM_TYPE_SHA256:
+					return EVP_sha256();
+				case HASH_ALGORITHM_TYPE_SHA512:
+					return EVP_sha512();
+				default:
+					break;
+				}
+				return 0;
+			}
+
 			HashOperation::HashOperation(const HashAlgorithmType _hashAlgorithmType) :
 				hashAlgorithmType(_hashAlgorithmType),
 				contextSize(0),
@@ -1962,11 +1985,15 @@ namespace CrypTool {
 				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
 					return false;
 				}
-				// determine asymmetric algorithm type and hash algorithm type 
-				// based on the signature type set at construction
+				// determine asymmetric algorithm type and hash algorithm type based on the signature type set at construction
 				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
 				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
 				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL || hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
+				// acquire the message digest corresponding to the determined hash algorithm type
+				const EVP_MD *messageDigest = Hash::getMessageDigest(hashAlgorithmType);
+				if (!messageDigest) {
 					return false;
 				}
 
@@ -1985,11 +2012,15 @@ namespace CrypTool {
 				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
 					return false;
 				}
-				// determine asymmetric algorithm type and hash algorithm type 
-				// based on the signature type set at construction
+				// determine asymmetric algorithm type and hash algorithm type based on the signature type set at construction
 				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
 				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
 				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL || hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
+				// acquire the message digest corresponding to the determined hash algorithm type
+				const EVP_MD *messageDigest = Hash::getMessageDigest(hashAlgorithmType);
+				if (!messageDigest) {
 					return false;
 				}
 

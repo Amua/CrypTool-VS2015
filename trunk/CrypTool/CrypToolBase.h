@@ -254,6 +254,10 @@ namespace CrypTool {
 			// this function returns the byte length of the specified hash algorithm type
 			unsigned int getHashAlgorithmByteLength(const HashAlgorithmType _hashAlgorithmType);
 
+			// this function returns the OpenSSL message digest corresponding to 
+			// the specified hash algorithm type (or null on error)
+			const OpenSSL::EVP_MD *getMessageDigest(const HashAlgorithmType _hashAlgorithmType);
+
 			// this class provides hash operations on all supported hash algorithm types 
 			// for both byte strings and files (see different execute functions below); 
 			// the file-based operation provides the ability to cancel the operation 
