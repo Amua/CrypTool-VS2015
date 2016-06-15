@@ -743,6 +743,7 @@ namespace CrypTool {
 				ASSERT(fpInitialize(context));
 				while (bytesRead = fileInput.Read(buffer, bufferByteLength)) {
 					ASSERT(fpUpdate(context, buffer, bytesRead));
+					// update progress
 					positionCurrent += bytesRead;
 					if (_cancelled) {
 						if (*_cancelled) {
@@ -958,6 +959,7 @@ namespace CrypTool {
 						return false;
 					}
 					fileOutput.Write(outputBuffer.getByteDataConst(), outputLength);
+					// update progress
 					positionCurrent += bytesRead;
 					if (_cancelled) {
 						if (*_cancelled) {
@@ -1211,6 +1213,7 @@ namespace CrypTool {
 					else {
 						fileOutput.Write(output.getByteDataConst(), bytesEncryptedDecrypted);
 					}
+					// update progress
 					positionCurrent += bytesRead;
 					if (_cancelled) {
 						if (*_cancelled) {
@@ -1976,6 +1979,11 @@ namespace CrypTool {
 
 			bool OperationSign::executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringSignature, const long _serial, const CString &_password) {
 				using namespace OpenSSL;
+				// determine asymmetric algorithm type based on the signature type set at construction
+				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
 				// determine hash algorithm type based on the signature type set at construction
 				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
 				if (hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
@@ -1994,6 +2002,30 @@ namespace CrypTool {
 					EVP_MD_CTX_destroy(context);
 					EVP_PKEY_free(pkey);
 					return false;
+				}
+				// make sure private key corresponds to selected signature type (RSA)
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_RSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure private key corresponds to selected signature type (DSA)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_DSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure private key corresponds to selected signature type (ECC)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
 				}
 				// initialize sign operation
 				if (EVP_DigestSignInit(context, 0, messageDigest, 0, pkey) != 1) {
@@ -2027,8 +2059,123 @@ namespace CrypTool {
 			}
 
 			bool OperationSign::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameSignature, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
-				AfxMessageBox("CRYPTOOL_BASE: implement me");
-				return false;
+				using namespace OpenSSL;
+				// determine asymmetric algorithm type based on the signature type set at construction
+				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
+				// determine hash algorithm type based on the signature type set at construction
+				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
+				if (hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
+				// acquire the message digest corresponding to the determined hash algorithm type
+				const EVP_MD *messageDigest = Hash::getMessageDigest(hashAlgorithmType);
+				if (!messageDigest) {
+					return false;
+				}
+				// try to open files
+				CFile fileMessage;
+				CFile fileSignature;
+				// try to open message file (for reading)
+				if (!fileMessage.Open(_fileNameMessage, CFile::modeRead)) {
+					return false;
+				}
+				// try to open signature file (for writing)
+				if (!fileSignature.Open(_fileNameSignature, CFile::modeCreate | CFile::modeWrite)) {
+					return false;
+				}
+				// initialize variables for message digest context and key
+				EVP_MD_CTX *context = EVP_MD_CTX_create();
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				// acquire the private key
+				if (!Asymmetric::CertificateStore::instance().getUserCertificatePrivateKey(_serial, _password, &pkey)) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// make sure private key corresponds to selected signature type (RSA)
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_RSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure private key corresponds to selected signature type (DSA)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_DSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure private key corresponds to selected signature type (ECC)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// initialize sign operation
+				if (EVP_DigestSignInit(context, 0, messageDigest, 0, pkey) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// the size of chunks we're reading
+				const unsigned int inputBufferByteLength = 4096;
+				// initialize buffer variable
+				ByteString inputBuffer;
+				inputBuffer.reset(inputBufferByteLength);
+				// initialize some internal variables
+				const ULONGLONG positionStart = 0;
+				const ULONGLONG positionEnd = fileMessage.GetLength();
+				ULONGLONG positionCurrent = positionStart;
+				ULONGLONG bytesRead;
+				while (bytesRead = fileMessage.Read(inputBuffer.getByteData(), inputBufferByteLength)) {
+					// update sign operation
+					if (EVP_DigestSignUpdate(context, inputBuffer.getByteDataConst(), inputBuffer.getByteLength()) != 1) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+					// update progress
+					positionCurrent += bytesRead;
+					if (_cancelled) {
+						if (*_cancelled) {
+							EVP_MD_CTX_destroy(context);
+							EVP_PKEY_free(pkey);
+							return false;
+						}
+					}
+					if (_progress) {
+						*_progress = (double)(positionCurrent) / (double)(positionEnd);
+					}
+				}
+				// finalize sign operation
+				size_t signatureLength = 0;
+				if (EVP_DigestSignFinal(context, 0, &signatureLength) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// initialize temporary variable for signature
+				ByteString byteStringSignature;
+				byteStringSignature.reset(signatureLength);
+				if (EVP_DigestSignFinal(context, byteStringSignature.getByteData(), &signatureLength) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				byteStringSignature.truncateRight(signatureLength);
+				// write signature
+				fileSignature.Write((void*)(byteStringSignature.getByteDataConst()), byteStringSignature.getByteLength());
+				EVP_MD_CTX_destroy(context);
+				EVP_PKEY_free(pkey);
+				return true;
 			}
 
 			OperationVerify::OperationVerify(const SignatureType _signatureType) :
@@ -2042,6 +2189,11 @@ namespace CrypTool {
 
 			bool OperationVerify::executeOnByteStrings(const ByteString &_byteStringMessage, const ByteString &_byteStringSignature, const long _serial) {
 				using namespace OpenSSL;
+				// determine asymmetric algorithm type based on the signature type set at construction
+				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
 				// determine hash algorithm type based on the signature type set at construction
 				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
 				if (hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
@@ -2060,6 +2212,30 @@ namespace CrypTool {
 					EVP_MD_CTX_destroy(context);
 					EVP_PKEY_free(pkey);
 					return false;
+				}
+				// make sure public key corresponds to selected signature type (RSA)
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_RSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure public key corresponds to selected signature type (DSA)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_DSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure public key corresponds to selected signature type (ECC)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
 				}
 				// initialize verify operation
 				if (EVP_DigestVerifyInit(context, 0, messageDigest, 0, pkey) != 1) {
@@ -2085,8 +2261,115 @@ namespace CrypTool {
 			}
 
 			bool OperationVerify::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameSignature, const long _serial, const bool *_cancelled, double *_progress) {
-				AfxMessageBox("CRYPTOOL_BASE: implement me");
-				return false;
+				using namespace OpenSSL;
+				// determine asymmetric algorithm type based on the signature type set at construction
+				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
+				// determine hash algorithm type based on the signature type set at construction
+				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
+				if (hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+					return false;
+				}
+				// acquire the message digest corresponding to the determined hash algorithm type
+				const EVP_MD *messageDigest = Hash::getMessageDigest(hashAlgorithmType);
+				if (!messageDigest) {
+					return false;
+				}
+				// try to open files
+				CFile fileMessage;
+				CFile fileSignature;
+				// try to open message file (for reading)
+				if (!fileMessage.Open(_fileNameMessage, CFile::modeRead)) {
+					return false;
+				}
+				// try to open signature file (for reading)
+				if (!fileSignature.Open(_fileNameSignature, CFile::modeRead)) {
+					return false;
+				}
+				// initialize variables for message digest context and key
+				EVP_MD_CTX *context = EVP_MD_CTX_create();
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				// acquire the public key
+				if (!Asymmetric::CertificateStore::instance().getUserCertificatePublicKey(_serial, &pkey)) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// make sure public key corresponds to selected signature type (RSA)
+				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_RSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure public key corresponds to selected signature type (DSA)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_DSA) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// make sure public key corresponds to selected signature type (ECC)
+				else if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC) {
+					if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+				}
+				// initialize verify operation
+				if (EVP_DigestVerifyInit(context, 0, messageDigest, 0, pkey) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// the size of chunks we're reading
+				const unsigned int inputBufferByteLength = 4096;
+				// initialize buffer variable
+				ByteString inputBuffer;
+				inputBuffer.reset(inputBufferByteLength);
+				// initialize some internal variables
+				const ULONGLONG positionStart = 0;
+				const ULONGLONG positionEnd = fileMessage.GetLength();
+				ULONGLONG positionCurrent = positionStart;
+				ULONGLONG bytesRead;
+				while (bytesRead = fileMessage.Read(inputBuffer.getByteData(), inputBufferByteLength)) {
+					// update verify operation
+					if (EVP_DigestVerifyUpdate(context, inputBuffer.getByteDataConst(), inputBuffer.getByteLength()) != 1) {
+						EVP_MD_CTX_destroy(context);
+						EVP_PKEY_free(pkey);
+						return false;
+					}
+					// update progress
+					positionCurrent += bytesRead;
+					if (_cancelled) {
+						if (*_cancelled) {
+							EVP_MD_CTX_destroy(context);
+							EVP_PKEY_free(pkey);
+							return false;
+						}
+					}
+					if (_progress) {
+						*_progress = (double)(positionCurrent) / (double)(positionEnd);
+					}
+				}
+				// initialize temporary variable for signature
+				ByteString byteStringSignature;
+				byteStringSignature.reset((size_t)(fileSignature.GetLength()));
+				fileSignature.Read((void*)(byteStringSignature.getByteData()), (UINT)(fileSignature.GetLength()));
+				// finalize verify operation
+				if (EVP_DigestVerifyFinal(context, byteStringSignature.getByteDataConst(), byteStringSignature.getByteLength()) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				EVP_MD_CTX_destroy(context);
+				EVP_PKEY_free(pkey);
+				return true;
 			}
 
 		}
