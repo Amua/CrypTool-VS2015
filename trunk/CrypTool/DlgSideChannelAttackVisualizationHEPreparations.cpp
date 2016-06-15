@@ -28,7 +28,6 @@
 #include "DlgSideChannelAttackVisualizationHEPreparationsRequest3.h"
 
 #include "DlgHybridEncryptionDemoSCA.h"
-#include "DlgHybridDecryptionDemo.h"
 
 #include "FileTools.h"
 #include "CryptDoc.h"
@@ -105,9 +104,11 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK() {
 				// Dateinamen setzen (VOLLER PFAD!)
 				finalHybEncFile = CrypTool::getCrypToolPath() + "\\" + pc_str;
 				// Zertifikatsinformationen ermitteln
+				CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+				CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
 				CrypTool::ByteString byteStringSessionKeyEncrypted;
 				CrypTool::ByteString byteStringCipherText;
-				if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(finalHybEncFile, certificateSerial, byteStringSessionKeyEncrypted, byteStringCipherText)) {
+				if (!CrypTool::Utilities::parseHybridEncryptedFile(finalHybEncFile, certificateSerial, asymmetricAlgorithmType, symmetricAlgorithmType, byteStringSessionKeyEncrypted, byteStringCipherText)) {
 					CString message;
 					message.Format(IDS_SCA_ERROR_CERTINFOEXTRACTION, finalHybEncFile);
 					MessageBox(message, "CrypTool", MB_OK);
@@ -166,9 +167,11 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK() {
 				// Dateinamen setzen (VOLLER PFAD!)
 				finalHybEncFile = CrypTool::getCrypToolPath() + "\\" + pc_str;
 				// Zertifikatsinformationen ermitteln
+				CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+				CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
 				CrypTool::ByteString byteStringSessionKeyEncrypted;
 				CrypTool::ByteString byteStringCipherText;
-				if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(finalHybEncFile, certificateSerial, byteStringSessionKeyEncrypted, byteStringCipherText)) {
+				if (!CrypTool::Utilities::parseHybridEncryptedFile(finalHybEncFile, certificateSerial, asymmetricAlgorithmType, symmetricAlgorithmType, byteStringSessionKeyEncrypted, byteStringCipherText)) {
 					CString message;
 					message.Format(IDS_SCA_ERROR_CERTINFOEXTRACTION, finalHybEncFile);
 					MessageBox(message, "CrypTool", MB_OK);
@@ -198,9 +201,11 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK() {
 				useExistingHybEncFile = true;
 				finalHybEncFile = initFile;
 				// Zertifikatsinformationen ermitteln
+				CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+				CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
 				CrypTool::ByteString byteStringSessionKeyEncrypted;
 				CrypTool::ByteString byteStringCipherText;
-				if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(finalHybEncFile, certificateSerial, byteStringSessionKeyEncrypted, byteStringCipherText)) {
+				if (!CrypTool::Utilities::parseHybridEncryptedFile(finalHybEncFile, certificateSerial, asymmetricAlgorithmType, symmetricAlgorithmType, byteStringSessionKeyEncrypted, byteStringCipherText)) {
 					CString message;
 					message.Format(IDS_SCA_ERROR_CERTINFOEXTRACTION, finalHybEncFile);
 					MessageBox(message, "CrypTool", MB_OK);
@@ -236,9 +241,11 @@ void CDlgSideChannelAttackVisualizationHEPreparations::OnOK() {
 				// Dateinamen setzen (VOLLER PFAD!)
 				finalHybEncFile = CrypTool::getCrypToolPath() + "\\" + pc_str;
 				// Zertifikatsinformationen ermitteln
+				CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+				CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
 				CrypTool::ByteString byteStringSessionKeyEncrypted;
 				CrypTool::ByteString byteStringCipherText;
-				if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(finalHybEncFile, certificateSerial, byteStringSessionKeyEncrypted, byteStringCipherText)) {
+				if (!CrypTool::Utilities::parseHybridEncryptedFile(finalHybEncFile, certificateSerial, asymmetricAlgorithmType, symmetricAlgorithmType, byteStringSessionKeyEncrypted, byteStringCipherText)) {
 					CString message;
 					message.Format(IDS_SCA_ERROR_CERTINFOEXTRACTION, finalHybEncFile);
 					MessageBox(message, "CrypTool", MB_OK);

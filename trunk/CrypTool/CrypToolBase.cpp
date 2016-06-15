@@ -570,6 +570,24 @@ namespace CrypTool {
 				return hashAlgorithmName;
 			}
 
+			HashAlgorithmType getHashAlgorithmType(const CString &_hashAlgorithmName) {
+				std::vector<HashAlgorithmType> vectorHashAlgorithmTypes;
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_MD4);
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_MD5);
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_RIPEMD160);
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_SHA);
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_SHA1);
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_SHA256);
+				vectorHashAlgorithmTypes.push_back(HASH_ALGORITHM_TYPE_SHA512);
+				for (size_t index = 0; index < vectorHashAlgorithmTypes.size(); index++) {
+					const HashAlgorithmType hashAlgorithmType = vectorHashAlgorithmTypes.at(index);
+					if (getHashAlgorithmName(hashAlgorithmType) == _hashAlgorithmName) {
+						return hashAlgorithmType;
+					}
+				}
+				return HASH_ALGORITHM_TYPE_NULL;
+			}
+
 			unsigned int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType) {
 				unsigned int hashAlgorithmBitLength = 0;
 				switch (_hashAlgorithmType) {
@@ -826,6 +844,32 @@ namespace CrypTool {
 				return symmetricAlgorithmName;
 			}
 
+			SymmetricAlgorithmType getSymmetricAlgorithmType(const CString &_symmetricAlgorithmName) {
+				std::vector<SymmetricAlgorithmType> vectorSymmetricAlgorithmTypes;
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_IDEA);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_RC2);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_RC4);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_DES_ECB);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_DES_CBC);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_ECB);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_TRIPLE_DES_CBC);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_AES);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_MARS);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_RC6);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_SERPENT);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_TWOFISH);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_DESX);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_DESL);
+				vectorSymmetricAlgorithmTypes.push_back(SYMMETRIC_ALGORITHM_TYPE_DESXL);
+				for (size_t index = 0; index < vectorSymmetricAlgorithmTypes.size(); index++) {
+					const SymmetricAlgorithmType symmetricAlgorithmType = vectorSymmetricAlgorithmTypes.at(index);
+					if (getSymmetricAlgorithmName(symmetricAlgorithmType) == _symmetricAlgorithmName) {
+						return symmetricAlgorithmType;
+					}
+				}
+				return SYMMETRIC_ALGORITHM_TYPE_NULL;
+			}
+
 			SymmetricOperation::SymmetricOperation(const SymmetricAlgorithmType _symmetricAlgorithmType, const SymmetricOperationType _symmetricOperationType) :
 				symmetricAlgorithmType(_symmetricAlgorithmType),
 				symmetricOperationType(_symmetricOperationType),
@@ -1040,6 +1084,20 @@ namespace CrypTool {
 					break;
 				}
 				return asymmetricAlgorithmName;
+			}
+
+			AsymmetricAlgorithmType getAsymmetricAlgorithmType(const CString &_asymmetricAlgorithmName) {
+				std::vector<AsymmetricAlgorithmType> vectorAsymmetricAlgorithmTypes;
+				vectorAsymmetricAlgorithmTypes.push_back(ASYMMETRIC_ALGORITHM_TYPE_RSA);
+				vectorAsymmetricAlgorithmTypes.push_back(ASYMMETRIC_ALGORITHM_TYPE_DSA);
+				vectorAsymmetricAlgorithmTypes.push_back(ASYMMETRIC_ALGORITHM_TYPE_ECC);
+				for (size_t index = 0; index < vectorAsymmetricAlgorithmTypes.size(); index++) {
+					const AsymmetricAlgorithmType asymmetricAlgorithmType = vectorAsymmetricAlgorithmTypes.at(index);
+					if (getAsymmetricAlgorithmName(asymmetricAlgorithmType) == _asymmetricAlgorithmName) {
+						return asymmetricAlgorithmType;
+					}
+				}
+				return ASYMMETRIC_ALGORITHM_TYPE_NULL;
 			}
 
 			AsymmetricOperationEncryptOrDecrypt::AsymmetricOperationEncryptOrDecrypt(const AsymmetricAlgorithmType _asymmetricAlgorithmType, const AsymmetricOperationType _asymmetricOperationType, const bool _padding) :
@@ -1905,6 +1963,25 @@ namespace CrypTool {
 				return signatureName;
 			}
 
+			SignatureType getSignatureType(const CString &_signatureName) {
+				std::vector<SignatureType> vectorSignatureTypes;
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_RSA_MD5);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_RSA_RIPEMD160);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_RSA_SHA);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_RSA_SHA1);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_DSA_SHA);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_DSA_SHA1);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_ECC_RIPEMD160);
+				vectorSignatureTypes.push_back(SIGNATURE_TYPE_ECC_SHA1);
+				for (size_t index = 0; index < vectorSignatureTypes.size(); index++) {
+					const SignatureType signatureType = vectorSignatureTypes.at(index);
+					if (getSignatureName(signatureType) == _signatureName) {
+						return signatureType;
+					}
+				}
+				return SIGNATURE_TYPE_NULL;
+			}
+
 			SignatureType getSignatureType(const Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const Hash::HashAlgorithmType _hashAlgorithmType) {
 				if (_asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA && _hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_MD5)
 					return SIGNATURE_TYPE_RSA_MD5;
@@ -2723,6 +2800,156 @@ namespace CrypTool {
 			ON_WM_TIMER()
 			ON_WM_CLOSE()
 		END_MESSAGE_MAP()
+
+	}
+
+	namespace Utilities {
+
+		bool isFileHybridEncrypted(const CString &_fileName) {
+			long serial;
+			CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+			CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
+			ByteString sessionKeyEncrypted;
+			ByteString messageEncrypted;
+			return parseHybridEncryptedFile(_fileName, serial, asymmetricAlgorithmType, symmetricAlgorithmType, sessionKeyEncrypted, messageEncrypted);
+		}
+
+		bool createHybridEncryptedFile(const CString &_fileName, const long _serial, const Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const ByteString &_sessionKeyEncrypted, const ByteString &_messageEncrypted) {
+			CString stringTemp;
+			ByteString byteStringResult;
+			// write receiver
+			stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
+			byteStringResult += stringTemp;
+			stringTemp.Format("%d", _serial);
+			byteStringResult += stringTemp;
+			// write asymmetric algorithm
+			stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+			byteStringResult += stringTemp;
+			stringTemp = Cryptography::Asymmetric::getAsymmetricAlgorithmName(_asymmetricAlgorithmType);
+			byteStringResult += stringTemp;
+			// write symmetric algorithm
+			stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
+			byteStringResult += stringTemp;
+			stringTemp = Cryptography::Symmetric::getSymmetricAlgorithmName(_symmetricAlgorithmType);
+			byteStringResult += stringTemp;
+			// write length of encrypted session key
+			stringTemp.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
+			byteStringResult += stringTemp;
+			stringTemp.Format("%d", _sessionKeyEncrypted.getByteLength() * 8);
+			byteStringResult += stringTemp;
+			// write encrypted session key
+			stringTemp.LoadString(IDS_STRING_HYBRID_ENC_KEY);
+			byteStringResult += stringTemp;
+			byteStringResult += _sessionKeyEncrypted;
+			// write cipher text
+			stringTemp.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
+			byteStringResult += stringTemp;
+			byteStringResult += _messageEncrypted;
+			// write result byte string to file
+			if (!byteStringResult.writeToFile(_fileName)) {
+				return false;
+			}
+			return true;
+		}
+
+		bool parseHybridEncryptedFile(const CString &_fileName, long &_serial, Cryptography::Asymmetric::AsymmetricAlgorithmType &_asymmetricAlgorithmType, Cryptography::Symmetric::SymmetricAlgorithmType &_symmetricAlgorithmType, ByteString &_sessionKeyEncrypted, ByteString &_messageEncrypted) {
+			// try to load file into byte string
+			ByteString byteStringFile;
+			if (!byteStringFile.readFromFile(_fileName)) {
+				return false;
+			}
+			// find receiver pattern
+			CString stringReceiver;
+			stringReceiver.LoadString(IDS_STRING_HYBRID_RECIEVER);
+			ByteString byteStringReceiver;
+			byteStringReceiver = stringReceiver;
+			size_t startReceiver;
+			size_t endReceiver;
+			if (!byteStringFile.findPattern(byteStringReceiver, startReceiver, endReceiver))
+				return false;
+			// find asymmetric algorithm pattern
+			CString stringAsymmetricAlgorithm;
+			stringAsymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+			ByteString byteStringAsymmetricAlgorithm;
+			byteStringAsymmetricAlgorithm = stringAsymmetricAlgorithm;
+			size_t startAsymmetricAlgorithm;
+			size_t endAsymmetricAlgorithm;
+			if (!byteStringFile.findPattern(byteStringAsymmetricAlgorithm, startAsymmetricAlgorithm, endAsymmetricAlgorithm))
+				return false;
+			// find symmetric algorithm pattern
+			CString stringSymmetricAlgorithm;
+			stringSymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
+			ByteString byteStringSymmetricAlgorithm;
+			byteStringSymmetricAlgorithm = stringSymmetricAlgorithm;
+			size_t startSymmetricAlgorithm;
+			size_t endSymmetricAlgorithm;
+			if (!byteStringFile.findPattern(byteStringSymmetricAlgorithm, startSymmetricAlgorithm, endSymmetricAlgorithm))
+				return false;
+			// find length of encrypted session key pattern
+			CString stringEncryptedSessionKeyLength;
+			stringEncryptedSessionKeyLength.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
+			ByteString byteStringEncryptedSessionKeyLength;
+			byteStringEncryptedSessionKeyLength = stringEncryptedSessionKeyLength;
+			size_t startEncryptedSessionKeyLength;
+			size_t endEncryptedSessionKeyLength;
+			if (!byteStringFile.findPattern(byteStringEncryptedSessionKeyLength, startEncryptedSessionKeyLength, endEncryptedSessionKeyLength))
+				return false;
+			// find encrypted session key
+			CString stringEncryptedSessionKey;
+			stringEncryptedSessionKey.LoadString(IDS_STRING_HYBRID_ENC_KEY);
+			ByteString byteStringEncryptedSessionKey;
+			byteStringEncryptedSessionKey = stringEncryptedSessionKey;
+			size_t startEncryptedSessionKey;
+			size_t endEncryptedSessionKey;
+			if (!byteStringFile.findPattern(byteStringEncryptedSessionKey, startEncryptedSessionKey, endEncryptedSessionKey))
+				return false;
+			// find cipher text pattern
+			CString stringCipherText;
+			stringCipherText.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
+			ByteString byteStringCipherText;
+			byteStringCipherText = stringCipherText;
+			size_t startCipherText;
+			size_t endCipherText;
+			if (!byteStringFile.findPattern(byteStringCipherText, startCipherText, endCipherText))
+				return false;
+			// extract certificate serial number
+			ByteString byteStringSerial;
+			if (!byteStringFile.extractPattern(endReceiver, startAsymmetricAlgorithm, byteStringSerial))
+				return false;
+			_serial = atol(byteStringSerial.toString());
+			// extract asymmetric algorithm type
+			ByteString asymmetricAlgorithmName;
+			if (!byteStringFile.extractPattern(endAsymmetricAlgorithm, startSymmetricAlgorithm, asymmetricAlgorithmName))
+				return false;
+			_asymmetricAlgorithmType = Cryptography::Asymmetric::getAsymmetricAlgorithmType(asymmetricAlgorithmName.toString());
+			// extract symmetric algorithm type
+			ByteString symmetricAlgorithmName;
+			if (!byteStringFile.extractPattern(endSymmetricAlgorithm, startEncryptedSessionKeyLength, symmetricAlgorithmName))
+				return false;
+			_symmetricAlgorithmType = Cryptography::Symmetric::getSymmetricAlgorithmType(symmetricAlgorithmName.toString());
+			// extract encrypted session key
+			if (!byteStringFile.extractPattern(endEncryptedSessionKey, startCipherText, _sessionKeyEncrypted))
+				return false;
+			// extract cipher text
+			if (!byteStringFile.extractPattern(endCipherText, byteStringFile.getByteLength(), _messageEncrypted))
+				return false;
+			return true;
+		}
+
+		bool isFileSignature(const CString &_fileName) {
+			AfxMessageBox("CRYPTOOL_BASE: implement me");
+			return false;
+		}
+
+		bool createSignatureFile(const CString &_fileName, const long _serial, const Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const ByteString &_message, const ByteString &_signature) {
+			AfxMessageBox("CRYPTOOL_BASE: implement me");
+			return false;
+		}
+
+		bool parseSignatureFile(const CString &_fileName, long &_serial, Cryptography::Hash::HashAlgorithmType &_hashAlgorithmType, Cryptography::Asymmetric::AsymmetricAlgorithmType &_asymmetricAlgorithmType, ByteString &_message, ByteString &_signature) {
+			AfxMessageBox("CRYPTOOL_BASE: implement me");
+			return false;
+		}
 
 	}
 

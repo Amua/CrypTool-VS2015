@@ -24,8 +24,6 @@
 
 #include "DlgSideChannelAttackVisualizationHE.h"
 
-#include "DlgHybridDecryptionDemo.h"
-
 #include "CrypToolTools.h"
 
 #ifdef _DEBUG
@@ -181,7 +179,7 @@ void CDlgSideChannelAttackVisualizationHE::setInitFileTitle(const char *title) {
 }
 
 bool CDlgSideChannelAttackVisualizationHE::isDocumentHybridEncrypted(const char *infile) {
-	return CDlgHybridDecryptionDemo::isDocumentHybridEncrypted(infile);
+	return CrypTool::Utilities::isFileHybridEncrypted(infile);
 }
 
 void CDlgSideChannelAttackVisualizationHE::OnIntroduction() {
@@ -225,7 +223,9 @@ void CDlgSideChannelAttackVisualizationHE::OnPreparations() {
 		// try to parse the hybrid-encrypted document and extract the certificate 
 		// serial number, the encrypted session key, and the cipher text; put all 
 		// this information into the "hybridEncryptedFile" structure
-		if (!CDlgHybridDecryptionDemo::parseHybridEncryptedDocument(dlg.getFinalHybEncFile(), hybridEncryptedFile.certificateSerial, hybridEncryptedFile.sessionKeyEncrypted, hybridEncryptedFile.cipherText)) {
+		CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+		CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType symmetricAlgorithmType;
+		if (!CrypTool::Utilities::parseHybridEncryptedFile(dlg.getFinalHybEncFile(), hybridEncryptedFile.certificateSerial, asymmetricAlgorithmType, symmetricAlgorithmType, hybridEncryptedFile.sessionKeyEncrypted, hybridEncryptedFile.cipherText)) {
 			throw SCA_Error(E_SCA_HYBENCFILE_EXTRACTION);
 		}
 		// depending on whether the user executed the hybrid encryption himself 

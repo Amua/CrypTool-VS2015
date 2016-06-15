@@ -305,51 +305,13 @@ void CDlgHybridEncryptionDemo::OnButtonDatenausgabe() {
 		Message(IDS_STRING_HYB_SHOW_DATA, MB_ICONEXCLAMATION);
 		return;
 	}
-	// declare temporary variable
-	CString stringTemp;
-	// this byte string will hold all the result data to be written
-	CrypTool::ByteString byteStringResult;
 
 	SHOW_HOUR_GLASS
 
-	// write receiver
-	stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
-	byteStringResult += stringTemp;
-	stringTemp.Format("%d", m_selectedCertificateSerial);
-	byteStringResult += stringTemp;
-
-	// write asymmetric algorithm
-	stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
-	byteStringResult += stringTemp;
-	stringTemp = "RSA";
-	byteStringResult += stringTemp;
-
-	// write symmetric algorithm
-	stringTemp.LoadString(IDS_STRING_HYBRID_SYM_METHOD);
-	byteStringResult += stringTemp;
-	stringTemp = "AES";
-	byteStringResult += stringTemp;
-
-	// write length of encrypted session key
-	stringTemp.LoadString(IDS_STRING_HYBRID_LENGTH_ENC_KEY);
-	byteStringResult += stringTemp;
-	stringTemp.Format("%d", m_byteStringSymmetricKeyEncrypted.getByteLength() * 8);
-	byteStringResult += stringTemp;
-
-	// write encrypted session key
-	stringTemp.LoadString(IDS_STRING_HYBRID_ENC_KEY);
-	byteStringResult += stringTemp;
-	byteStringResult += m_byteStringSymmetricKeyEncrypted;
-
-	// write cipher text
-	stringTemp.LoadString(IDS_STRING_HYBRID_CIPHERTEXT);
-	byteStringResult += stringTemp;
-	byteStringResult += m_byteStringCipherText;
-
-	// create a file for the result (with the .hex suffix)
+	// create result file name (with the .hex suffix)
 	m_documentFileNameResult = CrypTool::Utilities::createTemporaryFile(".hex");
-	// write result byte string to temporary file
-	byteStringResult.writeToFile(m_documentFileNameResult);
+	// create result file
+	CrypTool::Utilities::createHybridEncryptedFile(m_documentFileNameResult, m_selectedCertificateSerial, CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA, CrypTool::Cryptography::Symmetric::SYMMETRIC_ALGORITHM_TYPE_AES, m_byteStringSymmetricKeyEncrypted, m_byteStringCipherText);
 
 	HIDE_HOUR_GLASS
 

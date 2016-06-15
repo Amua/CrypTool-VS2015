@@ -249,6 +249,9 @@ namespace CrypTool {
 
 			// this function returns the name of the specified hash algorithm type
 			CString getHashAlgorithmName(const HashAlgorithmType _hashAlgorithmType);
+			// this function returns the hash algorithm type based on the specified name
+			HashAlgorithmType getHashAlgorithmType(const CString &_hashAlgorithmName);
+
 			// this function returns the bit length of the specified hash algorithm type
 			unsigned int getHashAlgorithmBitLength(const HashAlgorithmType _hashAlgorithmType);
 			// this function returns the byte length of the specified hash algorithm type
@@ -317,6 +320,8 @@ namespace CrypTool {
 
 			// this function returns the name of the specified symmetric algorithm type
 			CString getSymmetricAlgorithmName(const SymmetricAlgorithmType _symmetricAlgorithmType);
+			// this function returns the symmetric algorithm type based on the specified name
+			SymmetricAlgorithmType getSymmetricAlgorithmType(const CString &_symmetricAlgorithmName);
 
 			// this class provides symmetric operations (encryption and decryption) on 
 			// all supported symmetric algorithm types for both byte strings and files 
@@ -369,6 +374,8 @@ namespace CrypTool {
 
 			// this function returns the name of the specified asymmetric algorithm type
 			CString getAsymmetricAlgorithmName(const AsymmetricAlgorithmType _asymmetricAlgorithmType);
+			// this function returns the asymmetric algorithm type based on the specified name
+			AsymmetricAlgorithmType getAsymmetricAlgorithmType(const CString &_asymmetricAlgorithmName);
 
 			// this class provides asymmetric operations (encryption and decryption) on 
 			// the supported asymmetric algorithm types for both byte strings and files 
@@ -540,7 +547,8 @@ namespace CrypTool {
 
 			// this function returns the name of the specified signature type
 			CString getSignatureName(const SignatureType _signatureType);
-
+			// this function returns the signature type based on the specified name
+			SignatureType getSignatureType(const CString &_signatureName);
 			// this function returns the proper signature type for the specified 
 			// combination of asymmetric algorithm and hash algorithm; if the 
 			// specified combination is invalid, SIGNATURE_TYPE_NULL is returned
@@ -693,6 +701,24 @@ namespace CrypTool {
 			friend class CrypTool::Cryptography::Symmetric::SymmetricOperation;
 			friend class CrypTool::Cryptography::Asymmetric::AsymmetricOperationEncryptOrDecrypt;
 		};
+
+	}
+
+	namespace Utilities {
+
+		// this function tells whether the specified file is a hybrid-encrypted file
+		bool isFileHybridEncrypted(const CString &_fileName);
+		// this function tries to create a hybrid-encrypted file based on the specified parameters
+		bool createHybridEncryptedFile(const CString &_fileName, const long _serial, const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType _symmetricAlgorithmType, const ByteString &_sessionKeyEncrypted, const ByteString &_messageEncrypted);
+		// this fucntion tries to parse a hybrid-encrypted file
+		bool parseHybridEncryptedFile(const CString &_fileName, long &_serial, CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType &_asymmetricAlgorithmType, CrypTool::Cryptography::Symmetric::SymmetricAlgorithmType &_symmetricAlgorithmType, ByteString &_sessionKeyEncrypted, ByteString &_messageEncrypted);
+
+		// this function tells whether the specified file is a signature file
+		bool isFileSignature(const CString &_fileName);
+		// this function tries to create a signature file based on the specified parameters
+		bool createSignatureFile(const CString &_fileName, const long _serial, const CrypTool::Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const ByteString &_message, const ByteString &_signature);
+		// this function tries to parse a signature file
+		bool parseSignatureFile(const CString &_fileName, long &_serial, CrypTool::Cryptography::Hash::HashAlgorithmType &_hashAlgorithmType, CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType &_asymmetricAlgorithmType, ByteString &_message, ByteString &_signature);
 
 	}
 
