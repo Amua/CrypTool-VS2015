@@ -1530,49 +1530,108 @@ namespace CrypTool {
 				return true;
 			}
 
-			bool CertificateStore::getUserCertificatePublicKeyRSA(const long _serial, OpenSSL::RSA **_rsa) const {
+			bool CertificateStore::getUserCertificatePublicKey(const long _serial, OpenSSL::EVP_PKEY **_key) const {
 				using namespace OpenSSL;
-				// the result variable
 				bool result = false;
-				// generate file name based on serial
 				CString fileName;
 				fileName.Format(pathToCertificateStore + "\\" + "%d" + ".crt", _serial);
-				// initialize memory
-				BIO *bioPublicKey = BIO_new(BIO_s_file());
+				BIO *bio = BIO_new(BIO_s_file());
 				X509 *certificate = X509_new();
-				EVP_PKEY *pkey = EVP_PKEY_new();
-				if (BIO_read_filename(bioPublicKey, (LPCTSTR)(fileName))) {
-					certificate = PEM_read_bio_X509(bioPublicKey, 0, 0, 0);
+				if (BIO_read_filename(bio, (LPCTSTR)(fileName))) {
+					certificate = PEM_read_bio_X509(bio, 0, 0, 0);
 					if (certificate) {
-						pkey = X509_get_pubkey(certificate);
-						if (pkey) {
-							*_rsa = EVP_PKEY_get1_RSA(pkey);
-							result = (_rsa != 0);
-						}
+						*_key = X509_get_pubkey(certificate);
+						result = (*_key != 0);
 					}
 				}
-				EVP_PKEY_free(pkey);
+				BIO_free(bio);
 				X509_free(certificate);
-				BIO_free(bioPublicKey);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePrivateKey(const long _serial, const CString &_password, OpenSSL::EVP_PKEY **_key) const {
+				using namespace OpenSSL;
+				bool result = false;
+				CString fileName;
+				fileName.Format(pathToCertificateStore + "\\" + "%d" + ".key", _serial);
+				BIO *bio = BIO_new(BIO_s_file());
+				if (BIO_read_filename(bio, (LPCTSTR)(fileName))) {
+					*_key = PEM_read_bio_PrivateKey(bio, 0, 0, (void*)(LPCTSTR)(_password));
+					result = (*_key != 0);
+				}
+				BIO_free(bio);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePublicKeyRSA(const long _serial, OpenSSL::RSA **_rsa) const {
+				using namespace OpenSSL;
+				bool result = false;
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (getUserCertificatePublicKey(_serial, &pkey)) {
+					*_rsa = EVP_PKEY_get1_RSA(pkey);
+					result = (*_rsa != 0);
+				}
+				EVP_PKEY_free(pkey);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePublicKeyDSA(const long _serial, OpenSSL::DSA **_dsa) const {
+				using namespace OpenSSL;
+				bool result = false;
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (getUserCertificatePublicKey(_serial, &pkey)) {
+					*_dsa = EVP_PKEY_get1_DSA(pkey);
+					result = (*_dsa != 0);
+				}
+				EVP_PKEY_free(pkey);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePublicKeyECC(const long _serial, OpenSSL::EC_KEY **_ecc) const {
+				using namespace OpenSSL;
+				bool result = false;
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (getUserCertificatePublicKey(_serial, &pkey)) {
+					*_ecc = EVP_PKEY_get1_EC_KEY(pkey);
+					result = (*_ecc != 0);
+				}
+				EVP_PKEY_free(pkey);
 				return result;
 			}
 
 			bool CertificateStore::getUserCertificatePrivateKeyRSA(const long _serial, const CString &_password, OpenSSL::RSA **_rsa) const {
 				using namespace OpenSSL;
-				// the result variable
 				bool result = false;
-				// generate file name based on serial
-				CString fileName;
-				fileName.Format(pathToCertificateStore + "\\" + "%d" + ".key", _serial);
-				// initialize memory
-				BIO *bioPrivateKey = BIO_new(BIO_s_file());
 				EVP_PKEY *pkey = EVP_PKEY_new();
-				if (BIO_read_filename(bioPrivateKey, (LPCTSTR)(fileName))) {
-					*_rsa = PEM_read_bio_RSAPrivateKey(bioPrivateKey, 0, 0, (void*)(LPCTSTR)(_password));
+				if (getUserCertificatePrivateKey(_serial, _password, &pkey)) {
+					*_rsa = EVP_PKEY_get1_RSA(pkey);
 					result = (*_rsa != 0);
 				}
 				EVP_PKEY_free(pkey);
-				BIO_free(bioPrivateKey);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePrivateKeyDSA(const long _serial, const CString &_password, OpenSSL::DSA **_dsa) const {
+				using namespace OpenSSL;
+				bool result = false;
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (getUserCertificatePrivateKey(_serial, _password, &pkey)) {
+					*_dsa = EVP_PKEY_get1_DSA(pkey);
+					result = (*_dsa != 0);
+				}
+				EVP_PKEY_free(pkey);
+				return result;
+			}
+
+			bool CertificateStore::getUserCertificatePrivateKeyECC(const long _serial, const CString &_password, OpenSSL::EC_KEY **_ecc) const {
+				using namespace OpenSSL;
+				bool result = false;
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				if (getUserCertificatePrivateKey(_serial, _password, &pkey)) {
+					*_ecc = EVP_PKEY_get1_EC_KEY(pkey);
+					result = (*_ecc != 0);
+				}
+				EVP_PKEY_free(pkey);
 				return result;
 			}
 

@@ -432,12 +432,27 @@ namespace CrypTool {
 				// first and foremost this function is used as a convenience interface to easily display 
 				// user certificate information in list controls
 				bool getUserCertificateInformation(const long _serial, CString &_firstName, CString &_lastName, CString &_remarks, CString &_type, CString &_notBefore, CString &_notAfter) const;
-				// this function returns the RSA public key for the certificate corresponding to the 
-				// specified serial number (no password required)
+			public:
+				// this function returns a generic public key (RSA, DSA, ECC) for the certificate 
+				// corresponding to the specified serial number (no password required)
+				bool getUserCertificatePublicKey(const long _serial, OpenSSL::EVP_PKEY **_key) const;
+				// this function returns a generic private key (RSA, DSA, ECC) for the certificate 
+				// corresponding to the specified serial number (password required for private key)
+				bool getUserCertificatePrivateKey(const long _serial, const CString &_password, OpenSSL::EVP_PKEY **_key) const;
+			public:
+				// returns RSA public key (based on the generic function above)
 				bool getUserCertificatePublicKeyRSA(const long _serial, OpenSSL::RSA **_rsa) const;
-				// this function returns the RSA private key for the certificate corresponding to the 
-				// specified serial number (password required for the private key)
+				// returns DSA public key (based on the generic function above)
+				bool getUserCertificatePublicKeyDSA(const long _serial, OpenSSL::DSA **_dsa) const;
+				// returns ECC public key (based on the generic function above)
+				bool getUserCertificatePublicKeyECC(const long _serial, OpenSSL::EC_KEY **_ecc) const;
+				// returns RSA private key (based on the generic function above)
 				bool getUserCertificatePrivateKeyRSA(const long _serial, const CString &_password, OpenSSL::RSA **_rsa) const;
+				// returns DSA private key (based on the generic function above)
+				bool getUserCertificatePrivateKeyDSA(const long _serial, const CString &_password, OpenSSL::DSA **_dsa) const;
+				// returns ECC private key (based on the generic function above)
+				bool getUserCertificatePrivateKeyECC(const long _serial, const CString &_password, OpenSSL::EC_KEY **_ecc) const;
+			public:
 				// this function returns the public parameters of the user certificate corresponding to 
 				// the specified serial number in human-readable format; the output is very similar to 
 				// what you get from OpenSSL's x509 CLI command
