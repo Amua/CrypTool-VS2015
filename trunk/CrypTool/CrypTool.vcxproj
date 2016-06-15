@@ -2885,6 +2885,9 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClCompile Include="DlgCertificateStoreShowCertificateParametersAll.cpp" />
     <ClCompile Include="DlgCertificateStoreShowCertificateParametersPublic.cpp" />
     <ClCompile Include="DlgCertificateStoreSelectCertificate.cpp" />
+    <ClCompile Include="DlgCertificateStoreSignatureSign.cpp" />
+    <ClCompile Include="DlgCertificateStoreSignatureVerify.cpp" />
+    <ClCompile Include="DlgCertificateStoreSignatureExtracted.cpp" />
     <ClCompile Include="DlgChangePIN.cpp" />
     <ClCompile Include="DlgComputeMersenneNumbers.cpp" />
     <ClCompile Include="DlgCrtAstronomy.cpp" />
@@ -3185,6 +3188,9 @@ cmd /c copy /y "%(RootDir)%(Directory)ticket" "$(OutDir)"
     <ClInclude Include="DlgCertificateStoreShowCertificateParametersAll.h" />
     <ClInclude Include="DlgCertificateStoreShowCertificateParametersPublic.h" />
     <ClInclude Include="DlgCertificateStoreSelectCertificate.h" />
+    <ClInclude Include="DlgCertificateStoreSignatureSign.h" />
+    <ClInclude Include="DlgCertificateStoreSignatureVerify.h" />
+    <ClInclude Include="DlgCertificateStoreSignatureExtracted.h" />
     <ClInclude Include="DlgChangePIN.h" />
     <ClInclude Include="DlgComputeMersenneNumbers.h" />
     <ClInclude Include="DlgCrtAstronomy.h" />

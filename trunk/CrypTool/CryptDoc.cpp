@@ -68,6 +68,10 @@
 #include "DlgAutomatedPermAnalysis.h"
 #include "keyHillBase.h"
 
+#include "DlgCertificateStoreSignatureSign.h"
+#include "DlgCertificateStoreSignatureVerify.h"
+#include "DlgCertificateStoreSignatureExtracted.h"
+
 extern char *CaPseDatei, *CaPseVerzeichnis, *Pfad, *PseVerzeichnis;
 
 extern UINT singleThreadVigenereAnalysisSchroedel(PVOID argument);
@@ -940,31 +944,22 @@ void CCryptDoc::OnCryptMono() {
 	Mono(ContentName, GetTitle());
 }
 
-void CCryptDoc::OnCryptSign() 
-{
+void CCryptDoc::OnCryptSign() {
 	UpdateContent();
-#ifndef _UNSTABLE
-	Sign(ContentName, GetTitle());
-#endif
+	CDlgCertificateStoreSignatureSign dlgCertificateStoreSignatureSign(ContentName, GetTitle());
+	dlgCertificateStoreSignatureSign.DoModal();
 }
 
-void CCryptDoc::OnCryptVerify() 
-{
+void CCryptDoc::OnCryptVerify() {
 	UpdateContent();
-#ifndef _UNSTABLE
-	Verify(ContentName, GetTitle());
-#endif
+	CDlgCertificateStoreSignatureVerify dlgCertificateStoreSignatureVerify(ContentName, GetTitle());
+	dlgCertificateStoreSignatureVerify.DoModal();
 }
 
-void CCryptDoc::OnCryptExtract() 
-{
+void CCryptDoc::OnCryptExtract() {
 	UpdateContent();
-//	extract(ContentName, GetTitle());
-
-	SHOW_HOUR_GLASS
-	CDlgExtractSignature dlgSigExt(ContentName, GetTitle());
-	HIDE_HOUR_GLASS
-	dlgSigExt.DoModal();
+	CDlgCertificateStoreSignatureExtracted dlgCertificateStoreSignatureExtracted(ContentName, GetTitle());
+	dlgCertificateStoreSignatureExtracted.DoModal();
 }
 
 void CCryptDoc::OnAnalyzeSubst() 
