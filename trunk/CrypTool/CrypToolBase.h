@@ -538,13 +538,6 @@ namespace CrypTool {
 				SIGNATURE_TYPE_ECC_SHA1
 			};
 
-			// the supported signature operation types
-			enum SignatureOperationType {
-				SIGNATURE_OPERATION_TYPE_NULL,
-				SIGNATURE_OPERATION_TYPE_SIGN,
-				SIGNATURE_OPERATION_TYPE_VERIFY
-			};
-
 			// this function returns the name of the specified signature type
 			CString getSignatureName(const SignatureType _signatureType);
 
@@ -561,21 +554,32 @@ namespace CrypTool {
 			// type, or HASH_ALGORITHM_TYPE_NULL in case of errors
 			Hash::HashAlgorithmType getHashAlgorithmType(const SignatureType _signatureType);
 
-			// this class provides digital signature operations (sign and verify); the 
-			// file-based operations provide the ability to cancel the operations and 
-			// track their progress when run in a separate thread
-			class OperationSignOrVerify {
+			// this class provides sign operations for digital signatures; the file-based 
+			// operations provide the ability to cancel the operations and track their 
+			// progress when run in a separate thread
+			class OperationSign {
 			public:
-				OperationSignOrVerify(const SignatureType _signatureType, const SignatureOperationType _signatureOperationType);
-				virtual ~OperationSignOrVerify();
+				OperationSign(const SignatureType _signatureType);
+				virtual ~OperationSign();
 			public:
-				bool executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput);
-				bool executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled = 0, double *_progress = 0);
+				bool executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringSignature, const long _serial, const CString &_password);
+				bool executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameSignature, const long _serial, const CString &_password, const bool *_cancelled = 0, double *_progress = 0);
 			private:
 				const SignatureType signatureType;
-				const SignatureOperationType signatureOperationType;
+			};
+
+			// this class provides sign operations for digital signatures; the file-based 
+			// operations provide the ability to cancel the operations and track their 
+			// progress when run in a separate thread
+			class OperationVerify {
+			public:
+				OperationVerify(const SignatureType _signatureType);
+				virtual ~OperationVerify();
+			public:
+				bool executeOnByteStrings(const ByteString &_byteStringMessage, const ByteString &_byteStringSignature, const long _serial);
+				bool executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameSignature, const long _serial, const bool *_cancelled = 0, double *_progress = 0);
 			private:
-				bool isSignatureTypeValid() const;
+				const SignatureType signatureType;
 			};
 
 		}

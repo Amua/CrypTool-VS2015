@@ -1965,30 +1965,20 @@ namespace CrypTool {
 				return Hash::HASH_ALGORITHM_TYPE_NULL;
 			}
 
-			OperationSignOrVerify::OperationSignOrVerify(const SignatureType _signatureType, const SignatureOperationType _signatureOperationType) :
-				signatureType(_signatureType),
-				signatureOperationType(_signatureOperationType) {
+			OperationSign::OperationSign(const SignatureType _signatureType) :
+				signatureType(_signatureType) {
 
 			}
 
-			OperationSignOrVerify::~OperationSignOrVerify() {
+			OperationSign::~OperationSign() {
 
 			}
 
-			bool OperationSignOrVerify::executeOnByteStrings(const ByteString &_byteStringInput, const long _serial, const CString &_password, ByteString &_byteStringOutput) {
+			bool OperationSign::executeOnByteStrings(const ByteString &_byteStringMessage, ByteString &_byteStringSignature, const long _serial, const CString &_password) {
 				using namespace OpenSSL;
-				// make sure we have a valid signature type
-				if (!isSignatureTypeValid()) {
-					return false;
-				}
-				// make sure we have a valid signature operation type
-				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
-					return false;
-				}
-				// determine asymmetric algorithm type and hash algorithm type based on the signature type set at construction
-				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				// determine hash algorithm type based on the signature type set at construction
 				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
-				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL || hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+				if (hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
 					return false;
 				}
 				// acquire the message digest corresponding to the determined hash algorithm type
@@ -1996,26 +1986,65 @@ namespace CrypTool {
 				if (!messageDigest) {
 					return false;
 				}
+				// initialize variables for message digest context and key
+				EVP_MD_CTX *context = EVP_MD_CTX_create();
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				// acquire the private key
+				if (!Asymmetric::CertificateStore::instance().getUserCertificatePrivateKey(_serial, _password, &pkey)) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// initialize sign operation
+				if (EVP_DigestSignInit(context, 0, messageDigest, 0, pkey) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// update sign operation
+				if (EVP_DigestSignUpdate(context, _byteStringMessage.getByteDataConst(), _byteStringMessage.getByteLength()) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// finalize sign operation
+				size_t signatureLength = 0;
+				if (EVP_DigestSignFinal(context, 0, &signatureLength) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				_byteStringSignature.reset(signatureLength);
+				if (EVP_DigestSignFinal(context, _byteStringSignature.getByteData(), &signatureLength) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				_byteStringSignature.truncateRight(signatureLength);
+				EVP_MD_CTX_destroy(context);
+				EVP_PKEY_free(pkey);
+				return true;
+			}
 
-				// TODO/FIXME
+			bool OperationSign::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameSignature, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
 				AfxMessageBox("CRYPTOOL_BASE: implement me");
 				return false;
 			}
 
-			bool OperationSignOrVerify::executeOnFiles(const CString &_fileNameInput, const CString &_fileNameOutput, const long _serial, const CString &_password, const bool *_cancelled, double *_progress) {
+			OperationVerify::OperationVerify(const SignatureType _signatureType) :
+				signatureType(_signatureType) {
+
+			}
+
+			OperationVerify::~OperationVerify() {
+
+			}
+
+			bool OperationVerify::executeOnByteStrings(const ByteString &_byteStringMessage, const ByteString &_byteStringSignature, const long _serial) {
 				using namespace OpenSSL;
-				// make sure we have a valid signature type
-				if (!isSignatureTypeValid()) {
-					return false;
-				}
-				// make sure we have a valid signature operation type
-				if (signatureOperationType != SIGNATURE_OPERATION_TYPE_SIGN && signatureOperationType != SIGNATURE_OPERATION_TYPE_VERIFY) {
-					return false;
-				}
-				// determine asymmetric algorithm type and hash algorithm type based on the signature type set at construction
-				const Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = getAsymmetricAlgorithmType(signatureType);
+				// determine hash algorithm type based on the signature type set at construction
 				const Hash::HashAlgorithmType hashAlgorithmType = getHashAlgorithmType(signatureType);
-				if (asymmetricAlgorithmType == Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL || hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
+				if (hashAlgorithmType == Hash::HASH_ALGORITHM_TYPE_NULL) {
 					return false;
 				}
 				// acquire the message digest corresponding to the determined hash algorithm type
@@ -2023,26 +2052,40 @@ namespace CrypTool {
 				if (!messageDigest) {
 					return false;
 				}
-
-				// TODO/FIXME
-				AfxMessageBox("CRYPTOOL_BASE: implement me");
-				return false;
+				// initialize variables for message digest context and key
+				EVP_MD_CTX *context = EVP_MD_CTX_create();
+				EVP_PKEY *pkey = EVP_PKEY_new();
+				// acquire the public key
+				if (!Asymmetric::CertificateStore::instance().getUserCertificatePublicKey(_serial, &pkey)) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// initialize verify operation
+				if (EVP_DigestVerifyInit(context, 0, messageDigest, 0, pkey) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// update verify operation
+				if (EVP_DigestVerifyUpdate(context, _byteStringMessage.getByteDataConst(), _byteStringMessage.getByteLength()) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				// finalize verify operation
+				if (EVP_DigestVerifyFinal(context, _byteStringSignature.getByteDataConst(), _byteStringSignature.getByteLength()) != 1) {
+					EVP_MD_CTX_destroy(context);
+					EVP_PKEY_free(pkey);
+					return false;
+				}
+				EVP_MD_CTX_destroy(context);
+				EVP_PKEY_free(pkey);
+				return true;
 			}
 
-			bool OperationSignOrVerify::isSignatureTypeValid() const {
-				switch (signatureType) {
-				case SIGNATURE_TYPE_RSA_MD5:
-				case SIGNATURE_TYPE_RSA_RIPEMD160:
-				case SIGNATURE_TYPE_RSA_SHA:
-				case SIGNATURE_TYPE_RSA_SHA1:
-				case SIGNATURE_TYPE_DSA_SHA:
-				case SIGNATURE_TYPE_DSA_SHA1:
-				case SIGNATURE_TYPE_ECC_RIPEMD160:
-				case SIGNATURE_TYPE_ECC_SHA1:
-					return true;
-				default:
-					break;
-				}
+			bool OperationVerify::executeOnFiles(const CString &_fileNameMessage, const CString &_fileNameSignature, const long _serial, const bool *_cancelled, double *_progress) {
+				AfxMessageBox("CRYPTOOL_BASE: implement me");
 				return false;
 			}
 
