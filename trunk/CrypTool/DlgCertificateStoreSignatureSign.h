@@ -34,11 +34,37 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange *_pDX);
 protected:
+	afx_msg void clickedButtonRadioHashFunctionMD5();
+	afx_msg void clickedButtonRadioHashFunctionRIPEMD160();
+	afx_msg void clickedButtonRadioHashFunctionSHA();
+	afx_msg void clickedButtonRadioHashFunctionSHA1();
+	afx_msg void clickedButtonRadioRSA();
+	afx_msg void clickedButtonRadioDSA();
+	afx_msg void clickedButtonRadioECC();
+	afx_msg void changedSelectionListCertificates(NMHDR *_pNMHDR, LRESULT *_pResult);
 	afx_msg void clickedButtonOK();
 	afx_msg void clickedButtonCancel();
 protected:
 	const CString m_documentFileName;
 	const CString m_documentTitle;
+protected:
+	int m_radioHashFunction;
+	int m_radioAsymmetricAlgorithm;
+	CListCtrl m_listCertificates;
+	CButton m_buttonRadioHashFunctionMD5;
+	CButton m_buttonRadioHashFunctionRIPEMD160;
+	CButton m_buttonRadioHashFunctionSHA;
+	CButton m_buttonRadioHashFunctionSHA1;
+	CButton m_buttonRadioRSA;
+	CButton m_buttonRadioDSA;
+	CButton m_buttonRadioECC;
+	CButton m_buttonOK;
+	CButton m_buttonCancel;
+private:
+	void updateListCertificates();
+	void updateButtons();
+private:
+	long getSerialOfSelectedCertificate() const;
 
 	DECLARE_MESSAGE_MAP()
 };

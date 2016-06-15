@@ -219,7 +219,7 @@ void CDlgCertificateStoreDisplayOrExport::updateListCertificates() {
 }
 
 void CDlgCertificateStoreDisplayOrExport::updateButtons() {
-	// enable/disbale buttons depending on whether a certificate is selected
+	// enable/disable buttons depending on whether a certificate is selected
 	const long serialOfSelectedCertificate = getSerialOfSelectedCertificate();
 	m_buttonShowPublicParameters.EnableWindow(serialOfSelectedCertificate > 0);
 	m_buttonShowAllParameters.EnableWindow(serialOfSelectedCertificate > 0);
