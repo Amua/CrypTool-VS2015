@@ -61,7 +61,8 @@ BOOL CDlgCertificateStoreSignatureVerify::OnInitDialog() {
 		AfxMessageBox("CRYPTOOL_BASE: error parsing signature file");
 		EndDialog(IDOK);
 	}
-	// assign internal variables for hash algorithm and asymmetric algorithm
+	// assign internal variables for receiver name, hash algorithm name, and asymmetric algorithm name
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_serial, m_receiverName);
 	m_hashAlgorithmName = CrypTool::Cryptography::Hash::getHashAlgorithmName(m_hashAlgorithmType);
 	m_asymmetricAlgorithmName = CrypTool::Cryptography::Asymmetric::getAsymmetricAlgorithmName(m_asymmetricAlgorithmType);
 	// assign internal variable for signature type
@@ -83,6 +84,7 @@ BOOL CDlgCertificateStoreSignatureVerify::OnInitDialog() {
 
 void CDlgCertificateStoreSignatureVerify::DoDataExchange(CDataExchange *_pDX) {
 	CDialog::DoDataExchange(_pDX);
+	DDX_Text(_pDX, IDC_STATIC_RECEIVER, m_receiverName);
 	DDX_Text(_pDX, IDC_STATIC_HASH_ALGORITHM, m_hashAlgorithmName);
 	DDX_Text(_pDX, IDC_STATIC_ASYMMETRIC_ALGORITHM, m_asymmetricAlgorithmName);
 	DDX_Control(_pDX, IDC_LIST_CERTIFICATES, m_listCertificates);
@@ -104,6 +106,7 @@ void CDlgCertificateStoreSignatureVerify::changedSelectionListCertificates(NMHDR
 
 void CDlgCertificateStoreSignatureVerify::clickedButtonOK() {
 	UpdateData(true);
+	EndDialog(IDOK);
 	// try to verify the signature
 	CrypTool::Cryptography::Signature::OperationVerify operationVerify(m_signatureType);
 	const bool result = operationVerify.executeOnByteStrings(m_message, m_signature, m_serial);
@@ -114,7 +117,6 @@ void CDlgCertificateStoreSignatureVerify::clickedButtonOK() {
 	else {
 		AfxMessageBox("CRYPTOOL_BASE: signature verificated FAILED!");
 	}
-	EndDialog(IDOK);
 }
 
 void CDlgCertificateStoreSignatureVerify::clickedButtonCancel() {
@@ -189,3 +191,4 @@ BEGIN_MESSAGE_MAP(CDlgCertificateStoreSignatureVerify, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_OK, &CDlgCertificateStoreSignatureVerify::clickedButtonOK)
 	ON_BN_CLICKED(IDC_BUTTON_CANCEL, &CDlgCertificateStoreSignatureVerify::clickedButtonCancel)
 END_MESSAGE_MAP()
+

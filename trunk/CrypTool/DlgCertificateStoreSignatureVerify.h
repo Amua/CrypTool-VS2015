@@ -47,6 +47,7 @@ protected:
 	CrypTool::Cryptography::Signature::SignatureType m_signatureType;
 	CrypTool::ByteString m_message;
 	CrypTool::ByteString m_signature;
+	CString m_receiverName;
 	CString m_hashAlgorithmName;
 	CString m_asymmetricAlgorithmName;
 	CListCtrl m_listCertificates;
