@@ -60,9 +60,10 @@ BOOL CDlgCertificateStoreSignatureVerify::OnInitDialog() {
 	if (!CrypTool::Utilities::parseSignatureFile(m_documentFileName, m_serial, m_hashAlgorithmType, m_asymmetricAlgorithmType, m_message, m_signature)) {
 		AfxMessageBox("CRYPTOOL_BASE: error parsing signature file");
 		EndDialog(IDOK);
+		return TRUE;
 	}
-	// assign internal variables for receiver name, hash algorithm name, and asymmetric algorithm name
-	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_serial, m_receiverName);
+	// assign internal variables for signer name, hash algorithm name, and asymmetric algorithm name
+	CrypTool::Cryptography::Asymmetric::CertificateStore::instance().getUserCertificateStringName(m_serial, m_signerName);
 	m_hashAlgorithmName = CrypTool::Cryptography::Hash::getHashAlgorithmName(m_hashAlgorithmType);
 	m_asymmetricAlgorithmName = CrypTool::Cryptography::Asymmetric::getAsymmetricAlgorithmName(m_asymmetricAlgorithmType);
 	// assign internal variable for signature type
@@ -70,6 +71,7 @@ BOOL CDlgCertificateStoreSignatureVerify::OnInitDialog() {
 	if (m_signatureType == CrypTool::Cryptography::Signature::SIGNATURE_TYPE_NULL) {
 		AfxMessageBox("CRYPTOOL_BASE: error parsing signature file");
 		EndDialog(IDOK);
+		return TRUE;
 	}
 	// initial update for the list of certificates
 	updateListCertificates();
@@ -84,7 +86,7 @@ BOOL CDlgCertificateStoreSignatureVerify::OnInitDialog() {
 
 void CDlgCertificateStoreSignatureVerify::DoDataExchange(CDataExchange *_pDX) {
 	CDialog::DoDataExchange(_pDX);
-	DDX_Text(_pDX, IDC_STATIC_RECEIVER, m_receiverName);
+	DDX_Text(_pDX, IDC_STATIC_SIGNER, m_signerName);
 	DDX_Text(_pDX, IDC_STATIC_HASH_ALGORITHM, m_hashAlgorithmName);
 	DDX_Text(_pDX, IDC_STATIC_ASYMMETRIC_ALGORITHM, m_asymmetricAlgorithmName);
 	DDX_Control(_pDX, IDC_LIST_CERTIFICATES, m_listCertificates);
@@ -181,6 +183,7 @@ void CDlgCertificateStoreSignatureVerify::selectCertificate(const long _serial) 
 	for (int index = 0; index < m_listCertificates.GetItemCount(); index++) {
 		const CString serial = m_listCertificates.GetItemText(index, 0);
 		if (atol(serial) == _serial) {
+			m_listCertificates.SetItemState(index, LVIS_SELECTED, LVIS_SELECTED);
 			m_listCertificates.SetSelectionMark(index);
 			return;
 		}
@@ -188,6 +191,7 @@ void CDlgCertificateStoreSignatureVerify::selectCertificate(const long _serial) 
 }
 
 BEGIN_MESSAGE_MAP(CDlgCertificateStoreSignatureVerify, CDialog)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CERTIFICATES, &CDlgCertificateStoreSignatureVerify::changedSelectionListCertificates)
 	ON_BN_CLICKED(IDC_BUTTON_OK, &CDlgCertificateStoreSignatureVerify::clickedButtonOK)
 	ON_BN_CLICKED(IDC_BUTTON_CANCEL, &CDlgCertificateStoreSignatureVerify::clickedButtonCancel)
 END_MESSAGE_MAP()

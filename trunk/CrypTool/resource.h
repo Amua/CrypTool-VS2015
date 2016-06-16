@@ -893,7 +893,7 @@
 #define IDC_BITMAP_1                    1248
 #define IDC_BITMAP_2                    1249
 #define IDC_BUTTON_SEARCH_KEY           1250
-#define IDC_STATIC_RECEIVER             1251
+#define IDC_STATIC_SIGNER               1251
 #define IDC_STATIC_HASH_ALGORITHM       1252
 #define IDC_STATIC_ASYMMETRIC_ALGORITHM 1253
 #define IDC_RICHEDIT2                   1261
