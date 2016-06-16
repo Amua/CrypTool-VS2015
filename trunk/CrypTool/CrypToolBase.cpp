@@ -167,6 +167,56 @@ namespace CrypTool {
 		return result;
 	}
 
+	CString ByteString::toHexDump(const size_t _bytesPerRow) const {
+		CString result;
+		// convert byte string to hex for quicker access
+		const CString hex = toString(16);
+		// initialize column count and row count
+		const size_t cols = _bytesPerRow;
+		const size_t rows = byteLength % cols ? byteLength / cols + 1 : byteLength / cols;
+		// create rows
+		for (size_t indexRow = 0; indexRow < rows; indexRow++) {
+			// add address column (32bit hex)
+			CString address;
+			address.Format("%d", indexRow * cols);
+			address = Utilities::convertStringNumberFromBaseToBase(address, 10, 16);
+			ByteString byteStringAddress;
+			byteStringAddress = address;
+			byteStringAddress.fillLeft('0', 8);
+			result += byteStringAddress.toString();
+			// add space
+			result += " ";
+			// add hex bytes
+			for (size_t indexColumn = 0; indexColumn < cols; indexColumn++) {
+				const size_t indexByteHi = indexRow * cols * 2 + indexColumn * 2 + 0;
+				const size_t indexByteLo = indexRow * cols * 2 + indexColumn * 2 + 1;
+				if (indexByteHi < (size_t)(hex.GetLength()) && indexByteLo < (size_t)(hex.GetLength())) {
+					unsigned char byteHi = hex[indexByteHi];
+					unsigned char byteLo = hex[indexByteLo];
+					result += byteHi;
+					result += byteLo;
+					if (indexColumn + 1 < cols) {
+						result += " ";
+					}
+				}
+			}
+			// add space
+			result += " ";
+			// add ascii column
+			for (size_t indexColumn = 0; indexColumn < cols; indexColumn++) {
+				const size_t indexByte = indexRow * cols + indexColumn;
+				if (indexByte < byteLength) {
+					unsigned char byte = byteData[indexByte];
+					if (isprint(byte)) result += byte;
+					else result += ".";
+				}
+			}
+			// add new line
+			result += "\r\n";
+		}
+		return result;
+	}
+
 	void ByteString::reset(const size_t _byteLength) {
 		delete byteData;
 		if (_byteLength > 0) {
@@ -220,23 +270,31 @@ namespace CrypTool {
 	}
 
 	void ByteString::addZeroPaddingLeft(const size_t _byteLength) {
+		fillLeft(0, _byteLength);
+	}
+
+	void ByteString::addZeroPaddingRight(const size_t _byteLength) {
+		fillRight(0, _byteLength);
+	}
+
+	void ByteString::fillLeft(const unsigned char _character, const size_t _byteLength) {
 		if (_byteLength > byteLength) {
-			const size_t additionalZeros = _byteLength - byteLength;
+			const size_t additionalCharacters = _byteLength - byteLength;
 			unsigned char *byteDataNew = new unsigned char[_byteLength];
-			std::memset(byteDataNew, 0, _byteLength);
-			std::memcpy(byteDataNew + additionalZeros, byteData, byteLength);
+			std::memset(byteDataNew, _character, _byteLength);
+			std::memcpy(byteDataNew + additionalCharacters, byteData, byteLength);
 			delete byteData;
 			byteData = byteDataNew;
 			byteLength = _byteLength;
 		}
 	}
 
-	void ByteString::addZeroPaddingRight(const size_t _byteLength) {
+	void ByteString::fillRight(const unsigned char _character, const size_t _byteLength) {
 		if (_byteLength > byteLength) {
-			const size_t additionalZeros = _byteLength - byteLength;
+			const size_t additionalCharacters = _byteLength - byteLength;
 			unsigned char *byteDataNew = new unsigned char[_byteLength];
+			std::memset(byteDataNew, _character, _byteLength);
 			std::memcpy(byteDataNew, byteData, byteLength);
-			std::memset(byteDataNew + byteLength, 0, additionalZeros);
 			delete byteData;
 			byteData = byteDataNew;
 			byteLength = _byteLength;

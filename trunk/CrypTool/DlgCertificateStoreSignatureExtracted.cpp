@@ -23,6 +23,8 @@ limitations under the License.
 #include "CrypToolBase.h"
 #include "DlgCertificateStoreSignatureExtracted.h"
 
+#include "DlgCertificateStoreSignatureVerify.h"
+
 CDlgCertificateStoreSignatureExtracted::CDlgCertificateStoreSignatureExtracted(const CString &_documentFileName, const CString &_documentTitle, CWnd *_parent) :
 	CDialog(CDlgCertificateStoreSignatureExtracted::IDD, _parent),
 	m_documentFileName(_documentFileName),
@@ -36,6 +38,11 @@ CDlgCertificateStoreSignatureExtracted::~CDlgCertificateStoreSignatureExtracted(
 
 BOOL CDlgCertificateStoreSignatureExtracted::OnInitDialog() {
 	CDialog::OnInitDialog();
+	// initialize fonts
+	CFont fontCourier;
+	fontCourier.CreatePointFont(10, "Courier");
+	m_editSignature.SetFont(&fontCourier);
+	m_editMessage.SetFont(&fontCourier);
 	// try to parse specified document as signature file
 	if (!CrypTool::Utilities::parseSignatureFile(m_documentFileName, m_serial, m_hashAlgorithmType, m_asymmetricAlgorithmType, m_message, m_signature)) {
 		AfxMessageBox("CRYPTOOL_BASE: error parsing signature file");
@@ -55,6 +62,12 @@ BOOL CDlgCertificateStoreSignatureExtracted::OnInitDialog() {
 	m_signerKey.Format("%d", m_serial);
 	// assign internal variable for signature name
 	m_signatureName = CrypTool::Cryptography::Signature::getSignatureName(m_signatureType);
+	// the number of hexadecimal columns for the hex dump display
+	const size_t hexDumpColumns = 10;
+	// assign hex dump signature
+	m_hexDumpSignature = m_signature.toHexDump(hexDumpColumns);
+	// assign hex dump message
+	m_hexDumpMessage = m_message.toHexDump(hexDumpColumns);
 	// initial update
 	UpdateData(false);
 	return TRUE;
@@ -65,10 +78,16 @@ void CDlgCertificateStoreSignatureExtracted::DoDataExchange(CDataExchange *_pDX)
 	DDX_Text(_pDX, IDC_STATIC_SIGNER, m_signerName);
 	DDX_Text(_pDX, IDC_STATIC_KEY, m_signerKey);
 	DDX_Text(_pDX, IDC_STATIC_SIGNATURE, m_signatureName);
+	DDX_Text(_pDX, IDC_EDIT_SIGNATURE, m_hexDumpSignature);
+	DDX_Text(_pDX, IDC_EDIT_SIGNED_MESSAGE, m_hexDumpMessage);
+	DDX_Control(_pDX, IDC_EDIT_SIGNATURE, m_editSignature);
+	DDX_Control(_pDX, IDC_EDIT_SIGNED_MESSAGE, m_editMessage);
 }
 
 void CDlgCertificateStoreSignatureExtracted::clickedButtonVerify() {
 	UpdateData(true);
+	CDlgCertificateStoreSignatureVerify dlgCertificateStoreSignatureVerify(m_documentFileName, m_documentTitle);
+	dlgCertificateStoreSignatureVerify.DoModal();
 }
 
 void CDlgCertificateStoreSignatureExtracted::clickedButtonCancel() {

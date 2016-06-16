@@ -49,6 +49,10 @@ protected:
 	CString m_signerName;
 	CString m_signerKey;
 	CString m_signatureName;
+	CString m_hexDumpSignature;
+	CString m_hexDumpMessage;
+	CEdit m_editSignature;
+	CEdit m_editMessage;
 
 	DECLARE_MESSAGE_MAP()
 };

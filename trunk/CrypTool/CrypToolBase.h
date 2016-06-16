@@ -107,6 +107,12 @@ namespace CrypTool {
 		// specified, the function returns an empty string
 		CString toString(const unsigned int _base, const CString &_separator = "") const;
 	public:
+		// this is a convenience function to convert the byte string into a 
+		// hex dump; each hex dump features lines of three columns: a 32bit 
+		// address column, a hexadecimal column, and an ascii column; the 
+		// parameter specifies how many bytes are displayed per row
+		CString toHexDump(const size_t _bytesPerRow) const;
+	public:
 		// resets the byte string: deletes the allocated memory, 
 		// and resets both the byte data and byte length to zero 
 		// unless a new byte length is specified
@@ -133,6 +139,16 @@ namespace CrypTool {
 		// byte length is reached; if the byte string is as long or longer 
 		// than the specified byte length, it remains untouched
 		void addZeroPaddingRight(const size_t _byteLength);
+		// this function fills the byte string with the specified character 
+		// to the left until the desired byte length is reached; if the byte 
+		// string is as long or longer than the specified byte length, it 
+		// remains untouched
+		void fillLeft(const unsigned char _character, const size_t _byteLength);
+		// this function fills the byte string with the specified character 
+		// to the left until the desired byte length is reached; if the byte 
+		// string is as long or longer than the specified byte length, it 
+		// remains untouched
+		void fillRight(const unsigned char _character, const size_t _byteLength);
 	public:
 		// this function is provided for convenience: it searches the byte 
 		// string for the first occurence of the specified pattern; if the 
