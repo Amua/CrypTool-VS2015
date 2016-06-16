@@ -62,6 +62,8 @@ BOOL CDlgCertificateStoreSignatureSign::OnInitDialog() {
 	updateListCertificates();
 	// initial update for the buttons
 	updateButtons();
+	// initial update
+	UpdateData(false);
 	return TRUE;
 }
 

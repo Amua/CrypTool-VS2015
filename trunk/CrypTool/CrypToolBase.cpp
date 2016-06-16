@@ -2937,8 +2937,12 @@ namespace CrypTool {
 		}
 
 		bool isFileSignature(const CString &_fileName) {
-			AfxMessageBox("CRYPTOOL_BASE: implement me");
-			return false;
+			long serial;
+			CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType;
+			CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType;
+			ByteString message;
+			ByteString signature;
+			return parseSignatureFile(_fileName, serial, hashAlgorithmType, asymmetricAlgorithmType, message, signature);
 		}
 
 		bool createSignatureFile(const CString &_fileName, const long _serial, const Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const ByteString &_message, const ByteString &_signature) {
@@ -2975,8 +2979,78 @@ namespace CrypTool {
 		}
 
 		bool parseSignatureFile(const CString &_fileName, long &_serial, Cryptography::Hash::HashAlgorithmType &_hashAlgorithmType, Cryptography::Asymmetric::AsymmetricAlgorithmType &_asymmetricAlgorithmType, ByteString &_message, ByteString &_signature) {
-			AfxMessageBox("CRYPTOOL_BASE: implement me");
-			return false;
+			// try to load file into byte string
+			ByteString byteStringFile;
+			if (!byteStringFile.readFromFile(_fileName)) {
+				return false;
+			}
+			// find receiver pattern
+			CString stringReceiver;
+			stringReceiver.LoadString(IDS_STRING_HYBRID_RECIEVER);
+			ByteString byteStringReceiver;
+			byteStringReceiver = stringReceiver;
+			size_t startReceiver;
+			size_t endReceiver;
+			if (!byteStringFile.findPattern(byteStringReceiver, startReceiver, endReceiver))
+				return false;
+			// find hash function pattern
+			CString stringHashFunction;
+			stringHashFunction.LoadString(IDS_STRING_ASYMKEY_SELECT_HASH_METHOD);
+			ByteString byteStringHashFunction;
+			byteStringHashFunction = stringHashFunction;
+			size_t startHashFunction;
+			size_t endHashFunction;
+			if (!byteStringFile.findPattern(byteStringHashFunction, startHashFunction, endHashFunction))
+				return false;
+			// find asymmetric algorithm pattern
+			CString stringAsymmetricAlgorithm;
+			stringAsymmetricAlgorithm.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+			ByteString byteStringAsymmetricAlgorithm;
+			byteStringAsymmetricAlgorithm = stringAsymmetricAlgorithm;
+			size_t startAsymmetricAlgorithm;
+			size_t endAsymmetricAlgorithm;
+			if (!byteStringFile.findPattern(byteStringAsymmetricAlgorithm, startAsymmetricAlgorithm, endAsymmetricAlgorithm))
+				return false;
+			// find message pattern
+			CString stringMessage;
+			stringMessage.LoadString(IDS_STRING_ASYMKEY_MESSAGE);
+			ByteString byteStringMessage;
+			byteStringMessage = stringMessage;
+			size_t startMessage;
+			size_t endMessage;
+			if (!byteStringFile.findPattern(byteStringMessage, startMessage, endMessage))
+				return false;
+			// find signature pattern
+			CString stringSignature;
+			stringSignature.LoadString(IDS_STRING_MSG_SIGNATURE);
+			ByteString byteStringSignature;
+			byteStringSignature = stringSignature;
+			size_t startSignature;
+			size_t endSignature;
+			if (!byteStringFile.findPattern(byteStringSignature, startSignature, endSignature))
+				return false;
+			// extract certificate serial number
+			ByteString byteStringSerial;
+			if (!byteStringFile.extractPattern(endReceiver, startAsymmetricAlgorithm, byteStringSerial))
+				return false;
+			_serial = atol(byteStringSerial.toString());
+			// extract hash function type
+			ByteString hashFunctionName;
+			if (!byteStringFile.extractPattern(endHashFunction, startAsymmetricAlgorithm, hashFunctionName))
+				return false;
+			_hashAlgorithmType = Cryptography::Hash::getHashAlgorithmType(hashFunctionName.toString());
+			// extract asymmetric algorithm type
+			ByteString asymmetricAlgorithmName;
+			if (!byteStringFile.extractPattern(endAsymmetricAlgorithm, startMessage, asymmetricAlgorithmName))
+				return false;
+			_asymmetricAlgorithmType = Cryptography::Asymmetric::getAsymmetricAlgorithmType(asymmetricAlgorithmName.toString());
+			// extract message
+			if (!byteStringFile.extractPattern(endMessage, startSignature, _message))
+				return false;
+			// extract signature
+			if (!byteStringFile.extractPattern(endSignature, byteStringFile.getByteLength(), _signature))
+				return false;
+			return true;
 		}
 
 	}

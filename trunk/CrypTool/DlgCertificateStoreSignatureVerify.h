@@ -34,11 +34,31 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange *_pDX);
 protected:
+	afx_msg void changedSelectionListCertificates(NMHDR *_pNMHDR, LRESULT *_pResult);
 	afx_msg void clickedButtonOK();
 	afx_msg void clickedButtonCancel();
 protected:
 	const CString m_documentFileName;
 	const CString m_documentTitle;
+protected:
+	long m_serial;
+	CrypTool::Cryptography::Hash::HashAlgorithmType m_hashAlgorithmType;
+	CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType m_asymmetricAlgorithmType;
+	CrypTool::Cryptography::Signature::SignatureType m_signatureType;
+	CrypTool::ByteString m_message;
+	CrypTool::ByteString m_signature;
+	CString m_hashAlgorithmName;
+	CString m_asymmetricAlgorithmName;
+	CListCtrl m_listCertificates;
+	CButton m_buttonOK;
+	CButton m_buttonCancel;
+private:
+	void updateListCertificates();
+	void updateButtons();
+private:
+	long getSerialOfSelectedCertificate() const;
+private:
+	void selectCertificate(const long _serial);
 
 	DECLARE_MESSAGE_MAP()
 };
