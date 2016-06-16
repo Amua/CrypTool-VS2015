@@ -1934,28 +1934,28 @@ namespace CrypTool {
 				CString signatureName = "";
 				switch (_signatureType) {
 				case SIGNATURE_TYPE_RSA_MD5:
-					signatureName = "RSAwithMD5";
+					signatureName = "RSA-MD5";
 					break;
 				case SIGNATURE_TYPE_RSA_RIPEMD160:
-					signatureName = "RSAwithRIPEMD160";
+					signatureName = "RSA-RIPEMD160";
 					break;
 				case SIGNATURE_TYPE_RSA_SHA:
-					signatureName = "RSAwithSHA";
+					signatureName = "RSA-SHA";
 					break;
 				case SIGNATURE_TYPE_RSA_SHA1:
-					signatureName = "RSAwithSHA1";
+					signatureName = "RSA-SHA1";
 					break;
 				case SIGNATURE_TYPE_DSA_SHA:
-					signatureName = "DSAwithSHA";
+					signatureName = "DSA-SHA";
 					break;
 				case SIGNATURE_TYPE_DSA_SHA1:
-					signatureName = "DSAwithSHA1";
+					signatureName = "DSA-SHA1";
 					break;
 				case SIGNATURE_TYPE_ECC_RIPEMD160:
-					signatureName = "ECCwithRIPEMD160";
+					signatureName = "ECC-RIPEMD160";
 					break;
 				case SIGNATURE_TYPE_ECC_SHA1:
-					signatureName = "ECCwithSHA1";
+					signatureName = "ECC-SHA1";
 					break;
 				default:
 					break;
@@ -2942,8 +2942,36 @@ namespace CrypTool {
 		}
 
 		bool createSignatureFile(const CString &_fileName, const long _serial, const Cryptography::Hash::HashAlgorithmType _hashAlgorithmType, const Cryptography::Asymmetric::AsymmetricAlgorithmType _asymmetricAlgorithmType, const ByteString &_message, const ByteString &_signature) {
-			AfxMessageBox("CRYPTOOL_BASE: implement me");
-			return false;
+			CString stringTemp;
+			ByteString byteStringResult;
+			// write receiver
+			stringTemp.LoadString(IDS_STRING_HYBRID_RECIEVER);
+			byteStringResult += stringTemp;
+			stringTemp.Format("%d", _serial);
+			byteStringResult += stringTemp;
+			// write hash function
+			stringTemp.LoadString(IDS_STRING_ASYMKEY_SELECT_HASH_METHOD);
+			byteStringResult += stringTemp;
+			stringTemp = Cryptography::Hash::getHashAlgorithmName(_hashAlgorithmType);
+			byteStringResult += stringTemp;
+			// write asymmetric algorithm
+			stringTemp.LoadString(IDS_STRING_HYBRID_ASYM_METHOD);
+			byteStringResult += stringTemp;
+			stringTemp = Cryptography::Asymmetric::getAsymmetricAlgorithmName(_asymmetricAlgorithmType);
+			byteStringResult += stringTemp;
+			// write message
+			stringTemp.LoadString(IDS_STRING_ASYMKEY_MESSAGE);
+			byteStringResult += stringTemp;
+			byteStringResult += _message;
+			// write signature
+			stringTemp.LoadString(IDS_STRING_MSG_SIGNATURE);
+			byteStringResult += stringTemp;
+			byteStringResult += _signature;
+			// write result byte string to file
+			if (!byteStringResult.writeToFile(_fileName)) {
+				return false;
+			}
+			return true;
 		}
 
 		bool parseSignatureFile(const CString &_fileName, long &_serial, Cryptography::Hash::HashAlgorithmType &_hashAlgorithmType, Cryptography::Asymmetric::AsymmetricAlgorithmType &_asymmetricAlgorithmType, ByteString &_message, ByteString &_signature) {

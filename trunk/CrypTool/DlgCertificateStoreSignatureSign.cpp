@@ -23,6 +23,8 @@
 #include "CrypToolBase.h"
 #include "DlgCertificateStoreSignatureSign.h"
 
+#include "DlgCertificateStoreAskForPassword.h"
+
 CDlgCertificateStoreSignatureSign::CDlgCertificateStoreSignatureSign(const CString &_documentFileName, const CString &_documentTitle, CWnd *_parent) :
 	CDialog(CDlgCertificateStoreSignatureSign::IDD, _parent),
 	m_documentFileName(_documentFileName),
@@ -124,6 +126,51 @@ void CDlgCertificateStoreSignatureSign::changedSelectionListCertificates(NMHDR *
 
 void CDlgCertificateStoreSignatureSign::clickedButtonOK() {
 	UpdateData(true);
+	// acquire serial of selected certificate
+	const long serial = getSerialOfSelectedCertificate();
+	// acquire hash function type and asymmetric algorithm type
+	const CrypTool::Cryptography::Hash::HashAlgorithmType hashAlgorithmType = m_radioHashFunction == 0 ? CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_MD5 : m_radioHashFunction == 1 ? CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_RIPEMD160 : m_radioHashFunction == 2 ? CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA : m_radioHashFunction == 3 ? CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_SHA1 : CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL;
+	const CrypTool::Cryptography::Asymmetric::AsymmetricAlgorithmType asymmetricAlgorithmType = m_radioAsymmetricAlgorithm == 0 ? CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_RSA : m_radioAsymmetricAlgorithm == 1 ? CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_DSA : m_radioAsymmetricAlgorithm == 2 ? CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_ECC : CrypTool::Cryptography::Asymmetric::ASYMMETRIC_ALGORITHM_TYPE_NULL;
+	// acquire the signature type
+	const CrypTool::Cryptography::Signature::SignatureType signatureType = CrypTool::Cryptography::Signature::getSignatureType(asymmetricAlgorithmType, hashAlgorithmType);
+	// make sure the signature type is valid
+	if (signatureType == CrypTool::Cryptography::Signature::SIGNATURE_TYPE_NULL) {
+		AfxMessageBox("CRYPTOOL_BASE: invalid signature type");
+		return;
+	}
+	// ask the user for the password of the private key
+	CDlgCertificateStoreAskForPassword dlgCertificateStoreAskForPassword(serial);
+	if (dlgCertificateStoreAskForPassword.DoModal() != IDOK) {
+		return;
+	}
+	// read document into byte string
+	CrypTool::ByteString message;
+	if (!message.readFromFile(m_documentFileName)) {
+		return;
+	}
+	// create signature using the parameters specified through the GUI
+	CrypTool::ByteString signature;
+	CrypTool::Cryptography::Signature::OperationSign operationSign(signatureType);
+	if (!operationSign.executeOnByteStrings(message, signature, serial, dlgCertificateStoreAskForPassword.getCertificatePassword())) {
+		AfxMessageBox("CRYPTOOL_BASE: signature failed");
+		return;
+	}
+	// create a name for the signature file
+	const CString signatureFileName = CrypTool::Utilities::createTemporaryFile(".hex");
+	// try to write the signature file
+	if (!CrypTool::Utilities::createSignatureFile(signatureFileName, serial, hashAlgorithmType, asymmetricAlgorithmType, message, signature)) {
+		AfxMessageBox("CRYPTOOL_BASE: signature file failed");
+		return;
+	}
+	// open the signature file in new document
+	CAppDocument *document = theApp.OpenDocumentFileNoMRU(signatureFileName);
+	if (document) {
+		// create a meaningful title
+		const CString signatureName = CrypTool::Cryptography::Signature::getSignatureName(signatureType);
+		CString title;
+		title.Format(IDS_STRING_ASYMKEY_SIGNATURE_OF, signatureName, m_documentTitle);
+		document->SetTitle(title);
+	}
 	EndDialog(IDOK);
 }
 
