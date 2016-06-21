@@ -90,7 +90,6 @@ void NGramBin(const char *infile, const char *OldTitle);
 void Permutation(const char *infile, const char *OldTitle, BOOL TEXTMODE);
 void Hashdemo(const char *infile,const char *OldTitle);
 void HashOfAFile();
-void SignatureTutorial(const char *infile, const char* OldTitle);
 void CreateMac(const char *infile, const char *OldTitle);
 void SymmetricEncryption(int AlgId, cryptProvider provider, 
 						 const char* infile, const char *OldTitle, 

@@ -43,16 +43,22 @@ char button1, button2, button3, button4;
 // Dialogfeld CDlgSignatureDemo 
 
 
-CDlgSignatureDemo::CDlgSignatureDemo(CWnd* pParent /*=NULL*/)
-	: CDialog(CDlgSignatureDemo::IDD, pParent),
-  m_nCols(18),
-  m_Message(0),
-  m_NewDoc(0),  
-  m_bUpdateHsh(TRUE),
-  m_bUpdateEnc(TRUE),
-  m_bUpdateSgn(TRUE),
-  m_bUpdateCrt(TRUE)
-{
+CDlgSignatureDemo::CDlgSignatureDemo(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
+	CDialog(CDlgSignatureDemo::IDD, pParent),
+	m_documentFileName(_documentFileName),
+	m_documentTitle(_documentTitle),
+	m_nCols(18),
+	m_Message(0),
+	m_NewDoc(0),  
+	m_bUpdateHsh(TRUE),
+	m_bUpdateEnc(TRUE),
+	m_bUpdateSgn(TRUE),
+	m_bUpdateCrt(TRUE) {
+
+	// TODO/FIXME: from old init document method
+	m_sPathName = m_documentFileName;
+	m_sFileName = m_documentTitle;
+
 	//{{AFX_DATA_INIT(CDlgSignatureDemo)
 	m_DisplayInfo = _T("");
 	m_DisplayContent = _T("");
@@ -198,23 +204,6 @@ void CDlgSignatureDemo::OnSelectDocument()
 
 	delete doc;
 #endif
-}
-
-BOOL CDlgSignatureDemo::InitDocument(const char *infile, const char* OldTitle)
-{
-#ifndef _UNSTABLE
-	m_sFileName = OldTitle;
-	m_sPathName = infile;
-	if(m_Message = theApp.SecudeLib.aux_file2OctetString(m_sPathName)) 
-	{
-		if ( !m_Message || m_Message->noctets )
-		{
-			return FALSE;
-		}
-		return TRUE;
-	}
-#endif
-	return FALSE;	
 }
 
 void CDlgSignatureDemo::OnInfoDocument() 

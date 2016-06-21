@@ -46,6 +46,7 @@
 #include "DlgStatRandTests.h"
 #include "DlgHybridEncryptionDemo.h"
 #include "DlgHybridDecryptionDemo.h"
+#include "DlgSignatureDemo.h"
 #include <sys\stat.h>
 #include "DialogeMessage.h"
 #include "ASN1Decoder.h"
@@ -1453,8 +1454,6 @@ void CCryptDoc::OnUpdateAesSelfextract(CCmdUI* pCmdUI)
 		pCmdUI->Enable(FALSE);
 }
 
-
-
 void CCryptDoc::OnEinzelverfahrenHashwerteHashdemo() 
 {
 	UpdateContent();
@@ -1473,12 +1472,11 @@ void CCryptDoc::OnEinzelverfahrenHybridverfahrenHybridentschlsselung() {
 	dlgHybridDecryptionDemo.DoModal();
 }
 
-void CCryptDoc::OnEinzelverfahrenSignDoc() 
-{
+void CCryptDoc::OnEinzelverfahrenSignDoc() {
 	UpdateContent();
-	SignatureTutorial ( ContentName, GetTitle());
+	CDlgSignatureDemo dlgSignatureDemo(ContentName, GetTitle());
+	dlgSignatureDemo.DoModal();
 }
-
 
 // Diese Funktion wird aufgerufen, wenn der Benutzer ein bereits gegebenes Dokument asn1-decodieren will.
 // Wird das Format erkannt, so wird sowohl ein asn1-dump als auch eine formatspezifische Ausgabe angezeigt.

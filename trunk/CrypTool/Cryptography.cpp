@@ -55,7 +55,6 @@ using namespace std;
 #include "DlgKeyPermutationInfo.h"
 #include "DlgSelectHashFunction.h"
 #include "DlgHashDemo.h"
-#include "DlgSignatureDemo.h"
 #include "DlgEntropyInfo.h"
 #include "Mac.h"
 // #include "DlgMac.h"
@@ -3066,17 +3065,6 @@ void Hashdemo(const char *infile,const char *OldTitle) {
 	CDlgHashDemo dlgHashDemo(documentFileName, documentTitle);
 	AfxInitRichEdit();
 	dlgHashDemo.DoModal();
-}
-
-//crypt.cpp
-void SignatureTutorial(const char *infile, const char* OldTitle)
-{
-	if(CDlgSignatureDemo* SigDemo = new CDlgSignatureDemo)
-	{
-		SigDemo->InitDocument( infile, OldTitle );
-		SigDemo->DoModal();
-		delete SigDemo;
-	}
 }
 
 // original implementation: Christine Stötzel, 2004

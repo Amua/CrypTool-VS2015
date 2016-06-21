@@ -1065,10 +1065,9 @@ void CCrypToolApp::OnHashOfAFile()
 	HashOfAFile();	
 }
 
-void CCrypToolApp::OnEinzelverfahrenTutorialSignaturerzeugung() 
-{
-	CDlgSignatureDemo DST;
-	DST.DoModal();
+void CCrypToolApp::OnEinzelverfahrenTutorialSignaturerzeugung() {
+	CDlgSignatureDemo dlgSignatureDemo;
+	dlgSignatureDemo.DoModal();
 }
 
 #if !defined(_MSC_VER) || _MSC_VER <= 1200		

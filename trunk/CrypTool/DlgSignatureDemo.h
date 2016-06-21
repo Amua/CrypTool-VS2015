@@ -18,27 +18,23 @@
 
 **************************************************************************/
 
-#if !defined(AFX_DLGSIGNTUTORIAL_H__C8A91DA0_040A_11D6_8A81_000255320F1C__INCLUDED_)
-#define AFX_DLGSIGNTUTORIAL_H__C8A91DA0_040A_11D6_8A81_000255320F1C__INCLUDED_
+#ifndef _DLGSIGNATUREDEMO_H_
+#define _DLGSIGNATUREDEMO_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// DlgSignTutorial.h : Header-Datei
-//
+#include <afxwin.h>
+#include <afxcmn.h>
+#include <resource.h>
+
 #include "PSEDemo.h"
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSignatureDemo 
 
-class CDlgSignatureDemo : public CDialog
-{
-// Konstruktion
+class CDlgSignatureDemo : public CDialog {
+	enum { IDD = IDD_SIGNATURE_DEMO };
 public:
-	CDlgSignatureDemo(CWnd* pParent = NULL);   // Standardkonstruktor
-	~CDlgSignatureDemo();
-
-	// Funktionen
-	BOOL InitDocument(const char *infile, const char* OldTitle);
+	CDlgSignatureDemo(const CString &_documentFileName = "", const CString &_documentTitle = "", CWnd* pParent = NULL);
+	virtual ~CDlgSignatureDemo();
+protected:
+	CString m_documentFileName;
+	CString m_documentTitle;
 
 protected:
 	// Variablen
@@ -87,7 +83,6 @@ protected:
 
 // Dialogfelddaten
 	//{{AFX_DATA(CDlgSignatureDemo)
-	enum { IDD = IDD_SIGNATURE_DEMO };
 	CStatic	m_DisplayContentCtrl;
 	CEdit	m_DisplayInfoCtrl;
 	CString	m_DisplayInfo;
@@ -132,7 +127,4 @@ private:
 
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ fügt unmittelbar vor der vorhergehenden Zeile zusätzliche Deklarationen ein.
-
-#endif // AFX_DLGSIGNTUTORIAL_H__C8A91DA0_040A_11D6_8A81_000255320F1C__INCLUDED_
+#endif
