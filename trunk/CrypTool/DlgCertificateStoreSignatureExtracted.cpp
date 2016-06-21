@@ -38,8 +38,7 @@ CDlgCertificateStoreSignatureExtracted::~CDlgCertificateStoreSignatureExtracted(
 
 BOOL CDlgCertificateStoreSignatureExtracted::OnInitDialog() {
 	CDialog::OnInitDialog();
-	// initialize fonts
-	CFont fontCourier;
+	// initialize font
 	fontCourier.CreatePointFont(10, "Courier");
 	m_editSignature.SetFont(&fontCourier);
 	m_editMessage.SetFont(&fontCourier);
@@ -63,7 +62,7 @@ BOOL CDlgCertificateStoreSignatureExtracted::OnInitDialog() {
 	// assign internal variable for signature name
 	m_signatureName = CrypTool::Cryptography::Signature::getSignatureName(m_signatureType);
 	// the number of hexadecimal columns for the hex dump display
-	const size_t hexDumpColumns = 10;
+	const size_t hexDumpColumns = 15;
 	// assign hex dump signature
 	m_hexDumpSignature = m_signature.toHexDump(hexDumpColumns);
 	// assign hex dump message

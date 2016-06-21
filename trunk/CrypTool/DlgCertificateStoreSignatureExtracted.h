@@ -53,6 +53,7 @@ protected:
 	CString m_hexDumpMessage;
 	CEdit m_editSignature;
 	CEdit m_editMessage;
+	CFont fontCourier;
 
 	DECLARE_MESSAGE_MAP()
 };
