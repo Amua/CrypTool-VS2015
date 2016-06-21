@@ -199,6 +199,13 @@ namespace CrypTool {
 						result += " ";
 					}
 				}
+				else {
+					result += " ";
+					result += " ";
+					if (indexColumn + 1 < cols) {
+						result += " ";
+					}
+				}
 			}
 			// add space
 			result += " ";
