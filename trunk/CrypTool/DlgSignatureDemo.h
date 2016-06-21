@@ -33,15 +33,14 @@ public:
 	CDlgSignatureDemo(const CString &_documentFileName = "", const CString &_documentTitle = "", CWnd* pParent = NULL);
 	virtual ~CDlgSignatureDemo();
 protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);
+protected:
 	CString m_documentFileName;
 	CString m_documentTitle;
 
 protected:
-	// Variablen
-	CString			m_sPathName;	// Pfadname des Dokuments
-	CString			m_sFileName;	// Titel des Dokuments
-	CString			m_sFileNameNew; // Titel des signierten Dokuments
-	int				m_nCols;		// Spaltenzahl des Displays
+	int				m_nCols;
 	CFont			m_Font1;	
 	BOOL			m_bUpdateHsh;
 	BOOL			m_bUpdateEnc;
@@ -51,15 +50,13 @@ protected:
 	OctetString 	m_osHash;
 	OctetString		m_osHashDER;
 	OctetString		m_osHashEnc;
-	OctetString		m_SignText;		// OctetString
+	OctetString		m_SignText;
 
-	// Zeiger	
-	OctetString*    m_Message;		// Zeiger auf OctetString
-	CPSEDemo*		m_Cert;			// Zeiger auf CPSEDemo
-	CAppDocument*	m_NewDoc;		// Zeiger auf CAppDocument
-	CWnd*			m_hFocus;		// Zeiger auf CWnd
+	OctetString*    m_Message;
+	CPSEDemo*		m_Cert;
+	CAppDocument*	m_NewDoc;
+	CWnd*			m_hFocus;
 
-	// Buttons
 	CBitmapButton m_ButtonSelectDoc;
 	CBitmapButton m_ButtonSelectHashAlg;
 	CBitmapButton m_ButtonSelectKey;
@@ -81,30 +78,16 @@ protected:
 	CBitmapButton m_ButtonCancel;
 	CBitmapButton m_ButtonOK;
 
-// Dialogfelddaten
-	//{{AFX_DATA(CDlgSignatureDemo)
 	CStatic	m_DisplayContentCtrl;
 	CEdit	m_DisplayInfoCtrl;
 	CString	m_DisplayInfo;
 	CString	m_DisplayContent;
-	//}}AFX_DATA
 
-
-// Überschreibungen
-	// Vom Klassen-Assistenten generierte virtuelle Funktionsüberschreibungen
-	//{{AFX_VIRTUAL(CDlgSignatureDemo)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV-Unterstützung
-	//}}AFX_VIRTUAL
-
-// Implementierung
 protected:
 	void EnableButtons();
 	void ClearInfo();
 
-	// Generierte Nachrichtenzuordnungsfunktionen
-	//{{AFX_MSG(CDlgSignatureDemo)
-	virtual BOOL OnInitDialog();
+protected:
 	afx_msg void OnSelectDocument();
 	afx_msg void OnInfoDocument();
 	afx_msg void OnSelectKey();
@@ -121,10 +104,8 @@ protected:
 	afx_msg void OnInfoCert();
 	afx_msg void OnInfoSign();
 	afx_msg void OnPaint();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-private:
 
+	DECLARE_MESSAGE_MAP()
 };
 
 #endif

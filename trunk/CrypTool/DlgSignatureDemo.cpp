@@ -18,12 +18,11 @@
 
 **************************************************************************/
 
-// DlgSignTutorial.cpp: Implementierungsdatei
-//
-
 #include "stdafx.h"
 #include "CrypToolApp.h"
+#include "CrypToolBase.h"
 #include "DlgSignatureDemo.h"
+
 #include "FileTools.h"
 #include "DlgSignature.h"
 #include "DlgDemoRSAKeyGeneration.h"
@@ -39,10 +38,6 @@ static char THIS_FILE[] = __FILE__;
 
 char button1, button2, button3, button4;
 
-/////////////////////////////////////////////////////////////////////////////
-// Dialogfeld CDlgSignatureDemo 
-
-
 CDlgSignatureDemo::CDlgSignatureDemo(const CString &_documentFileName, const CString &_documentTitle, CWnd* pParent) :
 	CDialog(CDlgSignatureDemo::IDD, pParent),
 	m_documentFileName(_documentFileName),
@@ -54,16 +49,7 @@ CDlgSignatureDemo::CDlgSignatureDemo(const CString &_documentFileName, const CSt
 	m_bUpdateEnc(TRUE),
 	m_bUpdateSgn(TRUE),
 	m_bUpdateCrt(TRUE) {
-
-	// TODO/FIXME: from old init document method
-	m_sPathName = m_documentFileName;
-	m_sFileName = m_documentTitle;
-
-	//{{AFX_DATA_INIT(CDlgSignatureDemo)
-	m_DisplayInfo = _T("");
-	m_DisplayContent = _T("");
-	//}}AFX_DATA_INIT
-
+	
 	m_Cert = new CPSEDemo;
 	memset(&m_osHash, 0, sizeof(OctetString));
 	memset(&m_osHashDER, 0, sizeof(OctetString));
@@ -71,98 +57,64 @@ CDlgSignatureDemo::CDlgSignatureDemo(const CString &_documentFileName, const CSt
 	memset(&m_SignText, 0, sizeof(OctetString));
 }
 
-CDlgSignatureDemo::~CDlgSignatureDemo()
-{
-#ifndef _UNSTABLE
-	delete m_Cert;
-	theApp.SecudeLib.aux_free_OctetString(&m_Message);
-	delete[] m_SignText.octets;	
-#endif
+CDlgSignatureDemo::~CDlgSignatureDemo() {
+
 }
 
-
-void CDlgSignatureDemo::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDlgSignatureDemo)
-	DDX_Control(pDX, IDC_DISPLAY_CONTENT, m_DisplayContentCtrl);
-	DDX_Control(pDX, IDC_DISPLAY_INFO, m_DisplayInfoCtrl);
-	DDX_Text(pDX, IDC_DISPLAY_INFO, m_DisplayInfo);
-	DDX_Text(pDX, IDC_DISPLAY_CONTENT, m_DisplayContent);
-	//}}AFX_DATA_MAP
-}
-
-
-BEGIN_MESSAGE_MAP(CDlgSignatureDemo, CDialog)
-	//{{AFX_MSG_MAP(CDlgSignatureDemo)
-	ON_BN_CLICKED(IDC_SELECT_DOCUMENT, OnSelectDocument)
-	ON_BN_CLICKED(IDC_INFO_DOCUMENT, OnInfoDocument)
-	ON_BN_CLICKED(IDC_SELECT_KEY, OnSelectKey)
-	ON_BN_CLICKED(IDC_INFO_KEY, OnInfoKey)
-	ON_BN_CLICKED(IDC_SELECT_HASHALG, OnSelectHashAlg)
-	ON_BN_CLICKED(IDC_COMPUTE, OnCompute)
-	ON_BN_CLICKED(IDC_INFO_HASH, OnInfoHash)
-	ON_BN_CLICKED(IDC_ENCRYPT, OnEncrypt)
-	ON_BN_CLICKED(IDC_INFO_HASH_ENC, OnInfoHashEnc)
-	ON_BN_CLICKED(IDC_SELECT_CERT, OnSelectCert)
-	ON_BN_CLICKED(IDC_INFO_ALG, OnInfoAlg)
-	ON_BN_CLICKED(IDC_COMBINE, OnCombine)
-	ON_BN_CLICKED(IDC_INFO_CERT, OnInfoCert)
-	ON_BN_CLICKED(IDC_INFO_SIGN, OnInfoSign)
-	ON_WM_PAINT()
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// Behandlungsroutinen für Nachrichten CDlgSignatureDemo 
-
-BOOL CDlgSignatureDemo::OnInitDialog() 
-{
+BOOL CDlgSignatureDemo::OnInitDialog() {
 	CDialog::OnInitDialog();
 
 	// Fonts initialisieren:
 	m_Font1.CreatePointFont(80, "Courier");
 	m_DisplayInfoCtrl.SetFont(&m_Font1);
-	
+
 	// BitmapButtons laden:	
 	m_ButtonSelectDoc.AutoLoad(IDC_SELECT_DOCUMENT, this);
 	m_ButtonSelectHashAlg.AutoLoad(IDC_SELECT_HASHALG, this);
 	m_ButtonSelectKey.AutoLoad(IDC_SELECT_KEY, this);
 	m_ButtonSelectCert.AutoLoad(IDC_SELECT_CERT, this);
-	
-	m_ButtonInfoDoc.AutoLoad(IDC_INFO_DOCUMENT,this);
-	m_ButtonInfoHashAlg.AutoLoad(IDC_INFO_HASHALG,this);
-	m_ButtonInfoKey.AutoLoad(IDC_INFO_KEY,this);
-	m_ButtonInfoCert.AutoLoad(IDC_INFO_CERT,this);
+
+	m_ButtonInfoDoc.AutoLoad(IDC_INFO_DOCUMENT, this);
+	m_ButtonInfoHashAlg.AutoLoad(IDC_INFO_HASHALG, this);
+	m_ButtonInfoKey.AutoLoad(IDC_INFO_KEY, this);
+	m_ButtonInfoCert.AutoLoad(IDC_INFO_CERT, this);
 
 	m_ButtonCompute.AutoLoad(IDC_COMPUTE, this);
 	m_ButtonEncrypt.AutoLoad(IDC_ENCRYPT, this);
-	m_ButtonCombine.AutoLoad(IDC_COMBINE,this);
+	m_ButtonCombine.AutoLoad(IDC_COMBINE, this);
 
-	m_ButtonInfoHash.AutoLoad(IDC_INFO_HASH,this);
-	m_ButtonInfoHashEnc.AutoLoad(IDC_INFO_HASH_ENC,this);
-	m_ButtonInfoSign.AutoLoad(IDC_INFO_SIGN,this);
+	m_ButtonInfoHash.AutoLoad(IDC_INFO_HASH, this);
+	m_ButtonInfoHashEnc.AutoLoad(IDC_INFO_HASH_ENC, this);
+	m_ButtonInfoSign.AutoLoad(IDC_INFO_SIGN, this);
 
 	m_ButtonCancel.AutoLoad(IDCANCEL, this);
 	m_ButtonOK.AutoLoad(IDOK, this);
 
-	if(!m_sPathName.IsEmpty()) // Dokument anzeigen
-	{	
-		OnInfoDocument(); 
+	if (!m_documentFileName.IsEmpty()) {
+		OnInfoDocument();
 		m_ButtonInfoDoc.SetFocus();
 		button1 = -1;
 	}
-	else
+	else {
 		button1 = 0;
+	}
 	button2 = button3 = button4;
-	EnableButtons(); // Bitmap-Butttons ein/ausblenden	
+	EnableButtons();
 
-	return FALSE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX-Eigenschaftenseiten sollten FALSE zurückgeben
+	return FALSE;
 }
 
-void CDlgSignatureDemo::OnSelectDocument()
-{
+void CDlgSignatureDemo::DoDataExchange(CDataExchange* pDX) {
+	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_DISPLAY_CONTENT, m_DisplayContentCtrl);
+	DDX_Control(pDX, IDC_DISPLAY_INFO, m_DisplayInfoCtrl);
+	DDX_Text(pDX, IDC_DISPLAY_INFO, m_DisplayInfo);
+	DDX_Text(pDX, IDC_DISPLAY_CONTENT, m_DisplayContent);
+}
+
+
+
+void CDlgSignatureDemo::OnSelectDocument() {
 #ifndef _UNSTABLE
 	// Initialisierung des File-Dialogs:
 	CString sFileFilter;
@@ -220,7 +172,7 @@ void CDlgSignatureDemo::OnInfoDocument()
 	UpdateData(TRUE);
 	m_DisplayContent.LoadString(IDS_CONTENT_DOCUMENT);
 	m_DisplayInfo = static_cast<CString>(msgdata);
-	m_DisplayContent += m_sFileName;
+	m_DisplayContent += m_documentTitle;
 	UpdateData(FALSE);	
 	
 	delete[] msgdata;
@@ -761,3 +713,21 @@ void CDlgSignatureDemo::OnPaint()
 	dc.FillSolidRect(0,0,800,700,0x00C6C3C6);
 	// Kein Aufruf von CDialog::OnPaint() für Zeichnungsnachrichten
 }
+
+BEGIN_MESSAGE_MAP(CDlgSignatureDemo, CDialog)
+	ON_BN_CLICKED(IDC_SELECT_DOCUMENT, OnSelectDocument)
+	ON_BN_CLICKED(IDC_INFO_DOCUMENT, OnInfoDocument)
+	ON_BN_CLICKED(IDC_SELECT_KEY, OnSelectKey)
+	ON_BN_CLICKED(IDC_INFO_KEY, OnInfoKey)
+	ON_BN_CLICKED(IDC_SELECT_HASHALG, OnSelectHashAlg)
+	ON_BN_CLICKED(IDC_COMPUTE, OnCompute)
+	ON_BN_CLICKED(IDC_INFO_HASH, OnInfoHash)
+	ON_BN_CLICKED(IDC_ENCRYPT, OnEncrypt)
+	ON_BN_CLICKED(IDC_INFO_HASH_ENC, OnInfoHashEnc)
+	ON_BN_CLICKED(IDC_SELECT_CERT, OnSelectCert)
+	ON_BN_CLICKED(IDC_INFO_ALG, OnInfoAlg)
+	ON_BN_CLICKED(IDC_COMBINE, OnCombine)
+	ON_BN_CLICKED(IDC_INFO_CERT, OnInfoCert)
+	ON_BN_CLICKED(IDC_INFO_SIGN, OnInfoSign)
+	ON_WM_PAINT()
+END_MESSAGE_MAP()
