@@ -133,12 +133,10 @@ CCrypToolApp NEAR theApp;
 
 
 BEGIN_MESSAGE_MAP(CCrypToolApp, CWinApp)
-	//{{AFX_MSG_MAP(CCrypToolApp)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
 	ON_COMMAND(ID_OPTIONS_ANALYSIS, OnOptionsAnalysis)
 	ON_COMMAND(ID_WINDOW_CLOSE_ALL, OnWindowCloseAll)
 	ON_COMMAND(ID_OPTTEXT, OnOpttext)
-	ON_UPDATE_COMMAND_UI(ID_CRYPT_KeyGen, OnUpdateNeedSecudeTicket)
 	ON_COMMAND(ID_SHOW_ALL_EC_KEYS, OnShowKeys)
 	ON_COMMAND(ID_CRYPT_KeyGen, OnKeyGen)
 	ON_COMMAND(ID_EINZELVERFAHREN_TUTORIAL_PRIMZAHLENGENERIEREN, OnEinzelverfahrenTutorialPrimzahlengenerieren)
@@ -176,29 +174,15 @@ BEGIN_MESSAGE_MAP(CCrypToolApp, CWinApp)
 	ON_COMMAND(ID_INDIV_CRT_SECRETSHARING, OnIndivCrtSecretsharing)
 	ON_COMMAND(ID_NUMBERSHARK, OnNumberShark)
 	ON_UPDATE_COMMAND_UI(ID_NUMBERSHARK, OnUpdateNumberShark)
-	ON_UPDATE_COMMAND_UI(ID_SHOW_ALL_EC_KEYS, OnUpdateNeedSecudeTicket)
-	ON_UPDATE_COMMAND_UI(ID_CRYPT_KeyGen, OnUpdateNeedSecudeTicket)
-	ON_UPDATE_COMMAND_UI(ID_VERENTSCHLSSELN_HYBRIDVERFAHREN_HYBRIDVERSCHLSSELUNG, OnUpdateNeedSecudeTicket)
-	ON_UPDATE_COMMAND_UI(ID_VERENTSCHLSSELN_HYBRIDVERFAHREN_HYBRIDENTSCHLSSELUNG, OnUpdateNeedSecudeTicket)
-	ON_UPDATE_COMMAND_UI(ID_HASH_OFAFILE, OnUpdateNeedSecudeTicket)
-	ON_UPDATE_COMMAND_UI(ID_EINZELVERFAHREN_SIGN, OnUpdateNeedSecudeTicket)
-	ON_UPDATE_COMMAND_UI(ID_EINZELVERFAHREN_SCHLUESSELGENERIEREN, OnUpdateNeedSecudeTicket)
 	ON_COMMAND(ID_INDIVIDUAL_PROCEDURES_SECRETSHARING, OnIndividualProceduresSecretsharing)
 	ON_COMMAND(ID_GENERATION_TADIC_NAF_KEYS, OnGenerationTAdicNAFKeys)
-	//}}AFX_MSG_MAP
-
-	//ON_COMMAND(ID_VERENTSCHLSSELN_HYBRIDVERFAHREN_HYBRIDVERSCHLSSELUNG, OnVerentschlsselnHybridverfahrenHybridverschlsselung)
-	ON_COMMAND(ID_FILE_NEW, OnFileNew)			     // file commands...
+	ON_COMMAND(ID_FILE_NEW, OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
 	ON_COMMAND(ID_FILE_PRINT_SETUP, CWinApp::OnFilePrintSetup)
-// BEGINN Fuer Hilfe-Funktionalitaet eingefuegt
-	// Globale Hilfebefehle
 	ON_COMMAND(ID_HELP_FINDER, CWinApp::OnHelpFinder)
 	ON_COMMAND(ID_HELP, CWinApp::OnHelp)
 	ON_COMMAND(ID_CONTEXT_HELP, CWinApp::OnContextHelp)
 	ON_COMMAND(ID_DEFAULT_HELP, CWinApp::OnHelpFinder)
-
-// ENDE
 	ON_COMMAND(ID_PRIMENUMBER_TEST, OnPrimenumberTest)
 	ON_COMMAND(ID_AES_SELFEXTRACT, OnAesSelfextract)
 	ON_COMMAND(ID_INDIV_POINTADDITIONONELLIPTICCURVES, OnIndivPointadditiononellipticcurves)
@@ -1004,16 +988,6 @@ int CCrypToolApp::ExitInstance() {
 	if (ScintillaLib) FreeLibrary(ScintillaLib);
 
 	return CWinApp::ExitInstance();
-}
-
-void CCrypToolApp::OnUpdateNeedSecudeTicket(CCmdUI* pCmdUI) 
-{
-#ifndef _UNSTABLE
-    if(theApp.SecudeStatus == 2) pCmdUI->Enable(TRUE);
-	else pCmdUI->Enable(FALSE);	
-	if (pCmdUI->m_nID == ID_VERENTSCHLSSELN_HYBRIDVERFAHREN_HYBRIDENTSCHLSSELUNG )
-		pCmdUI->Enable(FALSE);
-#endif
 }
 
 void CCrypToolApp::OnShowKeys() {

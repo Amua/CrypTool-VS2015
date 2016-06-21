@@ -126,8 +126,6 @@ protected:
 	afx_msg void OnCryptExtract();
 	afx_msg void OnAnalyzeSubst();
 	afx_msg void OnFloating();
-	afx_msg void OnUpdateNeedSecude(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateNeedSecudeTicket(CCmdUI* pCmdUI);
 	afx_msg void OnAnalyseDescbc();
 	afx_msg void OnAnalyseDesecb();
 	afx_msg void OnAnalyseIdea();

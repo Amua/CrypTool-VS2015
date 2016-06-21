@@ -109,7 +109,6 @@ class CCrypToolApp : public CWinApp
 	afx_msg void OnOptionsAnalysis();
 	afx_msg void OnWindowCloseAll();
 	afx_msg void OnOpttext();
-	afx_msg void OnUpdateNeedSecudeTicket(CCmdUI* pCmdUI);
 	afx_msg void OnShowKeys();
 	afx_msg void OnKeyGen();
 	afx_msg void OnEinzelverfahrenTutorialPrimzahlengenerieren();
