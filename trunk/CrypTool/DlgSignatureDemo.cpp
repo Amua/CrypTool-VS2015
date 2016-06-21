@@ -42,6 +42,7 @@ CDlgSignatureDemo::CDlgSignatureDemo(const CString &_documentFileName, const CSt
 	CDialog(CDlgSignatureDemo::IDD, pParent),
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle),
+	m_hashAlgorihmType(CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL),
 	m_nCols(18),
 	m_NewDoc(0),  
 	m_bUpdateHsh(TRUE),
@@ -127,6 +128,41 @@ void CDlgSignatureDemo::OnInfoDocument() {
 	m_DisplayContent.LoadString(IDS_CONTENT_DOCUMENT);
 	m_DisplayInfo = m_byteStringMessage.toHexDump(19);
 	m_DisplayContent += m_documentTitle;
+	UpdateData(FALSE);
+}
+
+void CDlgSignatureDemo::OnSelectHashAlg() {
+	CDlgSelectHashFunction dlgSelectHashFunction;
+	dlgSelectHashFunction.enableSignatureMode();
+	if (dlgSelectHashFunction.DoModal() == IDOK) {
+		m_hashAlgorihmType = dlgSelectHashFunction.getHashAlgorithmType();
+		m_bUpdateHsh = TRUE;
+		m_bUpdateEnc = TRUE;
+		m_bUpdateSgn = TRUE;
+		button2 = -1;
+		EnableButtons();
+		m_ButtonInfoHashAlg.SetFocus();
+		ClearInfo();
+	}
+}
+
+void CDlgSignatureDemo::OnInfoAlg() {
+	m_DisplayContent.Format(IDS_CONTENT_ALG);
+	m_DisplayInfo = CrypTool::Cryptography::Hash::getHashAlgorithmName(m_hashAlgorihmType);
+	UpdateData(false);
+}
+
+void CDlgSignatureDemo::OnCompute() {
+	CrypTool::Cryptography::Hash::HashOperation hashOperation(m_hashAlgorihmType);
+	hashOperation.executeOnByteStrings(m_byteStringMessage, m_byteStringHash);
+	m_bUpdateHsh = FALSE;
+	EnableButtons();
+	m_ButtonInfoHash.SetFocus();
+}
+
+void CDlgSignatureDemo::OnInfoHash() {
+	m_DisplayContent.Format(IDS_STRING_HASH_VALUE_OF, CrypTool::Cryptography::Hash::getHashAlgorithmName(m_hashAlgorihmType), m_documentTitle);
+	m_DisplayInfo = m_byteStringHash.toHexDump(19);
 	UpdateData(FALSE);
 }
 
@@ -224,7 +260,7 @@ void CDlgSignatureDemo::EnableButtons() {
 		m_ButtonEncrypt.ShowWindow(SW_SHOW);
 	}
 	
-	if (!m_byteStringMessage.isNull()) {
+	if (m_byteStringMessage.getByteLength() && m_hashAlgorihmType != CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL) {
 		m_ButtonCompute.EnableWindow(TRUE);
 	}
 	else {
@@ -265,17 +301,22 @@ void CDlgSignatureDemo::EnableButtons() {
 	}
 
 	// TODO/FIXME
-	//m_ButtonInfoHashAlg.EnableWindow(TRUE);
-	m_ButtonInfoHashAlg.EnableWindow(FALSE);
+	if (m_hashAlgorihmType != CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL)
+		m_ButtonInfoHashAlg.EnableWindow(TRUE);
+	else
+		m_ButtonInfoHashAlg.EnableWindow(FALSE);
 
 	if (button2 == -1) {
-		// TODO/FIXME
-		//m_ButtonSelectHashAlg.LoadBitmaps("SELECTALG_G_U", "SELECTALG_G_D", "SELECTALG_G_F", NULL);
-		//m_ButtonSelectHashAlg.ShowWindow(SW_HIDE);
-		//m_ButtonSelectHashAlg.ShowWindow(SW_SHOW);
-		m_ButtonSelectHashAlg.LoadBitmaps("SELECTALG_R_U", "SELECTALG_R_D", "SELECTALG_R_F", NULL);
-		m_ButtonSelectHashAlg.ShowWindow(SW_HIDE);
-		m_ButtonSelectHashAlg.ShowWindow(SW_SHOW);
+		if (m_hashAlgorihmType != CrypTool::Cryptography::Hash::HASH_ALGORITHM_TYPE_NULL) {
+			m_ButtonSelectHashAlg.LoadBitmaps("SELECTALG_G_U", "SELECTALG_G_D", "SELECTALG_G_F", NULL);
+			m_ButtonSelectHashAlg.ShowWindow(SW_HIDE);
+			m_ButtonSelectHashAlg.ShowWindow(SW_SHOW);
+		}
+		else {
+			m_ButtonSelectHashAlg.LoadBitmaps("SELECTALG_R_U", "SELECTALG_R_D", "SELECTALG_R_F", NULL);
+			m_ButtonSelectHashAlg.ShowWindow(SW_HIDE);
+			m_ButtonSelectHashAlg.ShowWindow(SW_SHOW);
+		}
 		button2 = 1;
 	}
 
@@ -319,70 +360,6 @@ void CDlgSignatureDemo::EnableButtons() {
 
 	if (m_hFocus)
 		m_hFocus->SetFocus();
-}
-
-void CDlgSignatureDemo::OnSelectHashAlg() 
-{	
-#ifndef _UNSTABLE
-	CDlgSelectHashFunction* HashDialog;
-	HashDialog = new CDlgSelectHashFunction(this);
-
-	// we're in signature demo mode; thus, no SHA-2 support
-	HashDialog->m_deactivateSHA2 = true;
-
-	if (m_Cert->GetHashAlg() && m_Cert->GetHashAlg() != "")
-		HashDialog->m_sHashAlg = m_Cert->GetHashAlg();
-	else
-		HashDialog->m_sHashAlg = CString("SHA-1");
-	HashDialog->m_deactivateMD4 = TRUE;
-	if ( IDOK == HashDialog->DoModal() && m_Cert->GetHashAlg() != HashDialog->m_sHashAlg )
-	{
-		m_bUpdateHsh = TRUE;
-		m_bUpdateEnc = TRUE;
-		m_bUpdateSgn = TRUE;
-		m_Cert->SetHashAlg(HashDialog->m_sHashAlg);
-		button2 = -1;
-		EnableButtons();
-		//OnInfoAlg();
-		m_ButtonInfoHashAlg.SetFocus();	
-		ClearInfo();
-	}	
-	delete HashDialog;
-#endif
-}
-
-
-
-void CDlgSignatureDemo::OnCompute() 
-{
-#ifndef _UNSTABLE
-	if(!m_Message) return;
-	m_Cert->HashAll(*m_Message, m_osHash);
-	if(!m_osHash.noctets) return;
-
-	m_bUpdateHsh = FALSE;		
-	EnableButtons();
-	//OnInfoHash();
-	m_ButtonInfoHash.SetFocus();
-#endif
-}
-
-void CDlgSignatureDemo::OnInfoHash() 
-{
-#ifndef _UNSTABLE
-	if (!m_osHash.noctets || m_bUpdateHsh) 
-	{
-		Message(IDS_STRING_HYB_SHOW_ENC_DOC, MB_ICONEXCLAMATION);
-		return;
-	}
-	//Message(IDS_STRING_HYB_SHOW_ENC_DOC, MB_ICONEXCLAMATION);
-	
-	UpdateData(TRUE);
-	int srcSize = m_osHash.noctets;
-	dataToHexDump(m_osHash.octets, m_osHash.noctets, m_DisplayInfo); /*FIXME*/
-	m_DisplayContent.Format(IDS_STRING_HASH_VALUE_OF, m_Cert->GetHashAlg(), m_sFileName);
-	UpdateData(FALSE);
-#endif
 }
 
 void CDlgSignatureDemo::OnEncrypt() 
@@ -490,33 +467,6 @@ void CDlgSignatureDemo::OnSelectCert()
 	m_bPSEIsExtern = CertDialog->m_PSEIsExtern;
 
 	delete CertDialog;
-#endif
-}
-
-void CDlgSignatureDemo::OnInfoAlg() 
-{
-#ifndef _UNSTABLE
-	if(m_Cert->GetHashAlg().IsEmpty()) return;
-
-	CString Text;
-	CString Encoding;
-	OctetString DER_Encoding;
-	memset(&DER_Encoding, 0, sizeof(OctetString));
-	m_Cert->GetDER_Encoding(DER_Encoding);
-	dataToHexDump(DER_Encoding.octets, DER_Encoding.noctets, Encoding);	
-
-	UpdateData(TRUE);
-	m_DisplayInfo.Empty();
-	m_DisplayContent.LoadString(IDS_CONTENT_ALG);
-	Text.Format(IDS_NAME2, m_Cert->GetHashAlg(), "");
-	m_DisplayInfo += Text;
-	Text.Format(IDS_BITLENGTH, m_Cert->GetHashLength());
-	m_DisplayInfo += Text;
-	Text.Format(IDS_DERCODE, Encoding);
-	m_DisplayInfo += Text;
-	UpdateData(FALSE);
-
-	delete[] DER_Encoding.octets;
 #endif
 }
 

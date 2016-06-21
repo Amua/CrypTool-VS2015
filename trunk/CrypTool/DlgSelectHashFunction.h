@@ -28,6 +28,8 @@ class CDlgSelectHashFunction : public CDialog {
 public:
 	CDlgSelectHashFunction(CWnd* pParent = NULL);
 public:
+	void enableSignatureMode();
+public:
 	CrypTool::Cryptography::Hash::HashAlgorithmType getHashAlgorithmType() const;
 protected:
 	virtual BOOL OnInitDialog();
@@ -44,6 +46,8 @@ protected:
 	afx_msg void OnSelectedHashFunctionRIPEMD160();
 protected:
 	virtual void OnOK();
+protected:
+	bool m_enabledSignatureMode;
 private:
 	int selectedHashFunctionMD4;
 	int selectedHashFunctionMD5;

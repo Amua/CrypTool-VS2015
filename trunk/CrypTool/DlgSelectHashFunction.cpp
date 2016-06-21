@@ -30,8 +30,14 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 CDlgSelectHashFunction::CDlgSelectHashFunction(CWnd* pParent) :
-	CDialog(CDlgSelectHashFunction::IDD, pParent) {
+	CDialog(CDlgSelectHashFunction::IDD, pParent),
+	m_enabledSignatureMode(false) {
 	
+}
+
+void CDlgSelectHashFunction::enableSignatureMode() {
+	// enable signature mode
+	m_enabledSignatureMode = true;
 }
 
 CrypTool::Cryptography::Hash::HashAlgorithmType CDlgSelectHashFunction::getHashAlgorithmType() const {
@@ -47,7 +53,22 @@ CrypTool::Cryptography::Hash::HashAlgorithmType CDlgSelectHashFunction::getHashA
 
 BOOL CDlgSelectHashFunction::OnInitDialog() {
 	CDialog::OnInitDialog();
-	OnSelectedHashFunctionMD4();
+	// if we're in signature mode
+	if (m_enabledSignatureMode) {
+		// not all hash functions available in signature mode
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_MD4)->EnableWindow(false);
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_MD5)->EnableWindow(true);
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_SHA)->EnableWindow(true);
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_SHA1)->EnableWindow(true);
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_SHA256)->EnableWindow(false);
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_SHA512)->EnableWindow(false);
+		GetDlgItem(IDC_RADIO_HASH_FUNCTION_RIPEMD160)->EnableWindow(true);
+		OnSelectedHashFunctionMD5();
+	}
+	// if we're not in signature mode
+	else {
+		OnSelectedHashFunctionMD4();
+	}
 	return TRUE;
 }
 

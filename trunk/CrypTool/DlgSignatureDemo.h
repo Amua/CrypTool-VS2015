@@ -43,6 +43,8 @@ protected:
 	CrypTool::ByteString m_byteStringHash;
 	CrypTool::ByteString m_byteStringHashEncrypted;
 	CrypTool::ByteString m_byteStringSignature;
+protected:
+	CrypTool::Cryptography::Hash::HashAlgorithmType m_hashAlgorihmType;
 
 protected:
 	int				m_nCols;
