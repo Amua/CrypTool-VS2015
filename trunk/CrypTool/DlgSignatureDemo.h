@@ -38,6 +38,11 @@ protected:
 protected:
 	CString m_documentFileName;
 	CString m_documentTitle;
+protected:
+	CrypTool::ByteString m_byteStringMessage;
+	CrypTool::ByteString m_byteStringHash;
+	CrypTool::ByteString m_byteStringHashEncrypted;
+	CrypTool::ByteString m_byteStringSignature;
 
 protected:
 	int				m_nCols;
@@ -47,13 +52,7 @@ protected:
 	BOOL			m_bUpdateSgn;
 	BOOL			m_bUpdateCrt;
 	BOOL			m_bPSEIsExtern;
-	OctetString 	m_osHash;
-	OctetString		m_osHashDER;
-	OctetString		m_osHashEnc;
-	OctetString		m_SignText;
 
-	OctetString*    m_Message;
-	CPSEDemo*		m_Cert;
 	CAppDocument*	m_NewDoc;
 	CWnd*			m_hFocus;
 

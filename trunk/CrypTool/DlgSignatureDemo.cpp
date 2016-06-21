@@ -43,18 +43,12 @@ CDlgSignatureDemo::CDlgSignatureDemo(const CString &_documentFileName, const CSt
 	m_documentFileName(_documentFileName),
 	m_documentTitle(_documentTitle),
 	m_nCols(18),
-	m_Message(0),
 	m_NewDoc(0),  
 	m_bUpdateHsh(TRUE),
 	m_bUpdateEnc(TRUE),
 	m_bUpdateSgn(TRUE),
 	m_bUpdateCrt(TRUE) {
 	
-	m_Cert = new CPSEDemo;
-	memset(&m_osHash, 0, sizeof(OctetString));
-	memset(&m_osHashDER, 0, sizeof(OctetString));
-	memset(&m_osHashEnc, 0, sizeof(OctetString));
-	memset(&m_SignText, 0, sizeof(OctetString));
 }
 
 CDlgSignatureDemo::~CDlgSignatureDemo() {
@@ -158,8 +152,8 @@ void CDlgSignatureDemo::OnSelectDocument() {
 #endif
 }
 
-void CDlgSignatureDemo::OnInfoDocument() 
-{
+void CDlgSignatureDemo::OnInfoDocument() {
+#ifndef _UNSTABLE
 	if (!m_Message->noctets) return;
 	
 	int srcSize = m_Message->noctets;
@@ -176,11 +170,11 @@ void CDlgSignatureDemo::OnInfoDocument()
 	UpdateData(FALSE);	
 	
 	delete[] msgdata;
+#endif
 }
 
-
-void CDlgSignatureDemo::OnSelectKey() 
-{
+void CDlgSignatureDemo::OnSelectKey() {
+#ifndef _UNSTABLE
 	CDlgDemoRSAKeyGeneration* KeyDialog;
 	KeyDialog = new CDlgDemoRSAKeyGeneration(this);
 
@@ -197,11 +191,11 @@ void CDlgSignatureDemo::OnSelectKey()
 		m_ButtonInfoKey.SetFocus();	
 		ClearInfo();
 	}
-	delete KeyDialog;			
+	delete KeyDialog;
+#endif
 }
 
-void CDlgSignatureDemo::OnInfoKey() 
-{
+void CDlgSignatureDemo::OnInfoKey() {
 #ifndef _UNSTABLE
 	if(!m_Cert->IsInitialized()) return;
 
@@ -225,14 +219,7 @@ void CDlgSignatureDemo::OnInfoKey()
 #endif
 }
 
-
-/********************************************************************************
-/* Diese Funktion aktiviert / deaktiviert die Bitmapbuttons
-/********************************************************************************/
-
-
-void CDlgSignatureDemo::EnableButtons()
-{
+void CDlgSignatureDemo::EnableButtons() {
 #ifndef _UNSTABLE
 	m_hFocus = GetFocus();
 
