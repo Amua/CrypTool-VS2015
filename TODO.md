@@ -11,6 +11,7 @@ This document contains the most important TODOs for the project.
 ## Licensing
 
 - remove obsolete licensing files (may be cluttered across the whole code base)
+- update licensing information in installer (license-{LANGUAGE}.rtf files): move version information to 1.5, and remove all obsolete information (such as references to Secude, for example)
 
 ## Code
 
