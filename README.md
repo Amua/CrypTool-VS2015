@@ -4,6 +4,8 @@ This is a fork of CrypTool 1 to provide support for Visual Studio 2015.
 
 Please visit http://www.cryptool.org for information on the original project.
 
+**ATTENTION: The CrypTool-VS2015 project is on hold for now. The sources in this repository can be compiled using VS2015, but the development focus will now be on QCrypTool (https://github.com/flomar/QCrypTool). QCrypTool is also written in C++ and based on CrypTool 1, but it relies on Qt instead of MFC to provide platform independency.**
+
 The code in this repository was forked from r3717 of the CrypTool SVN repository. It was refactored quite heavily to enable students and other interested parties to work with CrypTool using the free-to-use Community Edition of VS2015. Older IDEs like VS2008 or VS2010 are not supported, please refer to the original CrypTool SVN repository for legacy support.
 
 The long-term goal of this project is to refactor all the legacy code so that CrypTool is no longer dependent on a set of deprecated libraries, but instead using a to-be-implemented OpenSSL-based abstraction layer.
